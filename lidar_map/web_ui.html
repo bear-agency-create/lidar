@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>лидар — езда</title>
+<style>
+  html, body { margin:0; height:100%; background:#111; color:#ddd; font:13px monospace; }
+  #bar { padding:6px 10px; background:#1a1a1a; border-bottom:1px solid #333; display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+  button { font:12px monospace; background:#222; color:#ddd; border:1px solid #555; padding:3px 8px; cursor:pointer; }
+  button.on { background:#345; border-color:#79a; }
+  button.save { border-color:#5a5; color:#afa; }
+  button.again { border-color:#a85; color:#fda; }
+  #stage { position:absolute; inset:32px 0 0 0; }
+  canvas { width:100%; height:100%; display:block; background:#000; cursor:crosshair; }
+  #legend {
+    position:absolute; left:10px; bottom:10px; background:rgba(0,0,0,0.82);
+    border:1px solid #444; padding:8px 10px; line-height:1.5; max-width:460px;
+    pointer-events:none;
+  }
+  #legend b { color:#fff; }
+  .sw { display:inline-block; width:10px; height:10px; margin-right:6px; vertical-align:middle; }
+  #warn { color:#fa4; }
+  #pad {
+    position:absolute; right:12px; bottom:12px; display:grid;
+    grid-template-columns: repeat(3, 52px); grid-template-rows: repeat(4, 48px);
+    gap:6px; z-index:5; user-select:none; -webkit-user-select:none;
+  }
+  #pad button {
+    font:18px monospace; background:#1c1c1c; color:#eee; border:1px solid #666;
+    border-radius:6px; padding:0; touch-action:none;
+  }
+  #pad button:active, #pad button.held { background:#356; border-color:#8cf; }
+  #pad button.stop { grid-column: 2; background:#311; border-color:#a44; color:#faa; }
+  #pad .empty { visibility:hidden; pointer-events:none; }
+</style>
+</head>
+<body>
+<div id="bar">
+  <button id="bScan" class="on">скан сейчас</button>
+  <button id="bMap" class="on">память стен</button>
+  <button id="bFollow" class="on">следить</button>
+  <button id="bSave" class="save">сохранить</button>
+  <button id="bFreeze" class="save">заморозить комнату</button>
+  <button id="bAgain" class="again">заново</button>
+  <span id="info">—</span>
+</div>
+<div id="stage">
+  <canvas id="c"></canvas>
+  <div id="pad" aria-label="пульт">
+    <button type="button" data-cmd="yaw_l" title="танковый поворот влево (Z)">Ｚ</button>
+    <button type="button" data-cmd="fwd" title="вперёд (W)">▲</button>
+    <button type="button" data-cmd="yaw_r" title="танковый поворот вправо (C)">Ｃ</button>
+    <button type="button" data-cmd="strafe_l" title="меканум боком влево (←) — курс держит">◀</button>
+    <button type="button" class="empty" tabindex="-1" aria-hidden="true"></button>
+    <button type="button" data-cmd="strafe_r" title="меканум боком вправо (→) — курс держит">▶</button>
+    <span class="empty"></span>
+    <button type="button" data-cmd="back" title="назад (S)">▼</button>
+    <span class="empty"></span>
+    <span class="empty"></span>
+    <button type="button" class="stop" data-cmd="stop" title="стоп (Space)">■</button>
+    <span class="empty"></span>
+  </div>
+  <div id="legend">
+    <div><b>Режим:</b> пульт → Arduino. Вперёд/назад: <b>одинаковый PWM</b> на все колёса (без PID).</div>
+    <div>W/↑ вперёд · S/↓ назад · ←→ боком (пока не настраиваем) · Z/C поворот · Space стоп</div>
+    <div>Кликни по странице, потом держи клавиши. Отпустил — стоп.</div>
+    <div><b>заново</b> — сброс. <b>заморозить комнату</b> — стены навечно; люди = оранжевые временно.</div>
+    <div>После заморозки клик = <b>точка B</b>. <b>A</b> = где робот сейчас → едет меканумом к B.</div>
+    <div>6 стоек рамы (углы + середины боков) лидар <b>не видит</b> — в карту не пишутся.</div>
+    <div><span class="sw" style="background:#f44"></span><b>красные</b> — лидар сейчас</div>
+    <div><span class="sw" style="background:#eee;border:1px solid #777"></span><b>белое + контур</b> — стены / мебель</div>
+    <div><span class="sw" style="background:#fa0"></span><b>оранж</b> — человек / временно</div>
+    <div><span class="sw" style="background:#777"></span><b>серое</b> — пустое</div>
+    <div><span class="sw" style="background:#0f0"></span><b>A / рама</b> — робот · <span class="sw" style="background:#ff0"></span><b>B</b> — цель · <span class="sw" style="background:#0ff"></span>путь</div>
+  </div>
+</div>
+<script>
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+let showScan = true, showMap = true, follow = true;
+let scale = 35;
+let data = null;
+let panX = 0, panY = 0;
+let drag = null;
+let mapFrozen = false;
+
+const VX = 0.45, VY = 0.35, W = 1.2;
+const CMDS = {
+  fwd:  {vx: VX,  vy: 0,   w: 0},
+  back: {vx:-VX,  vy: 0,   w: 0},
+  left: {vx: 0,   vy: 0,   w: W},
+  right:{vx: 0,   vy: 0,   w:-W},
+  strafe_l:{vx: 0, vy: VY,  w: 0},
+  strafe_r:{vx: 0, vy:-VY,  w: 0},
+  yaw_l:{vx: 0,   vy: 0,   w: W},
+  yaw_r:{vx: 0,   vy: 0,   w:-W},
+  stop: {vx: 0,   vy: 0,   w: 0},
+};
+
+const held = new Set();
+let driveTimer = null;
+
+async function postCmd(body) {
+  try {
+    await fetch('/api/cmd', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(body),
+      cache: 'no-store',
+    });
+  } catch (_) {}
+}
+
+async function postStop() {
+  try {
+    await fetch('/api/cmd/stop', {method:'POST', cache:'no-store'});
+  } catch (_) {}
+}
+
+function mergedCmd() {
+  let vx = 0, vy = 0, w = 0;
+  for (const name of held) {
+    const c = CMDS[name];
+    if (!c) continue;
+    vx += c.vx; vy += c.vy; w += c.w;
+  }
+  const clamp = (v, m) => Math.max(-m, Math.min(m, v));
+  return {vx: clamp(vx, 0.35), vy: clamp(vy, 0.35), w: clamp(w, 1.2)};
+}
+
+function refreshDriveLoop() {
+  if (held.size === 0) {
+    if (driveTimer) { clearInterval(driveTimer); driveTimer = null; }
+    postStop();
+    return;
+  }
+  const send = () => postCmd(mergedCmd());
+  send();
+  if (!driveTimer) driveTimer = setInterval(send, 80);
+}
+
+function holdStart(name) {
+  if (!CMDS[name]) return;
+  if (name === 'stop') {
+    held.clear();
+    document.querySelectorAll('#pad button.held').forEach(b => b.classList.remove('held'));
+    refreshDriveLoop();
+    return;
+  }
+  held.add(name);
+  const btn = document.querySelector('#pad button[data-cmd="'+name+'"]');
+  if (btn) btn.classList.add('held');
+  refreshDriveLoop();
+}
+
+function holdEnd(name) {
+  if (!name || name === 'stop') return;
+  held.delete(name);
+  const btn = document.querySelector('#pad button[data-cmd="'+name+'"]');
+  if (btn) btn.classList.remove('held');
+  refreshDriveLoop();
+}
+
+function allStop() {
+  held.clear();
+  document.querySelectorAll('#pad button.held').forEach(b => b.classList.remove('held'));
+  if (driveTimer) { clearInterval(driveTimer); driveTimer = null; }
+  postStop();
+}
+
+document.querySelectorAll('#pad button[data-cmd]').forEach((btn) => {
+  const name = btn.getAttribute('data-cmd');
+  const down = (e) => { e.preventDefault(); try { btn.setPointerCapture(e.pointerId); } catch(_){} holdStart(name); };
+  const up = (e) => { e.preventDefault(); holdEnd(name); };
+  btn.addEventListener('pointerdown', down);
+  btn.addEventListener('pointerup', up);
+  btn.addEventListener('pointercancel', up);
+  btn.addEventListener('lostpointercapture', up);
+});
+
+window.addEventListener('blur', allStop);
+document.addEventListener('visibilitychange', () => { if (document.hidden) allStop(); });
+
+const KEY_MAP = {
+  KeyW: 'fwd', ArrowUp: 'fwd',
+  KeyS: 'back', ArrowDown: 'back',
+  // Arrows / A/D = mecanum strafe (slide, keep heading)
+  KeyA: 'strafe_l', ArrowLeft: 'strafe_l',
+  KeyD: 'strafe_r', ArrowRight: 'strafe_r',
+  // Z/C = tank turn in place
+  KeyZ: 'yaw_l',
+  KeyC: 'yaw_r',
+  KeyQ: 'yaw_l',
+  KeyE: 'yaw_r',
+  Space: 'stop',
+};
+
+window.addEventListener('keydown', (e) => {
+  if (e.repeat) return;
+  const name = KEY_MAP[e.code];
+  if (!name) return;
+  e.preventDefault();
+  holdStart(name);
+});
+window.addEventListener('keyup', (e) => {
+  const name = KEY_MAP[e.code];
+  if (!name || name === 'stop') return;
+  e.preventDefault();
+  holdEnd(name);
+});
+
+document.getElementById('bScan').onclick = (e) => {
+  showScan = !showScan; e.target.classList.toggle('on', showScan); draw();
+};
+document.getElementById('bMap').onclick = (e) => {
+  showMap = !showMap; e.target.classList.toggle('on', showMap); draw();
+};
+document.getElementById('bFollow').onclick = (e) => {
+  follow = !follow; e.target.classList.toggle('on', follow); draw();
+};
+document.getElementById('bSave').onclick = async () => {
+  const r = await fetch('/api/save', {method:'POST'});
+  const j = await r.json();
+  document.getElementById('info').textContent = j.ok
+    ? ('сохранено: ' + (j.path || '') + ' | стен ' + (j.hits || 0))
+    : ('ошибка сохранения');
+};
+document.getElementById('bAgain').onclick = async () => {
+  if (!confirm('Начать карту заново? Старые стены сотрутся, центр вокруг текущей позиции.')) return;
+  const r = await fetch('/api/clear', {method:'POST'});
+  const j = await r.json().catch(() => ({ok:true, frozen:false}));
+  mapFrozen = false;
+  const bf = document.getElementById('bFreeze');
+  if (bf) { bf.textContent = 'заморозить комнату'; bf.classList.add('save'); bf.classList.remove('again'); }
+  document.getElementById('info').textContent = j.ok
+    ? 'сброшено — запись стен ВКЛ, едь с пульта'
+    : ('ошибка сброса: ' + (j.error || ''));
+};
+document.getElementById('bFreeze').onclick = async () => {
+  const r = await fetch('/api/freeze', {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({frozen: !mapFrozen}),
+  });
+  const j = await r.json().catch(() => ({ok:false}));
+  if (!j.ok) {
+    document.getElementById('info').textContent = 'freeze error: ' + (j.error || '');
+    return;
+  }
+  mapFrozen = !!j.frozen;
+  const bf = document.getElementById('bFreeze');
+  bf.textContent = mapFrozen ? 'писать стены снова' : 'заморозить комнату';
+  bf.classList.toggle('save', !mapFrozen);
+  bf.classList.toggle('again', mapFrozen);
+  document.getElementById('info').textContent = mapFrozen
+    ? 'комната заморожена — клик = точка B (A→B); люди оранжевые'
+    : 'запись стен снова включена';
+};
+
+canvas.addEventListener('wheel', (e) => {
+  e.preventDefault();
+  scale = Math.min(200, Math.max(8, scale * (e.deltaY > 0 ? 0.9 : 1.1)));
+  draw();
+}, {passive:false});
+
+canvas.addEventListener('pointerdown', (e) => {
+  if (follow && !mapFrozen) return;
+  if (mapFrozen && !e.shiftKey) {
+    // Click = navigate to world point (avoid people)
+    const r = canvas.parentElement.getBoundingClientRect();
+    const cx = r.width/2, cy = r.height/2;
+    const pose = (data && data.pose) || {x:0,y:0};
+    const viewX = follow ? pose.x : panX;
+    const viewY = follow ? pose.y : panY;
+    const sx = e.clientX - r.left;
+    const sy = e.clientY - r.top;
+    // inverse of worldToScreen: [cx - (wy-oy)*s, cy - (wx-ox)*s]
+    const wx = viewX - (sy - cy) / scale;
+    const wy = viewY - (sx - cx) / scale;
+    fetch('/api/goal', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({x: wx, y: wy}),
+    }).then(r => r.json()).then(j => {
+      document.getElementById('info').textContent = j.ok
+        ? ('A→B путь ' + (j.path_len||0) + ' | цель (' + wx.toFixed(1) + ',' + wy.toFixed(1) + ')')
+        : ('нет пути A→B: ' + (j.error || ''));
+    }).catch(() => {});
+    return;
+  }
+  if (follow) return;
+  drag = {x: e.clientX, y: e.clientY, panX, panY};
+  canvas.setPointerCapture(e.pointerId);
+});
+canvas.addEventListener('pointermove', (e) => {
+  if (!drag) return;
+  panX = drag.panX + (e.clientY - drag.y) / scale;
+  panY = drag.panY - (e.clientX - drag.x) / scale;
+  draw();
+});
+canvas.addEventListener('pointerup', () => { drag = null; });
+
+function resize() {
+  const dpr = devicePixelRatio || 1;
+  const r = canvas.parentElement.getBoundingClientRect();
+  canvas.width = Math.floor(r.width * dpr);
+  canvas.height = Math.floor(r.height * dpr);
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  draw();
+}
+window.addEventListener('resize', resize);
+
+function worldToScreen(wx, wy, cx, cy, ox, oy) {
+  return [cx - (wy - oy) * scale, cy - (wx - ox) * scale];
+}
+
+function draw() {
+  const r = canvas.parentElement.getBoundingClientRect();
+  const w = r.width, h = r.height;
+  const cx = w/2, cy = h/2;
+  ctx.fillStyle = '#000';
+  ctx.fillRect(0, 0, w, h);
+
+  const pose = (data && data.pose) || {x:0,y:0,yaw:0,ok:false};
+  const viewX = follow ? pose.x : panX;
+  const viewY = follow ? pose.y : panY;
+
+  ctx.strokeStyle = '#222';
+  ctx.lineWidth = 1;
+  const meters = Math.ceil(Math.max(w,h)/(2*scale)) + 2;
+  const gx0 = Math.floor(viewX - meters);
+  const gy0 = Math.floor(viewY - meters);
+  for (let i = gx0; i <= gx0 + 2*meters; i++) {
+    const [x0,y0] = worldToScreen(i, viewY - meters, cx, cy, viewX, viewY);
+    const [x1,y1] = worldToScreen(i, viewY + meters, cx, cy, viewX, viewY);
+    ctx.beginPath(); ctx.moveTo(x0,y0); ctx.lineTo(x1,y1); ctx.stroke();
+  }
+  for (let j = gy0; j <= gy0 + 2*meters; j++) {
+    const [x0,y0] = worldToScreen(viewX - meters, j, cx, cy, viewX, viewY);
+    const [x1,y1] = worldToScreen(viewX + meters, j, cx, cy, viewX, viewY);
+    ctx.beginPath(); ctx.moveTo(x0,y0); ctx.lineTo(x1,y1); ctx.stroke();
+  }
+
+  if (!data) return;
+
+  if (showMap && data.map && data.map.cells) {
+    const m = data.map;
+    const res = m.resolution;
+    const origin = m.origin;
+    const s = Math.max(1.0, res * scale);
+    // Quick lookup of occupied cells for wall outlines
+    const occ = new Set();
+    for (const cell of m.cells) {
+      if (cell[2] === 100 || cell[2] === 90) occ.add(cell[0] + ',' + cell[1]);
+    }
+    ctx.fillStyle = 'rgba(80,80,80,0.40)';
+    for (const cell of m.cells) {
+      if (cell[2] !== 0) continue;
+      const wx = origin[0] + (cell[0] + 0.5) * res;
+      const wy = origin[1] + (cell[1] + 0.5) * res;
+      const [x,y] = worldToScreen(wx, wy, cx, cy, viewX, viewY);
+      ctx.fillRect(x - s/2, y - s/2, s, s);
+    }
+    // Soft fill for solid furniture/walls
+    for (const cell of m.cells) {
+      if (cell[2] !== 100 && cell[2] !== 90) continue;
+      const wx = origin[0] + (cell[0] + 0.5) * res;
+      const wy = origin[1] + (cell[1] + 0.5) * res;
+      const [x,y] = worldToScreen(wx, wy, cx, cy, viewX, viewY);
+      ctx.fillStyle = cell[2] === 90 ? 'rgba(210,210,210,0.55)' : 'rgba(232,232,232,0.70)';
+      ctx.fillRect(x - s/2, y - s/2, s + 0.2, s + 0.2);
+    }
+    // Sharp wall outlines: only draw edges facing free space
+    ctx.strokeStyle = '#f5f5f5';
+    ctx.lineWidth = Math.max(1.5, scale * 0.04);
+    ctx.lineJoin = 'round';
+    ctx.beginPath();
+    for (const cell of m.cells) {
+      if (cell[2] !== 100 && cell[2] !== 90) continue;
+      const ix = cell[0], iy = cell[1];
+      const wx0 = origin[0] + ix * res;
+      const wy0 = origin[1] + iy * res;
+      const wx1 = wx0 + res;
+      const wy1 = wy0 + res;
+      const corners = [
+        worldToScreen(wx0, wy0, cx, cy, viewX, viewY),
+        worldToScreen(wx0, wy1, cx, cy, viewX, viewY),
+        worldToScreen(wx1, wy1, cx, cy, viewX, viewY),
+        worldToScreen(wx1, wy0, cx, cy, viewX, viewY),
+      ];
+      const edgeFree = [
+        !occ.has(ix + ',' + (iy - 1)),
+        !occ.has((ix - 1) + ',' + iy),
+        !occ.has(ix + ',' + (iy + 1)),
+        !occ.has((ix + 1) + ',' + iy),
+      ];
+      const pairs = [[0,3],[0,1],[1,2],[3,2]];
+      for (let e = 0; e < 4; e++) {
+        if (!edgeFree[e]) continue;
+        const a = corners[pairs[e][0]], b = corners[pairs[e][1]];
+        ctx.moveTo(a[0], a[1]);
+        ctx.lineTo(b[0], b[1]);
+      }
+    }
+    ctx.stroke();
+    ctx.fillStyle = '#fa0';
+    for (const cell of m.cells) {
+      if (cell[2] !== 50) continue;
+      const wx = origin[0] + (cell[0] + 0.5) * res;
+      const wy = origin[1] + (cell[1] + 0.5) * res;
+      const [x,y] = worldToScreen(wx, wy, cx, cy, viewX, viewY);
+      ctx.fillRect(x - s/2, y - s/2, s + 0.5, s + 0.5);
+    }
+  }
+
+  // Path A → B (always starts at robot)
+  const pathPts = [];
+  if (pose && pose.ok !== false) pathPts.push([pose.x, pose.y]);
+  if (data.path && data.path.length) {
+    for (const p of data.path) pathPts.push(p);
+  }
+  if (data.goal) pathPts.push(data.goal);
+  if (pathPts.length > 1 && data.path && data.path.length) {
+    ctx.strokeStyle = '#0cf';
+    ctx.lineWidth = 2.5;
+    ctx.setLineDash([8, 5]);
+    ctx.beginPath();
+    for (let i = 0; i < pathPts.length; i++) {
+      const [x,y] = worldToScreen(pathPts[i][0], pathPts[i][1], cx, cy, viewX, viewY);
+      if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+    ctx.setLineDash([]);
+  }
+  if (data.goal) {
+    const [gx, gy] = worldToScreen(data.goal[0], data.goal[1], cx, cy, viewX, viewY);
+    ctx.fillStyle = 'rgba(255,220,0,0.25)';
+    ctx.beginPath();
+    ctx.arc(gx, gy, 14, 0, Math.PI*2);
+    ctx.fill();
+    ctx.strokeStyle = '#ff0';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(gx, gy, 10, 0, Math.PI*2);
+    ctx.stroke();
+    ctx.fillStyle = '#ff0';
+    ctx.font = 'bold 14px monospace';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('B', gx, gy);
+  }
+
+  if (showScan && data.points) {
+    ctx.fillStyle = '#f44';
+    for (const p of data.points) {
+      const [x,y] = worldToScreen(p.x, p.y, cx, cy, viewX, viewY);
+      ctx.fillRect(x - 1.5, y - 1.5, 3, 3);
+    }
+  }
+
+  const [rx, ry] = worldToScreen(pose.x, pose.y, cx, cy, viewX, viewY);
+  const yaw = pose.yaw || 0;
+  const bot = data.robot || {length: 0.85, width: 0.58, radius: 0.48};
+  // Motor chassis frame: body + 4 mecanum wheels + axle marks
+  ctx.save();
+  ctx.translate(rx, ry);
+  ctx.rotate(-yaw);
+  const fl = (bot.length || 0.85) * scale;
+  const fw = (bot.width || 0.58) * scale;
+  const fr = (bot.radius || 0.48) * scale;
+  const okCol = pose.ok ? '#0f0' : '#fa0';
+  // clearance
+  ctx.beginPath();
+  ctx.ellipse(0, 0, fr, fr, 0, 0, Math.PI * 2);
+  ctx.strokeStyle = 'rgba(0,255,120,0.28)';
+  ctx.lineWidth = 1;
+  ctx.stroke();
+  // plywood deck
+  ctx.fillStyle = pose.ok ? 'rgba(40,90,50,0.55)' : 'rgba(120,80,20,0.5)';
+  ctx.strokeStyle = okCol;
+  ctx.lineWidth = 2;
+  roundRect(ctx, -fw/2, -fl/2, fw, fl, Math.max(2, scale * 0.03));
+  ctx.fill();
+  ctx.stroke();
+  // inner frame rails (motor bay)
+  ctx.strokeStyle = 'rgba(180,255,180,0.55)';
+  ctx.lineWidth = 1;
+  const inset = Math.max(3, scale * 0.04);
+  ctx.strokeRect(-fw/2 + inset, -fl/2 + inset, fw - 2*inset, fl - 2*inset);
+  // cross brace
+  ctx.beginPath();
+  ctx.moveTo(-fw/2 + inset, 0);
+  ctx.lineTo(fw/2 - inset, 0);
+  ctx.moveTo(0, -fl/2 + inset);
+  ctx.lineTo(0, fl/2 - inset);
+  ctx.stroke();
+  // 6 frame racks (ignored by lidar): 4 corners + mid-sides
+  const racks = [
+    [-fw/2, -fl/2], [fw/2, -fl/2],
+    [-fw/2,  fl/2], [fw/2,  fl/2],
+    [-fw/2, 0], [fw/2, 0],
+  ];
+  for (const [px, py] of racks) {
+    ctx.fillStyle = '#fa4';
+    ctx.beginPath();
+    ctx.arc(px, py, Math.max(2.5, scale * 0.025), 0, Math.PI * 2);
+    ctx.fill();
+  }
+  // 4 mecanum wheels at corners
+  const wheelL = fl * 0.18;
+  const wheelW = fw * 0.14;
+  const ox = fw * 0.38;
+  const oy = fl * 0.36;
+  const wheels = [[-ox, -oy], [ox, -oy], [-ox, oy], [ox, oy]];
+  for (const [wx, wy] of wheels) {
+    ctx.fillStyle = '#222';
+    ctx.strokeStyle = okCol;
+    ctx.lineWidth = 1.5;
+    ctx.fillRect(wx - wheelW/2, wy - wheelL/2, wheelW, wheelL);
+    ctx.strokeRect(wx - wheelW/2, wy - wheelL/2, wheelW, wheelL);
+    // roller marks
+    ctx.strokeStyle = 'rgba(255,255,255,0.35)';
+    ctx.beginPath();
+    ctx.moveTo(wx - wheelW/2 + 1, wy);
+    ctx.lineTo(wx + wheelW/2 - 1, wy);
+    ctx.stroke();
+  }
+  // nose / forward
+  ctx.beginPath();
+  ctx.moveTo(0, -fl/2 - 2);
+  ctx.lineTo(7, -fl/2 + 14);
+  ctx.lineTo(-7, -fl/2 + 14);
+  ctx.closePath();
+  ctx.fillStyle = okCol;
+  ctx.fill();
+  ctx.restore();
+  // Point A label (screen space, outside chassis)
+  ctx.fillStyle = okCol;
+  ctx.font = 'bold 14px monospace';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'bottom';
+  ctx.fillText('A', rx, ry - fr - 4);
+}
+
+function roundRect(ctx, x, y, w, h, r) {
+  const rr = Math.min(r, w/2, h/2);
+  ctx.beginPath();
+  ctx.moveTo(x + rr, y);
+  ctx.arcTo(x + w, y, x + w, y + h, rr);
+  ctx.arcTo(x + w, y + h, x, y + h, rr);
+  ctx.arcTo(x, y + h, x, y, rr);
+  ctx.arcTo(x, y, x + w, y, rr);
+  ctx.closePath();
+}
+
+async function tick() {
+  try {
+    const res = await fetch('/api/scan', {cache:'no-store'});
+    data = await res.json();
+    if (data.ok) {
+      const p = data.pose || {};
+      const hits = data.map ? data.map.hits : 0;
+      const yawDeg = ((p.yaw || 0) * 180 / Math.PI);
+      const saved = data.saved_ago != null ? (' | память ' + data.saved_ago + 'с назад') : '';
+      const odomTxt = data.odom_ok ? 'odom ok' : 'odom нет';
+      let warn = '';
+      if (data.stale) warn += ' | ' + (data.error || 'лидар молчит');
+      if (!data.odom_ok) warn += ' | поза по скану (fallback)';
+      if (data.mapping === false) warn += ' | матч слабый — стены не пишу';
+      const sc = (data.score != null) ? (' | матч ' + Number(data.score).toFixed(2)) : '';
+      const align = data.map_align ? (' | ' + data.map_align) : '';
+      const frozen = data.frozen ? ' | КОМНАТА ЗАМОРОЖЕНА' : '';
+      const people = (data.temp_hits != null) ? (' | люди ' + data.temp_hits) : '';
+      document.getElementById('info').innerHTML =
+        `еду с пульта | стен ${hits} | x=${(p.x||0).toFixed(2)} y=${(p.y||0).toFixed(2)} yaw=${yawDeg.toFixed(0)}° | ${odomTxt}` +
+        sc + align + saved + frozen + people + (warn ? (' <span id="warn">' + warn + '</span>') : '');
+      if (typeof data.frozen === 'boolean' && data.frozen !== mapFrozen) {
+        mapFrozen = data.frozen;
+        const bf = document.getElementById('bFreeze');
+        if (bf) {
+          bf.textContent = mapFrozen ? 'писать стены снова' : 'заморозить комнату';
+          bf.classList.toggle('save', !mapFrozen);
+          bf.classList.toggle('again', mapFrozen);
+        }
+      }
+      draw();
+    } else {
+      document.getElementById('info').textContent = data.error || 'нет данных';
+    }
+  } catch (e) {
+    document.getElementById('info').textContent = 'нет связи — открой http://0.0.0.0:8765/';
+  }
+  setTimeout(tick, 100);
+}
+resize();
+tick();
+</script>
+</body>
+</html>

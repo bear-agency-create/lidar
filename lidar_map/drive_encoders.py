@@ -1,0 +1,291 @@
+#!/usr/bin/env python3
+"""Encoder mecanum drive: web cmd → Mega serial + /odom + lidar yaw hold.
+
+This file owns ONLY chassis motion (forward/back/strafe/rotate). Mapping
+and the web UI live in other modules; main.py / start_drive_map.sh run
+this process alongside the map server.
+"""
+
+from __future__ import annotations
+
+import json
+import logging
+import math
+import os
+import re
+import sys
+import threading
+import time
+from pathlib import Path
+
+import numpy as np
+import serial
+
+_ROOT = Path(__file__).resolve().parent
+if str(_ROOT) not in sys.path:
+    sys.path.insert(0, str(_ROOT))
+
+try:
+    from logutil import get_logger, setup_logging
+except ImportError:
+    setup_logging = None  # type: ignore[assignment]
+    get_logger = None  # type: ignore[assignment]
+
+CMD_FILE = Path("/tmp/robot_cmd.json")
+PORT = os.environ.get("MEGA_DEV", "/dev/ttyUSB0")
+BAUD = 115200
+STALE_SEC = 0.9   # tolerate WiFi/SSH hiccups from the web remote
+POS_RE = re.compile(r"POS X=([-\d.]+) Y=([-\d.]+) Th=([-\d.]+)")
+
+# Lidar yaw hold
+YAW_KP = float(os.environ.get("YAW_KP", "1.8"))      # rad/s per rad of drift
+YAW_W_MAX = 0.8                                      # rad/s correction clamp
+YAW_DEADBAND = math.radians(2.5)                     # ignore parallax noise
+YAW_MAX_SHIFT_DEG = 25.0
+SCAN_STALE_SEC = 0.6
+
+
+def _clean(ranges) -> np.ndarray:
+    r = np.asarray(ranges, dtype=np.float64)
+    r = np.nan_to_num(r, nan=0.0, posinf=0.0, neginf=0.0)
+    r[(r < 0.08) | (r > 8.0)] = 0.0
+    return r
+
+
+def _yaw_by_correlation(a: np.ndarray, b: np.ndarray, inc: float) -> float | None:
+    """Yaw of scan b relative to a, with parabolic sub-bin refinement."""
+    n = min(len(a), len(b))
+    a, b = a[:n], b[:n]
+    max_s = int(YAW_MAX_SHIFT_DEG * math.pi / 180.0 / max(1e-6, inc))
+    am = a > 0
+    scores: dict[int, float] = {}
+    best_s, best_score = None, -1e9
+    for s in range(-max_s, max_s + 1):
+        br = np.roll(b, s)
+        m = am & (br > 0)
+        if m.sum() < 40:
+            continue
+        score = -float(np.mean(np.minimum(np.abs(a[m] - br[m]), 0.5)))
+        scores[s] = score
+        if score > best_score:
+            best_score, best_s = score, s
+    if best_s is None:
+        return None
+    frac = 0.0
+    s0 = scores.get(best_s - 1)
+    s2 = scores.get(best_s + 1)
+    if s0 is not None and s2 is not None:
+        denom = s0 - 2.0 * best_score + s2
+        if abs(denom) > 1e-12:
+            frac = max(-0.5, min(0.5, 0.5 * (s0 - s2) / denom))
+    return (best_s + frac) * inc
+
+
+class YawHold:
+    """Accumulates yaw incrementally between consecutive scans.
+
+    Consecutive scans are ~100 ms apart, so translation between them is
+    a few cm and correlation is unbiased by parallax (unlike matching
+    against the motion-start reference over a metre of travel).
+    """
+
+    def __init__(self) -> None:
+        self.lock = threading.Lock()
+        self.latest = None          # (ranges, inc, t)
+        self.active = False
+        self.prev = None            # (ranges, inc, t) last accumulated scan
+        self.err = 0.0
+
+    def on_scan(self, msg) -> None:
+        with self.lock:
+            self.latest = (_clean(msg.ranges), float(msg.angle_increment), time.time())
+
+    def start(self) -> None:
+        with self.lock:
+            self.active = True
+            self.prev = self.latest
+            self.err = 0.0
+
+    def stop(self) -> None:
+        with self.lock:
+            self.active = False
+            self.prev = None
+            self.err = 0.0
+
+    def correction(self) -> float:
+        with self.lock:
+            if not self.active or self.latest is None:
+                return 0.0
+            ranges, inc, t = self.latest
+            if time.time() - t > SCAN_STALE_SEC:
+                return 0.0
+            if self.prev is None:
+                self.prev = self.latest
+                return 0.0
+            if t > self.prev[2]:
+                dyaw = _yaw_by_correlation(self.prev[0], ranges, inc)
+                if dyaw is not None:
+                    self.err += dyaw
+                self.prev = self.latest
+            if abs(self.err) <= YAW_DEADBAND:
+                return 0.0
+            err = self.err - math.copysign(YAW_DEADBAND, self.err)
+            w = -YAW_KP * err
+            return max(-YAW_W_MAX, min(YAW_W_MAX, w))
+
+
+def main() -> None:
+    if setup_logging is not None:
+        setup_logging("drive_encoders")
+        log = get_logger("drive_encoders")
+    else:
+        logging.basicConfig(level=logging.INFO)
+        log = logging.getLogger("drive_encoders")
+
+    try:
+        import rclpy
+        from geometry_msgs.msg import TransformStamped
+        from nav_msgs.msg import Odometry
+        from sensor_msgs.msg import LaserScan
+        import tf2_ros
+        from transforms3d.euler import euler2quat
+    except ImportError as e:
+        raise SystemExit(f"ROS2 python deps missing: {e}") from e
+
+    rclpy.init()
+    node = rclpy.create_node("mega_teleop_bridge")
+    odom_pub = node.create_publisher(Odometry, "odom", 10)
+    tf_br = tf2_ros.TransformBroadcaster(node)
+
+    hold = YawHold()
+    node.create_subscription(LaserScan, "/scan", hold.on_scan, 5)
+
+    def open_serial() -> serial.Serial:
+        s = serial.Serial(PORT, BAUD, timeout=0.05)
+        time.sleep(2.0)
+        s.reset_input_buffer()
+        return s
+
+    ser = open_serial()
+    msg = f"drive_encoders on {PORT} (lidar yaw hold kp={YAW_KP})"
+    node.get_logger().info(msg)
+    log.info(msg)
+    last_stop = False
+    holding = False
+    cmd_ticks = 0
+
+    while rclpy.ok():
+        rclpy.spin_once(node, timeout_sec=0.0)
+        try:
+            while ser.in_waiting:
+                raw = ser.readline()
+                if not raw:
+                    break
+                line = raw.decode("ascii", errors="ignore").strip()
+                m = POS_RE.search(line)
+                if not m:
+                    if line.startswith("ENC ") or line.startswith("READY"):
+                        node.get_logger().info(line)
+                    continue
+                x_mm = float(m.group(1))
+                y_mm = float(m.group(2))
+                th = float(m.group(3))
+                x = x_mm / 1000.0
+                y = y_mm / 1000.0
+                q = euler2quat(0.0, 0.0, th)
+                now = node.get_clock().now().to_msg()
+
+                odom = Odometry()
+                odom.header.stamp = now
+                odom.header.frame_id = "odom"
+                odom.child_frame_id = "base_link"
+                odom.pose.pose.position.x = x
+                odom.pose.pose.position.y = y
+                odom.pose.pose.orientation.w = float(q[0])
+                odom.pose.pose.orientation.x = float(q[1])
+                odom.pose.pose.orientation.y = float(q[2])
+                odom.pose.pose.orientation.z = float(q[3])
+                odom_pub.publish(odom)
+
+                t = TransformStamped()
+                t.header.stamp = now
+                t.header.frame_id = "odom"
+                t.child_frame_id = "base_link"
+                t.transform.translation.x = x
+                t.transform.translation.y = y
+                t.transform.rotation.w = float(q[0])
+                t.transform.rotation.x = float(q[1])
+                t.transform.rotation.y = float(q[2])
+                t.transform.rotation.z = float(q[3])
+                tf_br.sendTransform(t)
+        except serial.SerialException:
+            time.sleep(0.5)
+            continue
+
+        vx = vy = w = 0.0
+        fresh = False
+        try:
+            if CMD_FILE.is_file():
+                data = json.loads(CMD_FILE.read_text(encoding="utf-8"))
+                age = time.time() - float(data.get("t", 0.0))
+                if age <= STALE_SEC:
+                    fresh = True
+                    vx = float(data.get("vx", 0.0))
+                    vy = float(data.get("vy", 0.0))
+                    w = float(data.get("w", 0.0))
+        except (OSError, json.JSONDecodeError, TypeError, ValueError):
+            fresh = False
+
+        moving = fresh and (abs(vx) > 0.02 or abs(vy) > 0.02 or abs(w) > 0.05)
+        translating = moving and abs(w) <= 0.05
+
+        if translating and not holding:
+            hold.start()
+            holding = True
+        elif not translating and holding:
+            hold.stop()
+            holding = False
+
+        try:
+            if moving:
+                if holding:
+                    w = hold.correction()
+                vx_mm = int(max(-700, min(700, vx * 1000.0 * 1.8)))
+                vy_mm = int(max(-700, min(700, vy * 1000.0 * 1.8)))
+                w_mrad = int(max(-2500, min(2500, w * 1000.0)))
+                ser.write(f"SET_ROBOT_VELOCITY {vx_mm} {vy_mm} {w_mrad}\n".encode())
+                last_stop = False
+                cmd_ticks += 1
+                if cmd_ticks % 100 == 0:
+                    log.info(
+                        "drive vx=%.2f vy=%.2f w=%.2f hold=%s",
+                        vx, vy, w, holding,
+                    )
+            elif not last_stop:
+                ser.write(b"STOP\n")
+                last_stop = True
+                log.info("STOP")
+        except serial.SerialException as e:
+            node.get_logger().error(f"serial error: {e}")
+            log.error("serial error: %s", e)
+            time.sleep(1.0)
+            try:
+                ser.close()
+            except Exception:
+                pass
+            try:
+                ser = open_serial()
+                last_stop = False
+            except serial.SerialException:
+                time.sleep(2.0)
+            continue
+
+        time.sleep(0.02)
+
+    ser.close()
+    node.destroy_node()
+    rclpy.shutdown()
+
+
+if __name__ == "__main__":
+    main()
