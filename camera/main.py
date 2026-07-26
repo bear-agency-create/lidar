@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
-"""Умная камера: захват лица + удержание в центре.
+"""Умная камера: цикл USB/RTSP → лицо → центр.
 
-Сейчас по умолчанию — USB webcam.
-Tapo RTSP/PTZ остаётся на потом (CAMERA_SOURCE=rtsp).
+Сейчас USB; Tapo RTSP/PTZ — позже (CAMERA_SOURCE=rtsp).
 """
 
 from __future__ import annotations
@@ -19,63 +18,21 @@ if str(_ROOT) not in sys.path:
     sys.path.insert(0, str(_ROOT))
 
 import config
-from digital_center import digital_center_view
-from face_detect import FaceDetector
-from proximity import ProximityEstimator
-from stream import open_source
-from tracker import FaceTracker, TrackState
+from vision import (
+    FaceDetector,
+    FaceTracker,
+    ProximityEstimator,
+    TrackState,
+    digital_center_view,
+    draw_overlay,
+    open_source,
+)
 
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s %(levelname)s [%(name)s] %(message)s",
 )
 log = logging.getLogger("camera.main")
-
-
-def _draw_face(frame, f, color, thickness: int = 1) -> None:
-    cv2.rectangle(frame, (f.x, f.y), (f.x + f.w, f.y + f.h), color, thickness)
-    for lx, ly in f.landmarks:
-        cv2.circle(frame, (int(lx), int(ly)), 2, color, -1)
-    if f.score < 1.0:
-        cv2.putText(
-            frame,
-            f"{f.score:.2f}",
-            (f.x, max(16, f.y - 6)),
-            cv2.FONT_HERSHEY_SIMPLEX,
-            0.5,
-            color,
-            1,
-            cv2.LINE_AA,
-        )
-
-
-def draw_overlay(frame, track, prox, faces, backend: str = "") -> None:
-    h, w = frame.shape[:2]
-    cv2.line(frame, (w // 2, 0), (w // 2, h), (60, 60, 60), 1)
-    cv2.line(frame, (0, h // 2), (w, h // 2), (60, 60, 60), 1)
-    for f in faces:
-        if track.face is not None and f is track.face:
-            continue
-        _draw_face(frame, f, (80, 80, 255), 1)
-    if track.face is not None:
-        f = track.face
-        color = (0, 220, 0) if track.locked else (0, 165, 255)
-        _draw_face(frame, f, color, 2)
-        cv2.circle(frame, (int(f.cx), int(f.cy)), 4, color, -1)
-    label = (
-        f"{backend} lock={track.locked} close={prox.close} approach={prox.approaching} "
-        f"area={prox.area_frac:.3f} ox={track.offset_x:+.2f} oy={track.offset_y:+.2f}"
-    )
-    cv2.putText(
-        frame,
-        label,
-        (10, 24),
-        cv2.FONT_HERSHEY_SIMPLEX,
-        0.55,
-        (240, 240, 240),
-        1,
-        cv2.LINE_AA,
-    )
 
 
 def main() -> int:
@@ -124,13 +81,11 @@ def main() -> int:
             cmd_interval_sec=config.PTZ_CMD_INTERVAL_SEC,
             dry_run=False,
         )
-    elif config.CAMERA_SOURCE in ("usb", "webcam", "local"):
-        log.info("USB mode: hardware PTZ off, digital center=%s", config.DIGITAL_CENTER)
+    else:
+        if config.CAMERA_SOURCE in ("usb", "webcam", "local"):
+            log.info("USB mode: hardware PTZ off, digital center=%s", config.DIGITAL_CENTER)
 
-    rtsp = None
-    if config.CAMERA_SOURCE in ("rtsp", "tapo"):
-        rtsp = config.rtsp_url()
-
+    rtsp = config.rtsp_url() if config.CAMERA_SOURCE in ("rtsp", "tapo") else None
     stream = open_source(
         config.CAMERA_SOURCE,
         index=config.CAMERA_INDEX,
@@ -149,18 +104,12 @@ def main() -> int:
             h, w = frame.shape[:2]
             frame_area = max(1, w * h)
             faces = detector.detect(frame)
-
             area_flags = {
                 id(f): (float(f.area) / float(frame_area)) >= config.FACE_MIN_AREA_FRAC
                 for f in faces
             }
-
             track = tracker.update(
-                faces,
-                w,
-                h,
-                require_in_zone=True,
-                area_ok=area_flags,
+                faces, w, h, require_in_zone=True, area_ok=area_flags
             )
             prox = proximity.evaluate(track.face, w, h)
 
@@ -172,15 +121,12 @@ def main() -> int:
             ):
                 ptz.center_on_offset(track.offset_x, track.offset_y)
 
-            view = frame
-            view_faces = faces
-            view_track_face = track.face
+            view, view_faces, view_track_face = frame, faces, track.face
             if config.DIGITAL_CENTER and config.CAMERA_SOURCE in ("usb", "webcam", "local"):
                 view, shifted, dig_state = digital_center_view(
                     frame, track.face if track.locked else None, state=dig_state
                 )
                 view_track_face = shifted
-                # для оверлея достаточно целевого лица
                 view_faces = [shifted] if shifted is not None else []
 
             n += 1
@@ -199,22 +145,25 @@ def main() -> int:
                 )
 
             if config.SHOW_PREVIEW:
-                draw_track = TrackState(
-                    view_track_face,
-                    track.offset_x,
-                    track.offset_y,
-                    track.locked,
-                    track.lost_frames,
+                draw_overlay(
+                    view,
+                    TrackState(
+                        view_track_face,
+                        track.offset_x,
+                        track.offset_y,
+                        track.locked,
+                        track.lost_frames,
+                    ),
+                    prox,
+                    view_faces,
+                    backend=detector.backend,
                 )
-                draw_overlay(view, draw_track, prox, view_faces, backend=detector.backend)
                 cv2.imshow("smart camera (USB)", view)
-                key = cv2.waitKey(1) & 0xFF
-                if key in (27, ord("q")):
+                if (cv2.waitKey(1) & 0xFF) in (27, ord("q")):
                     log.info("quit by user")
                     break
 
-            elapsed = time.time() - loop_t
-            sleep = frame_interval - elapsed
+            sleep = frame_interval - (time.time() - loop_t)
             if sleep > 0:
                 time.sleep(sleep)
     except KeyboardInterrupt:
