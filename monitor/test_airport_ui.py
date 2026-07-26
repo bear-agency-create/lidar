@@ -32,23 +32,38 @@ class AirportUiAssetTest(unittest.TestCase):
         self.assertNotIn("radial-gradient", cloud_css)
 
     def test_route_plane_has_takeoff_and_landing_cycle(self) -> None:
-        self.assertIn('class="plane" src="assets/realistic-airliner-balanced.png"', self.html)
+        self.assertIn('class="plane" src="assets/realistic-airliner-clean.png"', self.html)
+        self.assertIn("plane-mover", self.html)
         self.assertRegex(
             self.html,
             r"animation:\s*routeFlight\s+[^;]*\sinfinite;",
         )
+        self.assertRegex(
+            self.html,
+            r"animation:\s*planeFade\s+[^;]*\sinfinite;",
+        )
         keyframes = self.html.split("@keyframes routeFlight", 1)[1].split("}", 6)
         route_animation = "}".join(keyframes)
-        self.assertIn("left: 7%", route_animation)
-        self.assertIn("left: 95%", route_animation)
+        self.assertIn("left: 8%", route_animation)
+        self.assertIn("left: 92%", route_animation)
 
     def test_reduced_motion_disables_animation(self) -> None:
         reduced_motion = self.html.split("@media (prefers-reduced-motion: reduce)", 1)[1]
         self.assertIn("animation: none !important", reduced_motion)
-        self.assertIn(".plane, .attract-plane", reduced_motion)
+        self.assertIn(".plane-mover, .attract-plane", reduced_motion)
         self.assertIn('? 80 : 1800', self.html)
         self.assertIn('screen.classList.add("hidden")', self.html)
         self.assertIn('screen.classList.remove("departing")', self.html)
+
+    def test_scan_modal_has_camera_and_manual_entry(self) -> None:
+        self.assertIn('id="scanCamera"', self.html)
+        self.assertIn('id="scanVideo"', self.html)
+        self.assertIn("getUserMedia", self.html)
+        self.assertIn("BarcodeDetector", self.html)
+        self.assertIn('id="ticketCode"', self.html)
+        self.assertIn("startCameraScan", self.html)
+        self.assertIn("stopCameraScan", self.html)
+        self.assertIn('data-i18n="manualEntry"', self.html)
 
 
 if __name__ == "__main__":

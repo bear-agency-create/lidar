@@ -23,14 +23,37 @@
     * { box-sizing: border-box; }
     html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; }
     body {
-      background: #edf5fb;
+      display: grid;
+      place-items: center;
+      background: #1a222c;
       color: var(--ink);
       font-family: "Arial Nova", Arial, "Noto Sans", sans-serif;
       -webkit-font-smoothing: antialiased;
       user-select: none;
     }
+    /* Принудительный кадр 10.1″ киоска: 1280×800 (как на роботе) */
+    .kiosk-stage {
+      position: relative;
+      width: 1280px;
+      height: 800px;
+      overflow: hidden;
+      background: #edf5fb;
+      box-shadow: 0 0 0 2px #0e1620, 0 28px 80px rgba(0, 0, 0, .5);
+      flex-shrink: 0;
+    }
+    .kiosk-badge {
+      position: absolute; z-index: 200; top: 8px; right: 10px;
+      padding: 4px 9px; border-radius: 999px;
+      color: #d7e4ef; background: rgba(7, 28, 51, .72);
+      font-size: 11px; font-weight: 800; letter-spacing: .04em;
+      pointer-events: none;
+      display: none;
+    }
+    @media (min-width: 1281px), (min-height: 801px) {
+      .kiosk-badge { display: block; }
+    }
     .attract {
-      position: fixed; z-index: 100; inset: 0; overflow: hidden;
+      position: absolute; z-index: 100; inset: 0; overflow: hidden;
       color: white; background: #087fbe; cursor: pointer; isolation: isolate;
       touch-action: manipulation;
     }
@@ -56,7 +79,7 @@
       transition: opacity .42s ease, transform .65s ease;
     }
     .attract-logo {
-      display: block; width: min(410px, 68vw); max-height: 220px; margin: 0 auto 28px;
+      display: block; width: min(560px, 78vw); max-height: 200px; margin: 0 auto 28px;
       object-fit: contain; filter: drop-shadow(0 8px 25px rgba(0,48,88,.26));
     }
     .attract-start {
@@ -99,8 +122,8 @@
       background: var(--navy);
       box-shadow: 0 4px 22px rgba(3, 20, 38, .24);
     }
-    .brand { display: flex; align-items: center; min-width: 245px; }
-    .brand img { width: 176px; height: 62px; object-fit: contain; object-position: left center; }
+    .brand { display: flex; align-items: center; min-width: 320px; }
+    .brand img { width: 280px; height: 78px; object-fit: contain; object-position: left center; }
     .languages { display: flex; gap: 7px; }
     .language {
       min-width: 82px; height: 48px; padding: 0 13px;
@@ -108,7 +131,7 @@
       color: #dbeaff; background: rgba(255,255,255,.06); font-weight: 700;
     }
     .language.active { color: var(--navy); background: white; border-color: white; }
-    main { min-height: 0; display: grid; grid-template-columns: 405px 1fr; }
+    main { min-height: 0; display: grid; grid-template-columns: 540px 1fr; }
     aside {
       min-height: 0; padding: 22px 20px 20px 24px;
       background: #f7fbfe; border-right: 1px solid var(--line);
@@ -117,34 +140,130 @@
     .aside-help { margin: 0 0 17px; font-size: 19px; font-weight: 750; }
     .destinations { height: calc(100% - 65px); display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 14px; }
     .destination {
-      position: relative; min-height: 148px; padding: 18px 14px;
+      --accent: #0878e6;
+      --accent-soft: rgba(8,120,230,.14);
+      --accent-deep: #0660b8;
+      position: relative; min-height: 148px; padding: 20px 16px 20px 20px;
       display: flex; flex-direction: column; align-items: flex-start; justify-content: space-between;
-      border: 1px solid var(--line); border-radius: 18px; color: var(--ink); background: white;
-      box-shadow: 0 5px 14px rgba(20, 58, 92, .05); text-align: left;
-      transition: transform .15s ease, border-color .15s ease, background .15s ease;
+      border: 1px solid var(--line); border-radius: 18px; color: var(--ink);
+      background: linear-gradient(165deg, #ffffff 0%, #f3f9ff 58%, #eef6fc 100%);
+      box-shadow:
+        0 6px 16px rgba(20, 58, 92, .07),
+        inset 0 1px 0 rgba(255,255,255,.9);
+      text-align: left;
+      transition: transform .18s ease, border-color .18s ease, background .18s ease, box-shadow .22s ease;
       overflow: hidden;
+      animation: destCardBreath 4.8s ease-in-out infinite;
+    }
+    .destination[data-kind="check-in"] { --accent: #0878e6; --accent-soft: rgba(8,120,230,.16); --accent-deep: #0660b8; }
+    .destination[data-kind="gates"] { --accent: #0a8f9e; --accent-soft: rgba(10,143,158,.16); --accent-deep: #087a86; }
+    .destination[data-kind="baggage"] { --accent: #e39a00; --accent-soft: rgba(227,154,0,.18); --accent-deep: #c48400; }
+    .destination[data-kind="places"] { --accent: #1c9b68; --accent-soft: rgba(28,155,104,.16); --accent-deep: #168556; }
+    .destination[data-kind="information"] { --accent: #2f6fbf; --accent-soft: rgba(47,111,191,.16); --accent-deep: #255a9d; }
+    .destination[data-kind="exit"] { --accent: #c45c1a; --accent-soft: rgba(196,92,26,.16); --accent-deep: #a34c15; }
+    .destination:nth-child(1) { animation-delay: 0s; }
+    .destination:nth-child(2) { animation-delay: .7s; }
+    .destination:nth-child(3) { animation-delay: 1.4s; }
+    .destination:nth-child(4) { animation-delay: 2.1s; }
+    .destination:nth-child(5) { animation-delay: .35s; }
+    .destination:nth-child(6) { animation-delay: 1.05s; }
+    .destination::after {
+      content: ""; position: absolute; left: 0; top: 14px; bottom: 14px; width: 4px;
+      border-radius: 0 6px 6px 0;
+      background: linear-gradient(180deg, var(--accent), var(--accent-deep));
+      box-shadow: 0 0 12px var(--accent-soft);
+      animation: destRailGlow 3.6s ease-in-out infinite;
     }
     .destination::before {
-      content: ""; position: absolute; width: 110px; height: 110px; right: -42px; top: -45px;
-      border-radius: 50%; background: linear-gradient(145deg, rgba(8,120,230,.12), rgba(60,190,214,.03));
+      content: ""; position: absolute; width: 128px; height: 128px; right: -48px; top: -52px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 35% 40%, var(--accent-soft), transparent 68%);
+      animation: destOrb 6.4s ease-in-out infinite;
+      pointer-events: none;
     }
-    .destination::after {
-      content: ""; position: absolute; left: 12px; right: 12px; bottom: 44px; height: 1px;
-      background: linear-gradient(90deg, var(--line), transparent);
+    .destination .destination-shine {
+      position: absolute; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; border-radius: inherit;
     }
-    .destination:active { transform: scale(.98); }
-    .destination.active { color: white; background: var(--blue); border-color: var(--blue); box-shadow: 0 10px 24px rgba(8,120,230,.24); }
+    .destination .destination-shine::before {
+      content: ""; position: absolute; top: -20%; bottom: -20%; left: -40%; width: 42%;
+      background: linear-gradient(105deg, transparent 0%, rgba(255,255,255,0) 35%, rgba(255,255,255,.55) 50%, rgba(255,255,255,0) 65%, transparent 100%);
+      transform: translateX(-30%) skewX(-16deg);
+      animation: destShine 5.8s ease-in-out infinite;
+    }
+    .destination:nth-child(1) .destination-shine::before { animation-delay: 0s; }
+    .destination:nth-child(2) .destination-shine::before { animation-delay: 1.4s; }
+    .destination:nth-child(3) .destination-shine::before { animation-delay: 2.8s; }
+    .destination:nth-child(4) .destination-shine::before { animation-delay: 4.2s; }
+    .destination:nth-child(5) .destination-shine::before { animation-delay: .7s; }
+    .destination:nth-child(6) .destination-shine::before { animation-delay: 2.1s; }
+    .destination:active { transform: scale(.98); animation: none; }
+    .destination.active {
+      color: white;
+      background: linear-gradient(155deg, var(--accent-deep), var(--accent));
+      border-color: var(--accent);
+      box-shadow: 0 12px 28px var(--accent-soft);
+      animation: none;
+    }
+    .destination.active::after {
+      background: rgba(255,255,255,.85);
+      box-shadow: none;
+      animation: none;
+    }
+    .destination.active::before {
+      background: radial-gradient(circle at 35% 40%, rgba(255,255,255,.22), transparent 68%);
+      animation: none;
+    }
+    .destination.active .destination-shine { display: none; }
     .destination-icon {
-      position: relative; width: 54px; height: 54px; display: grid; place-items: center;
-      border-radius: 12px; color: var(--blue); background: var(--sky);
+      position: relative; z-index: 1; width: 54px; height: 54px; display: grid; place-items: center;
+      border-radius: 14px; color: var(--accent);
+      background: linear-gradient(160deg, #fff, var(--sky));
+      box-shadow:
+        0 4px 10px var(--accent-soft),
+        inset 0 1px 0 rgba(255,255,255,.95);
+      animation: destIconFloat 3.4s ease-in-out infinite;
     }
-    .destination.active .destination-icon { color: white; background: rgba(255,255,255,.18); }
+    .destination-icon::after {
+      content: ""; position: absolute; inset: -4px; border-radius: 16px;
+      border: 1.5px solid var(--accent-soft);
+      opacity: .9;
+      animation: destIconRing 3.4s ease-in-out infinite;
+      pointer-events: none;
+    }
+    .destination.active .destination-icon {
+      color: white;
+      background: rgba(255,255,255,.2);
+      box-shadow: none;
+      animation: none;
+    }
+    .destination.active .destination-icon::after { display: none; }
     .destination-icon svg { width: 26px; height: 26px; }
+    .destination:nth-child(1) .destination-icon,
+    .destination:nth-child(1) .destination-icon::after { animation-delay: 0s; }
+    .destination:nth-child(2) .destination-icon,
+    .destination:nth-child(2) .destination-icon::after { animation-delay: .45s; }
+    .destination:nth-child(3) .destination-icon,
+    .destination:nth-child(3) .destination-icon::after { animation-delay: .9s; }
+    .destination:nth-child(4) .destination-icon,
+    .destination:nth-child(4) .destination-icon::after { animation-delay: 1.35s; }
+    .destination:nth-child(5) .destination-icon,
+    .destination:nth-child(5) .destination-icon::after { animation-delay: .2s; }
+    .destination:nth-child(6) .destination-icon,
+    .destination:nth-child(6) .destination-icon::after { animation-delay: .65s; }
+    .destination:nth-child(1) .destination-arrow { animation-delay: 0s; }
+    .destination:nth-child(2) .destination-arrow { animation-delay: .35s; }
+    .destination:nth-child(3) .destination-arrow { animation-delay: .7s; }
+    .destination:nth-child(4) .destination-arrow { animation-delay: 1.05s; }
     .destination-copy { position: relative; z-index: 1; width: 100%; }
-    .destination-label { display: block; max-width: 100%; font-size: 18px; line-height: 1.12; font-weight: 850; }
-    .destination-meta { display: block; margin-top: 7px; padding-right: 22px; color: var(--muted); font-size: 13px; line-height: 1.25; font-weight: 650; }
-    .destination-arrow { position: absolute; right: 12px; bottom: 14px; color: var(--blue); font-size: 21px; font-weight: 500; }
+    .destination-label { display: block; max-width: 100%; font-size: 20px; line-height: 1.12; font-weight: 850; }
+    .destination-meta { display: block; margin-top: 14px; padding-right: 22px; color: var(--muted); font-size: 14px; line-height: 1.25; font-weight: 650; }
+    .destination-arrow {
+      position: absolute; z-index: 1; right: 12px; bottom: 14px;
+      color: var(--accent); font-size: 21px; font-weight: 500;
+      animation: destArrowNudge 2.2s ease-in-out infinite;
+    }
     .destination.active .destination-meta, .destination.active .destination-arrow { color: rgba(255,255,255,.78); }
+    .destination.active .destination-arrow { animation: none; }
     .content { position: relative; min-width: 0; min-height: 0; padding: 26px 30px 24px; overflow: hidden; }
     .content::before {
       content: ""; position: absolute; width: 430px; height: 430px; right: -210px; top: -220px;
@@ -165,17 +284,27 @@
     }
     .route-art { position: relative; flex: 1; min-width: 250px; height: 100%; overflow: hidden; }
     .route-line {
-      position: absolute; left: 7%; right: 8%; top: 49%; height: 5px;
+      position: absolute; left: 8%; right: 8%; top: 49%; height: 5px;
       border-radius: 8px; background: repeating-linear-gradient(90deg, #76d2ff 0 18px, transparent 18px 30px);
       background-size: 60px 5px; animation: routeFlow 1.8s linear infinite;
     }
-    .route-dot { position: absolute; top: calc(49% - 13px); width: 30px; height: 30px; border: 7px solid white; border-radius: 50%; background: var(--blue); }
-    .route-dot.start { left: 4%; }
-    .route-dot.end { right: 5%; background: var(--orange); border-color: var(--orange); box-shadow: 0 0 0 8px rgba(255,176,0,.18); }
+    .route-dot {
+      position: absolute; top: 49%; width: 30px; height: 30px;
+      border: 7px solid white; border-radius: 50%; background: var(--blue); z-index: 3;
+      transform: translate(-50%, -50%);
+    }
+    .route-dot.start { left: 8%; }
+    .route-dot.end { left: 92%; background: var(--orange); border-color: var(--orange); box-shadow: 0 0 0 8px rgba(255,176,0,.18); }
+    .plane-mover {
+      position: absolute; z-index: 4; left: 8%; top: 49%; width: 108px; height: 108px;
+      transform: translate(-50%, -50%) rotate(90deg);
+      animation: routeFlight 5.6s cubic-bezier(.36,.05,.2,1) infinite;
+    }
     .plane {
-      position: absolute; z-index: 2; left: 7%; top: 49%; width: 72px; height: 72px;
-      object-fit: contain; filter: drop-shadow(0 7px 8px rgba(0,22,43,.48));
-      animation: routeFlight 5.2s cubic-bezier(.36,.05,.2,1) infinite;
+      position: relative; z-index: 1; display: block; width: 100%; height: 100%;
+      object-fit: contain;
+      filter: drop-shadow(0 8px 10px rgba(0,22,43,.52));
+      animation: planeFade 5.6s cubic-bezier(.36,.05,.2,1) infinite;
     }
     .art-copy { position: relative; z-index: 2; width: 250px; }
     .art-copy strong { display: block; font-size: 25px; line-height: 1.12; }
@@ -195,6 +324,29 @@
       display: grid; grid-template-columns: 84px 1fr; align-content: center; gap: 22px;
       border: 1px solid #cadeee; border-radius: 24px; background: white; box-shadow: var(--shadow);
     }
+    .places-list {
+      flex: 1; min-height: 0; margin: 14px 0 12px; padding: 12px;
+      display: grid; grid-template-columns: 1fr 1fr; grid-auto-rows: 1fr; gap: 14px;
+      align-content: stretch;
+      border: 1px solid #cadeee; border-radius: 24px; background: white; box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+    .place-item {
+      min-height: 0; height: 100%; padding: 16px 18px;
+      display: flex; flex-direction: column; justify-content: center; gap: 0;
+      border: 1px solid var(--line); border-radius: 16px; background: #f8fcff; color: var(--ink); text-align: left;
+      transition: background .15s ease, border-color .15s ease, transform .15s ease;
+    }
+    .place-item:active { transform: scale(.98); }
+    .place-item strong { display: block; font-size: 18px; font-weight: 850; color: var(--navy); line-height: 1.15; }
+    .place-item .place-hint { display: block; margin-top: 12px; color: var(--muted); font-size: 13px; font-weight: 650; line-height: 1.3; }
+    .place-item-row { display: flex; align-items: center; gap: 14px; }
+    .place-item-copy { min-width: 0; }
+    .place-item-icon {
+      width: 44px; height: 44px; flex: 0 0 44px; display: grid; place-items: center;
+      border-radius: 12px; color: var(--blue); background: var(--sky);
+    }
+    .place-item-icon svg { width: 22px; height: 22px; }
     .detail-icon { width: 84px; height: 84px; display: grid; place-items: center; border-radius: 24px; color: var(--blue); background: var(--sky); }
     .detail-icon svg { width: 47px; height: 47px; }
     .zone { display: inline-block; margin-bottom: 8px; padding: 6px 10px; border-radius: 8px; color: #07589f; background: #e9f5ff; font-size: 13px; font-weight: 850; }
@@ -229,25 +381,47 @@
     .journey-error { margin: 14px auto 0; color: var(--danger); font-size: 15px; font-weight: 800; }
     .pulse { width: 9px; height: 9px; border-radius: 50%; background: var(--green); box-shadow: 0 0 0 6px rgba(28,155,104,.13); }
     .modal {
-      position: fixed; z-index: 20; inset: 0; display: none; place-items: center;
+      position: absolute; z-index: 20; inset: 0; display: none; place-items: center;
       padding: 28px; background: rgba(2, 16, 31, .78); backdrop-filter: blur(6px);
     }
     .modal.open { display: grid; }
-    .scan-dialog { width: min(720px, 100%); padding: 31px; border-radius: 27px; background: white; box-shadow: 0 28px 80px rgba(0,0,0,.3); text-align: center; }
-    .scan-visual {
-      width: 116px; height: 116px; margin: 0 auto 18px; display: grid; place-items: center;
-      border: 3px solid var(--blue); border-radius: 28px; color: var(--blue); background: var(--sky);
+    .scan-dialog { width: min(760px, 100%); max-height: calc(100% - 24px); padding: 24px 28px 26px; border-radius: 27px; background: white; box-shadow: 0 28px 80px rgba(0,0,0,.3); text-align: center; overflow: auto; }
+    .scan-camera {
+      position: relative; width: min(100%, 560px); height: 220px; margin: 0 auto 14px;
+      border-radius: 20px; overflow: hidden; background: #0b1c2e;
+      border: 2px solid #b7cfe2; box-shadow: inset 0 0 0 1px rgba(255,255,255,.08);
     }
-    .scan-visual svg { width: 62px; height: 62px; }
-    .scan-dialog h2 { margin: 0 0 8px; color: var(--navy); font-size: 31px; }
-    .scan-dialog p { margin: 0 auto 19px; max-width: 520px; color: var(--muted); font-size: 18px; line-height: 1.4; }
-    .scan-form { display: flex; gap: 10px; margin: 0 auto 15px; max-width: 580px; }
-    .scan-form input { min-width: 0; flex: 1; height: 61px; padding: 0 18px; border: 2px solid #b7cfe2; border-radius: 15px; color: var(--navy); background: white; font-size: 20px; user-select: text; }
+    .scan-camera.is-unavailable { display: none; }
+    .scan-camera video {
+      width: 100%; height: 100%; object-fit: cover; background: #0b1c2e;
+    }
+    .scan-camera-frame {
+      position: absolute; inset: 18px 42px; border: 2px solid rgba(255,255,255,.82);
+      border-radius: 14px; pointer-events: none;
+      box-shadow: 0 0 0 999px rgba(2, 16, 31, .28);
+    }
+    .scan-camera-frame::before {
+      content: ""; position: absolute; left: 8%; right: 8%; top: 50%; height: 2px;
+      background: rgba(8,120,230,.85); box-shadow: 0 0 10px rgba(8,120,230,.55);
+      animation: scanLine 1.6s ease-in-out infinite;
+    }
+    .scan-camera-status {
+      margin: 0 auto 12px; max-width: 560px; min-height: 20px;
+      color: var(--blue); font-size: 14px; font-weight: 750;
+    }
+    .scan-dialog h2 { margin: 0 0 6px; color: var(--navy); font-size: 28px; }
+    .scan-dialog > p { margin: 0 auto 12px; max-width: 560px; color: var(--muted); font-size: 16px; line-height: 1.35; }
+    .scan-manual-label {
+      margin: 0 auto 8px; max-width: 580px; color: var(--muted);
+      font-size: 13px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; text-align: left;
+    }
+    .scan-form { display: flex; gap: 10px; margin: 0 auto 12px; max-width: 580px; }
+    .scan-form input { min-width: 0; flex: 1; height: 58px; padding: 0 18px; border: 2px solid #b7cfe2; border-radius: 15px; color: var(--navy); background: white; font-size: 20px; user-select: text; }
     .scan-form button { min-width: 140px; }
-    .scan-error { min-height: 23px; margin-bottom: 12px; color: var(--danger); font-weight: 750; }
+    .scan-error { min-height: 23px; margin-bottom: 10px; color: var(--danger); font-weight: 750; }
     .hidden { display: none !important; }
     .offline {
-      position: fixed; z-index: 30; left: 50%; bottom: 12px; transform: translateX(-50%);
+      position: absolute; z-index: 30; left: 50%; bottom: 12px; transform: translateX(-50%);
       padding: 9px 15px; border-radius: 99px; color: white; background: var(--danger); font-size: 13px; font-weight: 800;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
@@ -262,15 +436,56 @@
     @keyframes whiteReveal { to { bottom: 0; } }
     @keyframes routeFlow { to { background-position: 60px 0; } }
     @keyframes routeFlight {
-      0% { left: 7%; opacity: 0; transform: translate(-50%,-50%) rotate(90deg) scale(.45); }
-      8% { opacity: 1; transform: translate(-50%,-50%) rotate(90deg) scale(.72); }
-      68% { left: 86%; opacity: 1; transform: translate(-50%,-54%) rotate(90deg) scale(1); }
-      86% { left: 95%; opacity: 1; transform: translate(-50%,-50%) rotate(90deg) scale(.55); }
-      94%, 100% { left: 95%; opacity: 0; transform: translate(-50%,-50%) rotate(90deg) scale(.28); }
+      /* Центры: старт 8% / финиш 92% — совпадают с .route-dot.start/end */
+      0% { left: 8%; transform: translate(-50%,-50%) rotate(90deg) scale(.55); }
+      22% { left: 8%; transform: translate(-50%,-50%) rotate(90deg) scale(.62); }
+      50% { left: 50%; transform: translate(-50%,-50%) rotate(90deg) scale(1.12); }
+      78% { left: 92%; transform: translate(-50%,-50%) rotate(90deg) scale(.62); }
+      100% { left: 92%; transform: translate(-50%,-50%) rotate(90deg) scale(.55); }
+    }
+    @keyframes planeFade {
+      0% { opacity: 0; }
+      22% { opacity: 1; }
+      78% { opacity: 1; }
+      100% { opacity: 0; }
+    }
+    @keyframes destCardBreath {
+      0%, 100% { box-shadow: 0 6px 16px rgba(20, 58, 92, .07), inset 0 1px 0 rgba(255,255,255,.9); }
+      50% { box-shadow: 0 10px 22px rgba(20, 58, 92, .12), inset 0 1px 0 rgba(255,255,255,.95); }
+    }
+    @keyframes destOrb {
+      0%, 100% { transform: translate(0, 0) scale(1); opacity: .9; }
+      50% { transform: translate(-10px, 8px) scale(1.12); opacity: 1; }
+    }
+    @keyframes destRailGlow {
+      0%, 100% { opacity: .75; filter: brightness(1); }
+      50% { opacity: 1; filter: brightness(1.15); }
+    }
+    @keyframes destShine {
+      0%, 55% { transform: translateX(-40%) skewX(-16deg); opacity: 0; }
+      62% { opacity: .85; }
+      78% { transform: translateX(280%) skewX(-16deg); opacity: .35; }
+      100% { transform: translateX(280%) skewX(-16deg); opacity: 0; }
+    }
+    @keyframes destIconFloat {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-3px); }
+    }
+    @keyframes destIconRing {
+      0%, 100% { transform: scale(1); opacity: .35; }
+      50% { transform: scale(1.08); opacity: .7; }
+    }
+    @keyframes destArrowNudge {
+      0%, 100% { transform: translateX(0); opacity: .75; }
+      50% { transform: translateX(4px); opacity: 1; }
+    }
+    @keyframes scanLine {
+      0%, 100% { transform: translateY(-48px); opacity: .35; }
+      50% { transform: translateY(48px); opacity: 1; }
     }
     @media (max-width: 950px) {
       header { padding: 0 16px; }
-      .brand { min-width: 190px; }
+      .brand { min-width: 220px; }
       .brand span { display: none; }
       .language { min-width: 65px; padding: 0 8px; }
       main { grid-template-columns: 330px 1fr; }
@@ -293,11 +508,13 @@
     }
     @media (prefers-reduced-motion: reduce) {
       *, *::before, *::after { animation: none !important; transition-duration: .001ms !important; }
-      .plane, .attract-plane { display: none !important; }
+      .plane-mover, .attract-plane { display: none !important; }
     }
   </style>
 </head>
 <body>
+  <div class="kiosk-stage" id="kioskStage">
+    <div class="kiosk-badge" aria-hidden="true">10.1″ · 1280×800</div>
   <div id="attractScreen" class="attract" role="button" tabindex="0" aria-label="Touch the screen to begin" data-i18n-aria="touchToStart">
     <img class="attract-bg" src="assets/kazan-sky-clear.png" alt="">
     <div class="attract-shade"></div>
@@ -336,7 +553,9 @@
           <div class="welcome-art">
             <div class="route-art" aria-hidden="true">
               <div class="route-line"></div><span class="route-dot start"></span><span class="route-dot end"></span>
-              <img class="plane" src="assets/realistic-airliner-balanced.png" alt="">
+              <div class="plane-mover">
+                <img class="plane" src="assets/realistic-airliner-clean.png" alt="">
+              </div>
             </div>
             <div class="art-copy"><strong data-i18n="artTitle">From here to your destination</strong><span data-i18n="artLead">The robot builds a safe route and avoids obstacles along the way.</span></div>
           </div>
@@ -360,6 +579,15 @@
           <div class="action-row">
             <button class="secondary" id="detailsBack" data-i18n="back">Back</button>
             <button class="primary" id="escortButton" data-i18n="escort">Escort me</button>
+          </div>
+        </div>
+        <div id="placesPanel" class="panel hidden">
+          <span class="eyebrow" data-i18n="placesEyebrow">Places</span>
+          <h1 data-i18n="placesTitle">Places in the airport</h1>
+          <p class="lead" data-i18n="placesLead">Choose restaurants, shops, restrooms and more.</p>
+          <div id="placesList" class="places-list" role="list"></div>
+          <div class="action-row">
+            <button class="secondary" id="placesBack" data-i18n="back">Back</button>
           </div>
         </div>
         <div id="ticketPanel" class="panel hidden" tabindex="-1">
@@ -403,9 +631,14 @@
 
   <div id="scanModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="scanTitle">
     <div class="scan-dialog">
-      <div class="scan-visual"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M3 5V3h4M17 3h4v4M21 17v4h-4M7 21H3v-4M7 8v8M10 8v8M14 8v8M17 8v8"/></svg></div>
+      <div id="scanCamera" class="scan-camera" aria-hidden="true">
+        <video id="scanVideo" playsinline muted autoplay></video>
+        <div class="scan-camera-frame"></div>
+      </div>
+      <p id="scanCameraStatus" class="scan-camera-status" data-i18n="cameraStarting">Starting camera…</p>
       <h2 id="scanTitle" data-i18n="scanTitle">Scan your ticket</h2>
-      <p data-i18n="scanLead">Hold the barcode in front of the scanner. Flight information will appear automatically.</p>
+      <p data-i18n="scanLead">Point the barcode at the camera, or type the code below.</p>
+      <p class="scan-manual-label" data-i18n="manualEntry">Manual entry</p>
       <form id="scanForm" class="scan-form">
         <input id="ticketCode" type="text" inputmode="text" autocomplete="off" aria-label="Ticket barcode" data-i18n-aria="ticketBarcode">
         <button class="primary" type="submit" data-i18n="checkTicket">Check</button>
@@ -415,16 +648,23 @@
     </div>
   </div>
   <div id="offline" class="offline hidden" data-i18n="offline">No connection to the robot</div>
+  </div>
 
   <script>
     const ICONS = {
       "check-in": '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M7 9h5M7 13h3M16 8v8M14 12h4"/></svg>',
       gates: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 21V4h12v17M16 9h4v12M8 8h4M8 12h4M8 16h4"/></svg>',
       baggage: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="7" width="16" height="13" rx="2"/><path d="M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2M8 20v1M16 20v1"/></svg>',
+      places: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s7-5.2 7-11a7 7 0 1 0-14 0c0 5.8 7 11 7 11Z"/><circle cx="12" cy="10" r="2.5"/></svg>',
       toilet: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="7" cy="4" r="2"/><circle cx="17" cy="4" r="2"/><path d="M4 9h6l-1 6v6H5v-6L4 9ZM14 9h6l1 6h-3v6h-2v-6h-3l1-6Z"/></svg>',
+      restaurants: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 3v8a2 2 0 0 0 2 2h1v8M7 3v7M9 3v7M16 3v18M16 8h4a2 2 0 0 0 0-4h-4"/></svg>',
+      souvenirs: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9h12l-1 11H7L6 9Z"/><path d="M9 9V7a3 3 0 0 1 6 0v2M12 13v4"/></svg>',
+      cafe: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 9h11v7a4 4 0 0 1-4 4H9a4 4 0 0 1-4-4V9Z"/><path d="M16 10h2.5a2.5 2.5 0 0 1 0 5H16M8 3s1 1.2 1 2.2S8 7 8 7M12 3s1 1.2 1 2.2S12 7 12 7"/></svg>',
+      pharmacy: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M12 8v8M8 12h8"/></svg>',
       information: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7h.01"/></svg>',
       exit: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 8V3H4v18h10v-5M9 12h12M18 9l3 3-3 3"/></svg>'
     };
+    const PLACE_ITEMS = ["restaurants", "souvenirs", "toilet", "cafe", "pharmacy"];
     const COPY = {
       ru: {
         brand:"Аэропорт",brandSub:"Робот-помощник пассажира",services:"Сервисы аэропорта",where:"Куда вам нужно?",languageLabel:"Выбор языка",ticketBarcode:"Штрихкод билета",touchToStart:"Коснитесь экрана, чтобы начать",
@@ -434,12 +674,16 @@
         back:"Назад",escort:"Проводить меня",ticketFound:"Билет найден",flightInformation:"Информация о вашем рейсе",passenger:"Пассажир",flight:"Рейс",
         departure:"Вылет",checkIn:"Регистрация",gate:"Выход",ticketRouteUnavailable:"Данные рейса найдены, но маршрут сопровождения не настроен.",
         done:"Готово",escortToCheckIn:"Проводить к регистрации",followMe:"Следуйте за мной",routeStarted:"Мы отправляемся",stayClose:"Пожалуйста, держитесь рядом с роботом и не перекрывайте ему путь.",
-        safeRoute:"Безопасный маршрут активен",stopEscort:"Остановить сопровождение",scanTitle:"Отсканируйте билет",scanLead:"Поднесите штрихкод к сканеру. Информация о рейсе появится автоматически.",
+        safeRoute:"Безопасный маршрут активен",stopEscort:"Остановить сопровождение",scanTitle:"Отсканируйте билет",scanLead:"Наведите штрихкод на камеру — или введите код вручную ниже.",
+        cameraStarting:"Включаем камеру…",cameraScanning:"Наведите штрихкод на камеру",cameraUnavailable:"Камера недоступна — введите код вручную",cameraNoDecoder:"Камера включена. Если код не считывается, введите его вручную.",manualEntry:"Ручной ввод",
         checkTicket:"Проверить",cancel:"Отмена",offline:"Нет связи с роботом",notFound:"Билет не найден. Проверьте штрихкод или обратитесь к сотруднику.",
         databaseUnavailable:"Сервис проверки билетов временно недоступен.",invalidTicket:"Этот билет сейчас недействителен.",startFailed:"Не удалось построить безопасный маршрут.",stopFailed:"Не удалось остановить робота. Не отходите и позовите сотрудника.",
         arrived:"Мы прибыли",arrivedLead:"Вы на месте. Хорошего путешествия!",routeStopped:"Маршрут остановлен",routeStoppedLead:"Движение было прервано. Выберите место ещё раз или обратитесь к сотруднику.",noDescription:"Точное расположение уточните на стойке информации.",
-        kinds:{"check-in":"Регистрация","gates":"Выходы на посадку","baggage":"Выдача багажа","toilet":"Туалет","information":"Стойка информации","exit":"Выход"},
-        kindHints:{"check-in":"Стойки и оформление","gates":"Зоны вылета","baggage":"Зал прилёта","toilet":"Ближайший","information":"Помощь пассажирам","exit":"К транспорту"}
+        placesEyebrow:"Места",placesTitle:"Места в аэропорту",placesLead:"Рестораны, сувениры, туалет и другие точки — выберите нужное.",
+        kinds:{"check-in":"Регистрация","gates":"Выходы на посадку","baggage":"Выдача багажа","places":"Места","information":"Стойка информации","exit":"Выход"},
+        kindHints:{"check-in":"Стойки и оформление","gates":"Зоны вылета","baggage":"Зал прилёта","places":"Рестораны, сувениры, туалет…","information":"Помощь пассажирам","exit":"К транспорту"},
+        placeNames:{"restaurants":"Рестораны","souvenirs":"Сувениры","toilet":"Туалет","cafe":"Кафе","pharmacy":"Аптека"},
+        placeHints:{"restaurants":"Фуд-корты и заведения","souvenirs":"Магазины подарков","toilet":"Санузлы поблизости","cafe":"Кофе и лёгкие перекусы","pharmacy":"Лекарства и гигиена"}
       },
       en: {
         brand:"Airport",brandSub:"Passenger assistance robot",services:"Airport services",where:"Where do you need to go?",languageLabel:"Language selection",ticketBarcode:"Ticket barcode",touchToStart:"Touch the screen to begin",
@@ -449,12 +693,16 @@
         back:"Back",escort:"Escort me",ticketFound:"Ticket found",flightInformation:"Your flight information",passenger:"Passenger",flight:"Flight",
         departure:"Departure",checkIn:"Check-in",gate:"Gate",ticketRouteUnavailable:"Flight data is available, but the escort route is not configured.",
         done:"Done",escortToCheckIn:"Escort to check-in",followMe:"Follow me",routeStarted:"We’re on our way",stayClose:"Please stay close to the robot and keep the path clear.",
-        safeRoute:"Safe route is active",stopEscort:"Stop escort",scanTitle:"Scan your ticket",scanLead:"Hold the barcode in front of the scanner. Flight information will appear automatically.",
+        safeRoute:"Safe route is active",stopEscort:"Stop escort",scanTitle:"Scan your ticket",scanLead:"Point the barcode at the camera — or type the code below.",
+        cameraStarting:"Starting camera…",cameraScanning:"Point the barcode at the camera",cameraUnavailable:"Camera unavailable — enter the code manually",cameraNoDecoder:"Camera is on. If it does not read the code, type it manually.",manualEntry:"Manual entry",
         checkTicket:"Check",cancel:"Cancel",offline:"No connection to the robot",notFound:"Ticket not found. Check the barcode or ask an airport employee.",
         databaseUnavailable:"Ticket checking is temporarily unavailable.",invalidTicket:"This ticket is not currently active.",startFailed:"A safe route could not be built.",stopFailed:"The robot could not be stopped. Stay here and call an airport employee.",
         arrived:"We have arrived",arrivedLead:"You are at your destination. Have a good journey!",routeStopped:"Route stopped",routeStoppedLead:"The journey was interrupted. Choose the destination again or ask an airport employee.",noDescription:"Please ask at the information desk for the exact location.",
-        kinds:{"check-in":"Check-in","gates":"Boarding gates","baggage":"Baggage claim","toilet":"Restrooms","information":"Information desk","exit":"Exit"},
-        kindHints:{"check-in":"Desks and assistance","gates":"Departure zones","baggage":"Arrivals hall","toilet":"Nearest facility","information":"Passenger help","exit":"Ground transport"}
+        placesEyebrow:"Places",placesTitle:"Places in the airport",placesLead:"Restaurants, souvenirs, restrooms and more — pick what you need.",
+        kinds:{"check-in":"Check-in","gates":"Boarding gates","baggage":"Baggage claim","places":"Places","information":"Information desk","exit":"Exit"},
+        kindHints:{"check-in":"Desks and assistance","gates":"Departure zones","baggage":"Arrivals hall","places":"Restaurants, shops, restrooms…","information":"Passenger help","exit":"Ground transport"},
+        placeNames:{"restaurants":"Restaurants","souvenirs":"Souvenirs","toilet":"Restrooms","cafe":"Café","pharmacy":"Pharmacy"},
+        placeHints:{"restaurants":"Food courts and dining","souvenirs":"Gift shops","toilet":"Nearby facilities","cafe":"Coffee and light snacks","pharmacy":"Medicine and essentials"}
       },
       zh: {
         brand:"机场向导",brandSub:"旅客服务机器人",services:"机场服务",where:"您要去哪里？",languageLabel:"语言选择",ticketBarcode:"机票条码",touchToStart:"触摸屏幕开始",
@@ -464,12 +712,16 @@
         back:"返回",escort:"带我去",ticketFound:"已找到机票",flightInformation:"您的航班信息",passenger:"旅客",flight:"航班",
         departure:"起飞时间",checkIn:"值机柜台",gate:"登机口",ticketRouteUnavailable:"已找到航班信息，但引导路线尚未配置。",
         done:"完成",escortToCheckIn:"带我去值机",followMe:"请跟我来",routeStarted:"我们出发了",stayClose:"请跟紧机器人，并保持路线畅通。",
-        safeRoute:"安全路线已启用",stopEscort:"停止引导",scanTitle:"扫描您的机票",scanLead:"请将条码对准扫描器，航班信息会自动显示。",
+        safeRoute:"安全路线已启用",stopEscort:"停止引导",scanTitle:"扫描您的机票",scanLead:"将条码对准摄像头，或在下方手动输入代码。",
+        cameraStarting:"正在启动摄像头…",cameraScanning:"请将条码对准摄像头",cameraUnavailable:"无法使用摄像头 — 请手动输入代码",cameraNoDecoder:"摄像头已开启。如无法识别，请手动输入。",manualEntry:"手动输入",
         checkTicket:"查询",cancel:"取消",offline:"无法连接机器人",notFound:"未找到机票，请检查条码或咨询机场工作人员。",
         databaseUnavailable:"机票查询服务暂时不可用。",invalidTicket:"此机票当前无效。",startFailed:"无法规划安全路线。",stopFailed:"机器人无法停止。请留在原地并呼叫机场工作人员。",
         arrived:"我们到了",arrivedLead:"您已到达目的地，祝您旅途愉快！",routeStopped:"路线已停止",routeStoppedLead:"行程已中断。请重新选择目的地或咨询机场工作人员。",noDescription:"确切位置请咨询问讯处。",
-        kinds:{"check-in":"值机","gates":"登机口","baggage":"行李提取","toilet":"洗手间","information":"问讯处","exit":"出口"},
-        kindHints:{"check-in":"柜台和服务","gates":"出发区域","baggage":"到达大厅","toilet":"最近设施","information":"旅客帮助","exit":"地面交通"}
+        placesEyebrow:"场所",placesTitle:"机场内场所",placesLead:"餐厅、纪念品、洗手间等 — 请选择您需要的。",
+        kinds:{"check-in":"值机","gates":"登机口","baggage":"行李提取","places":"场所","information":"问讯处","exit":"出口"},
+        kindHints:{"check-in":"柜台和服务","gates":"出发区域","baggage":"到达大厅","places":"餐厅、商店、洗手间…","information":"旅客帮助","exit":"地面交通"},
+        placeNames:{"restaurants":"餐厅","souvenirs":"纪念品","toilet":"洗手间","cafe":"咖啡厅","pharmacy":"药店"},
+        placeHints:{"restaurants":"美食广场与餐饮","souvenirs":"礼品店","toilet":"附近设施","cafe":"咖啡与轻食","pharmacy":"药品与日用品"}
       },
       tt: {
         brand:"Аэропорт",brandSub:"Юлчыларга ярдәмче робот",services:"Аэропорт хезмәтләре",where:"Сезгә кая барырга?",languageLabel:"Тел сайлау",ticketBarcode:"Билет штрихкоды",touchToStart:"Башлау өчен экранга кагылыгыз",
@@ -479,19 +731,24 @@
         back:"Артка",escort:"Мине озат",ticketFound:"Билет табылды",flightInformation:"Сезнең рейс турында мәгълүмат",passenger:"Юлчы",flight:"Рейс",
         departure:"Очып китү",checkIn:"Теркәлү",gate:"Утыру чыгуы",ticketRouteUnavailable:"Рейс мәгълүматы табылды, ләкин озату маршруты көйләнмәгән.",
         done:"Әзер",escortToCheckIn:"Теркәлүгә озат",followMe:"Минем арттан барыгыз",routeStarted:"Без юлга чыктык",stayClose:"Зинһар, робот янында булыгыз һәм аның юлын япмагыз.",
-        safeRoute:"Куркынычсыз маршрут актив",stopEscort:"Озатуны туктату",scanTitle:"Билетны сканерлагыз",scanLead:"Штрихкодны сканерга якын китерегез. Рейс мәгълүматы автомат рәвештә күренәчәк.",
+        safeRoute:"Куркынычсыз маршрут актив",stopEscort:"Озатуны туктату",scanTitle:"Билетны сканерлагыз",scanLead:"Штрихкодны камерага якын китерегез — яки кодны кулдан языгыз.",
+        cameraStarting:"Камераны кабызабыз…",cameraScanning:"Штрихкодны камерага якын китерегез",cameraUnavailable:"Камера эшләми — кодны кулдан языгыз",cameraNoDecoder:"Камера кабык. Укылмаса, кодны кулдан языгыз.",manualEntry:"Кулдан кертү",
         checkTicket:"Тикшерү",cancel:"Баш тарту",offline:"Робот белән элемтә юк",notFound:"Билет табылмады. Штрихкодны тикшерегез яки хезмәткәргә мөрәҗәгать итегез.",
         databaseUnavailable:"Билет тикшерү хезмәте вакытлыча эшләми.",invalidTicket:"Бу билет хәзер гамәлдә түгел.",startFailed:"Куркынычсыз маршрут төзеп булмады.",stopFailed:"Роботны туктатып булмады. Урыныгызда калыгыз һәм хезмәткәрне чакырыгыз.",
         arrived:"Без килеп җиттек",arrivedLead:"Сез кирәкле урында. Хәерле юл!",routeStopped:"Маршрут туктатылды",routeStoppedLead:"Хәрәкәт өзелде. Урынны яңадан сайлагыз яки хезмәткәргә мөрәҗәгать итегез.",noDescription:"Төгәл урынны мәгълүмат өстәлендә сорагыз.",
-        kinds:{"check-in":"Теркәлү","gates":"Утыру чыгу юллары","baggage":"Багаж алу","toilet":"Бәдрәф","information":"Мәгълүмат өстәле","exit":"Чыгу"},
-        kindHints:{"check-in":"Өстәлләр һәм ярдәм","gates":"Очып китү зоналары","baggage":"Килү залы","toilet":"Иң якыны","information":"Юлчыларга ярдәм","exit":"Транспортка"}
+        placesEyebrow:"Урыннар",placesTitle:"Аэропорттагы урыннар",placesLead:"Рестораннар, сувенирлар, бәдрәф һәм башкалар — кирәклесен сайлагыз.",
+        kinds:{"check-in":"Теркәлү","gates":"Утыру чыгу юллары","baggage":"Багаж алу","places":"Урыннар","information":"Мәгълүмат өстәле","exit":"Чыгу"},
+        kindHints:{"check-in":"Өстәлләр һәм ярдәм","gates":"Очып китү зоналары","baggage":"Килү залы","places":"Рестораннар, кибетләр, бәдрәф…","information":"Юлчыларга ярдәм","exit":"Транспортка"},
+        placeNames:{"restaurants":"Рестораннар","souvenirs":"Сувенирлар","toilet":"Бәдрәф","cafe":"Кафе","pharmacy":"Аптека"},
+        placeHints:{"restaurants":"Ашау урыннары","souvenirs":"Бүләк кибетләре","toilet":"Якындагы санитар урыннар","cafe":"Кофе һәм җиңел ашамлыклар","pharmacy":"Дарулар һәм кирәк-яраклар"}
       }
     };
 
-    const panels = ["welcomePanel", "detailsPanel", "ticketPanel", "journeyPanel"];
+    const panels = ["welcomePanel", "detailsPanel", "placesPanel", "ticketPanel", "journeyPanel"];
     let lang = localStorage.getItem("airport-language") || "ru";
     let destinations = [];
     let selectedDestination = null;
+    let placesContext = false;
     let ticket = null;
     let activeDestinationId = null;
     let navigationSeen = false;
@@ -500,6 +757,10 @@
     let attractVisible = true;
     let scanReturnFocus = null;
     let idleTimer;
+    let cameraStream = null;
+    let barcodeDetector = null;
+    let scanLoopToken = 0;
+    let ticketLookupInFlight = false;
 
     const $ = id => document.getElementById(id);
     const t = key => COPY[lang][key] || COPY.en[key] || key;
@@ -525,9 +786,16 @@
         button.setAttribute("aria-pressed", String(active));
       });
       renderDestinations();
+      if (!$("placesPanel").classList.contains("hidden")) renderPlacesList();
       if (selectedDestination) renderDetails(selectedDestination);
       if (ticket) renderTicket(ticket);
       renderJourneyText();
+      if ($("scanModal").classList.contains("open") && $("scanCameraStatus")) {
+        if ($("scanCamera").classList.contains("is-unavailable")) $("scanCameraStatus").textContent = t("cameraUnavailable");
+        else if (barcodeDetector) $("scanCameraStatus").textContent = t("cameraScanning");
+        else if (cameraStream) $("scanCameraStatus").textContent = t("cameraNoDecoder");
+        else $("scanCameraStatus").textContent = t("cameraStarting");
+      }
       resetIdle();
     }
 
@@ -535,8 +803,8 @@
       $("destinations").innerHTML = destinations.map(destination => {
         const label = localized(destination.labels, t("kinds")[destination.kind] || destination.kind);
         const meta = t("kindHints")[destination.kind] || "";
-        const active = selectedDestination?.id === destination.id ? " active" : "";
-        return `<button class="destination${active}" data-id="${escapeHtml(destination.id)}"><span class="destination-icon">${ICONS[destination.kind] || ICONS.information}</span><span class="destination-copy"><span class="destination-label">${escapeHtml(label)}</span><span class="destination-meta">${escapeHtml(meta)}</span></span><span class="destination-arrow" aria-hidden="true">›</span></button>`;
+        const active = selectedDestination?.id === destination.id || (placesContext && destination.kind === "places") ? " active" : "";
+        return `<button class="destination${active}" data-id="${escapeHtml(destination.id)}" data-kind="${escapeHtml(destination.kind)}"><span class="destination-shine" aria-hidden="true"></span><span class="destination-icon">${ICONS[destination.kind] || ICONS.information}</span><span class="destination-copy"><span class="destination-label">${escapeHtml(label)}</span><span class="destination-meta">${escapeHtml(meta)}</span></span><span class="destination-arrow" aria-hidden="true">›</span></button>`;
       }).join("");
       document.querySelectorAll(".destination").forEach(button => button.addEventListener("click", () => selectDestination(button.dataset.id)));
     }
@@ -545,10 +813,59 @@
       return String(value ?? "").replace(/[&<>"']/g, character => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[character]));
     }
 
+    function renderPlacesList() {
+      const names = t("placeNames") || {};
+      const hints = t("placeHints") || {};
+      $("placesList").innerHTML = PLACE_ITEMS.map(key => {
+        const title = names[key] || key;
+        const hint = hints[key] || "";
+        return `<button type="button" class="place-item" data-place="${escapeHtml(key)}" role="listitem"><span class="place-item-row"><span class="place-item-icon">${ICONS[key] || ICONS.places}</span><span class="place-item-copy"><strong>${escapeHtml(title)}</strong><span class="place-hint">${escapeHtml(hint)}</span></span></span></button>`;
+      }).join("");
+      document.querySelectorAll(".place-item").forEach(button => {
+        button.addEventListener("click", () => selectPlace(button.dataset.place));
+      });
+    }
+
+    function openPlacesPanel() {
+      placesContext = true;
+      clearTicketData();
+      selectedDestination = destinations.find(item => item.kind === "places") || selectedDestination;
+      renderDestinations();
+      renderPlacesList();
+      showPanel("placesPanel");
+      resetIdle();
+    }
+
+    function selectPlace(placeKey) {
+      const names = t("placeNames") || {};
+      const hints = t("placeHints") || {};
+      const title = names[placeKey] || placeKey;
+      const hint = hints[placeKey] || t("noDescription");
+      placesContext = true;
+      selectedDestination = {
+        id: `place-${placeKey}`,
+        kind: placeKey,
+        enabled: false,
+        zone: "",
+        labels: {[lang]: title, en: (COPY.en.placeNames || {})[placeKey] || title},
+        descriptions: {[lang]: hint, en: (COPY.en.placeHints || {})[placeKey] || hint},
+      };
+      renderDestinations();
+      renderDetails(selectedDestination);
+      showPanel("detailsPanel");
+      resetIdle();
+    }
+
     function selectDestination(id) {
       selectedDestination = destinations.find(item => item.id === id) || null;
       if (!selectedDestination) return;
       clearTicketData();
+      if (selectedDestination.kind === "places" || selectedDestination.kind === "toilet") {
+        // toilet legacy → same places catalog
+        openPlacesPanel();
+        return;
+      }
+      placesContext = false;
       renderDestinations();
       renderDetails(selectedDestination);
       showPanel("detailsPanel");
@@ -567,17 +884,106 @@
       $("routeNotice").classList.toggle("hidden", destination.enabled);
     }
 
+    function normalizeTicketCode(raw) {
+      const cleaned = String(raw ?? "").replace(/\s+/g, "").trim();
+      if (/^[A-Za-z0-9_-]{1,128}$/.test(cleaned)) return cleaned;
+      const match = cleaned.match(/[A-Za-z0-9_-]{4,128}/);
+      return match ? match[0] : "";
+    }
+
+    async function startCameraScan() {
+      const camera = $("scanCamera");
+      const video = $("scanVideo");
+      const status = $("scanCameraStatus");
+      camera.classList.remove("is-unavailable", "hidden");
+      status.textContent = t("cameraStarting");
+      barcodeDetector = null;
+      try {
+        if (!navigator.mediaDevices?.getUserMedia) throw new Error("no_media");
+        cameraStream = await navigator.mediaDevices.getUserMedia({
+          audio: false,
+          video: {
+            facingMode: { ideal: "environment" },
+            width: { ideal: 1280 },
+            height: { ideal: 720 }
+          }
+        });
+        video.srcObject = cameraStream;
+        await video.play();
+        if ("BarcodeDetector" in window) {
+          let formats = ["qr_code", "pdf417", "code_128", "code_39", "ean_13", "ean_8", "upc_a", "upc_e", "aztec", "data_matrix"];
+          try {
+            if (typeof BarcodeDetector.getSupportedFormats === "function") {
+              const supported = await BarcodeDetector.getSupportedFormats();
+              if (Array.isArray(supported) && supported.length) {
+                formats = formats.filter(format => supported.includes(format));
+              }
+            }
+          } catch (_) {}
+          barcodeDetector = formats.length ? new BarcodeDetector({ formats }) : new BarcodeDetector();
+          status.textContent = t("cameraScanning");
+          runBarcodeLoop();
+        } else {
+          status.textContent = t("cameraNoDecoder");
+        }
+      } catch (_) {
+        stopCameraTracks();
+        camera.classList.add("is-unavailable");
+        status.textContent = t("cameraUnavailable");
+      }
+    }
+
+    function stopCameraTracks() {
+      if (cameraStream) {
+        cameraStream.getTracks().forEach(track => track.stop());
+        cameraStream = null;
+      }
+      const video = $("scanVideo");
+      if (video) video.srcObject = null;
+    }
+
+    function stopCameraScan() {
+      scanLoopToken += 1;
+      barcodeDetector = null;
+      stopCameraTracks();
+    }
+
+    async function runBarcodeLoop() {
+      const token = ++scanLoopToken;
+      const video = $("scanVideo");
+      while (token === scanLoopToken && $("scanModal").classList.contains("open")) {
+        if (!ticketLookupInFlight && barcodeDetector && video.readyState >= 2) {
+          try {
+            const codes = await barcodeDetector.detect(video);
+            if (codes?.length) {
+              const code = normalizeTicketCode(codes[0].rawValue);
+              if (code) {
+                $("ticketCode").value = code;
+                await lookupTicket(code);
+                return;
+              }
+            }
+          } catch (_) {}
+        }
+        await new Promise(resolve => setTimeout(resolve, 240));
+      }
+    }
+
     function openScan() {
       scanReturnFocus = document.activeElement;
+      ticketLookupInFlight = false;
       $("scanModal").classList.add("open");
       document.querySelector(".shell").inert = true;
       $("scanError").textContent = "";
       $("ticketCode").value = "";
+      startCameraScan();
       setTimeout(() => $("ticketCode").focus(), 80);
       resetIdle();
     }
 
     function closeScan(restoreFocus = true) {
+      stopCameraScan();
+      ticketLookupInFlight = false;
       $("scanModal").classList.remove("open");
       document.querySelector(".shell").inert = false;
       if (restoreFocus && scanReturnFocus && scanReturnFocus.isConnected) scanReturnFocus.focus();
@@ -602,17 +1008,27 @@
     }
 
     async function lookupTicket(code) {
+      const normalized = normalizeTicketCode(code);
       $("scanError").textContent = "";
+      if (!normalized) {
+        $("scanError").textContent = t("notFound");
+        $("ticketCode").focus();
+        return;
+      }
+      if (ticketLookupInFlight) return;
+      ticketLookupInFlight = true;
+      $("ticketCode").value = normalized;
       try {
         const response = await fetch("/api/ticket/lookup", {
           method: "POST", headers: {"Content-Type": "application/json"},
-          body: JSON.stringify({code}), cache: "no-store"
+          body: JSON.stringify({code: normalized}), cache: "no-store"
         });
         const result = await response.json();
         if (!result.ok) {
           const key = result.error === "ticket_database_unavailable" ? "databaseUnavailable" : result.error === "ticket_not_active" ? "invalidTicket" : "notFound";
           $("scanError").textContent = t(key);
           $("ticketCode").select();
+          ticketLookupInFlight = false;
           return;
         }
         ticket = result.ticket;
@@ -625,6 +1041,7 @@
         resetIdle();
       } catch (_) {
         $("scanError").textContent = t("databaseUnavailable");
+        ticketLookupInFlight = false;
       }
     }
 
@@ -715,12 +1132,21 @@
 
     function goHome() {
       selectedDestination = null;
+      placesContext = false;
       clearTicketData();
       activeDestinationId = null;
       cancellationPending = false;
       renderDestinations();
       showPanel("welcomePanel");
       resetIdle();
+    }
+
+    function detailsBack() {
+      if (placesContext) {
+        openPlacesPanel();
+        return;
+      }
+      goHome();
     }
 
     function beginExperience() {
@@ -813,6 +1239,10 @@
       } catch (_) {
         destinations = Object.keys(COPY.en.kinds).map(kind => ({id: kind, kind, enabled: false}));
       }
+      // Если с API пришёл старый kind "toilet" — показываем как каталог «Места»
+      destinations = destinations.map(item => (
+        item.kind === "toilet" ? {...item, kind: "places", id: item.id === "toilet" ? "places" : item.id} : item
+      ));
       renderDestinations();
     }
 
@@ -829,7 +1259,8 @@
     $("scanModal").addEventListener("keydown", trapScanFocus);
     $("scanModal").addEventListener("click", event => { if (event.target === $("scanModal")) closeScan(); });
     $("scanForm").addEventListener("submit", event => { event.preventDefault(); lookupTicket($("ticketCode").value); });
-    $("detailsBack").addEventListener("click", goHome);
+    $("detailsBack").addEventListener("click", detailsBack);
+    $("placesBack").addEventListener("click", goHome);
     $("ticketBack").addEventListener("click", goHome);
     $("escortButton").addEventListener("click", () => startEscort(selectedDestination?.id));
     $("ticketEscort").addEventListener("click", () => startEscort(ticket?.destinationId));

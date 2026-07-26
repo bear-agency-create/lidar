@@ -4,9 +4,12 @@ The visitor interface is served at `/`. The existing map and teleoperation
 console remains available at `/operator`.
 
 The layout is optimized for a 10.1-inch, 1280×800 landscape touchscreen and
-also adapts to portrait orientation. A USB/serial barcode scanner can operate
-as a keyboard: tap **Scan ticket**, scan the barcode, and the scanner's Enter
-key submits it.
+also adapts to portrait orientation.
+
+**Scan ticket** opens a camera preview and tries to read the barcode with the
+browser `BarcodeDetector` API (Chromium/Chrome). You can also type the code
+manually in the same dialog. A USB/HID wedge scanner still works as a
+keyboard: focus the input, scan, and Enter submits.
 
 Ticket lookup and robot escort endpoints accept requests from the robot itself
 only (`127.0.0.1` and `::1` by default). If the kiosk browser runs on a separate
