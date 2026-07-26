@@ -1,0 +1,852 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#071c33">
+  <title>Airport guide</title>
+  <style>
+    :root {
+      --navy: #071c33;
+      --navy-2: #0b2a4a;
+      --blue: #0878e6;
+      --sky: #eaf5ff;
+      --white: #fff;
+      --ink: #10233a;
+      --muted: #61748a;
+      --line: #d7e4ef;
+      --orange: #ffb000;
+      --green: #1c9b68;
+      --danger: #c23b3b;
+      --shadow: 0 16px 44px rgba(6, 35, 65, .13);
+    }
+    * { box-sizing: border-box; }
+    html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; }
+    body {
+      background: #edf5fb;
+      color: var(--ink);
+      font-family: "Arial Nova", Arial, "Noto Sans", sans-serif;
+      -webkit-font-smoothing: antialiased;
+      user-select: none;
+    }
+    .attract {
+      position: fixed; z-index: 100; inset: 0; overflow: hidden;
+      color: white; background: #087fbe; cursor: pointer; isolation: isolate;
+      touch-action: manipulation;
+    }
+    .attract-bg {
+      position: absolute; z-index: -4; inset: -3%;
+      width: 106%; height: 106%; object-fit: cover;
+      animation: skyBreath 12s ease-in-out infinite alternate;
+    }
+    .attract-shade {
+      position: absolute; z-index: -3; inset: 0;
+      background:
+        linear-gradient(180deg, rgba(2,47,91,.18), transparent 48%),
+        linear-gradient(0deg, rgba(0,75,121,.26), transparent 42%);
+    }
+    .attract-cloud {
+      position: absolute; z-index: -1; inset: -3%; width: 106%; height: 106%;
+      object-fit: cover; opacity: 1;
+      transition: transform 1.25s cubic-bezier(.6,0,.25,1), opacity 1s ease;
+    }
+    .attract-content {
+      position: absolute; left: 50%; bottom: 11%; width: min(560px, 76vw);
+      transform: translateX(-50%); text-align: center;
+      transition: opacity .42s ease, transform .65s ease;
+    }
+    .attract-logo {
+      display: block; width: min(410px, 68vw); max-height: 220px; margin: 0 auto 28px;
+      object-fit: contain; filter: drop-shadow(0 8px 25px rgba(0,48,88,.26));
+    }
+    .attract-start {
+      display: inline-flex; align-items: center; gap: 13px; padding: 13px 22px;
+      border: 1px solid rgba(255,255,255,.58); border-radius: 999px;
+      background: rgba(5,66,109,.28); backdrop-filter: blur(10px);
+      font-size: 20px; font-weight: 850; letter-spacing: .01em;
+      box-shadow: 0 12px 32px rgba(0,54,95,.16);
+    }
+    .attract-start::before {
+      content: ""; width: 10px; height: 10px; border-radius: 50%; background: white;
+      box-shadow: 0 0 0 0 rgba(255,255,255,.6); animation: tapPulse 1.8s ease-out infinite;
+    }
+    .attract-plane {
+      position: absolute; z-index: 3; left: calc(50% - 55px); bottom: -135px;
+      width: 110px; height: 125px; object-fit: contain;
+      filter: drop-shadow(0 9px 10px rgba(0,47,84,.26)); opacity: 0;
+    }
+    .attract-wipe {
+      position: absolute; z-index: 8; left: -10%; bottom: -145%; width: 120%; height: 140%;
+      border-radius: 50% 50% 0 0 / 18% 18% 0 0; background: #edf5fb;
+    }
+    .attract.departing { pointer-events: none; }
+    .attract.departing .attract-content { opacity: 0; transform: translate(-50%, -20px); }
+    .attract.departing .attract-cloud.left { transform: translateX(-105%); opacity: .25; }
+    .attract.departing .attract-cloud.right { transform: translateX(105%); opacity: .25; }
+    .attract.departing .attract-plane { animation: planeForward 1.35s cubic-bezier(.2,.72,.35,1) forwards; }
+    .attract.departing .attract-wipe { animation: whiteReveal .85s cubic-bezier(.65,0,.2,1) .9s forwards; }
+    button, input { font: inherit; }
+    button { -webkit-tap-highlight-color: transparent; }
+    button:focus-visible, input:focus-visible { outline: 4px solid rgba(255, 176, 0, .62); outline-offset: 2px; }
+    .shell { height: 100%; display: grid; grid-template-rows: 82px 1fr; }
+    header {
+      z-index: 5;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 28px;
+      color: white;
+      background: var(--navy);
+      box-shadow: 0 4px 22px rgba(3, 20, 38, .24);
+    }
+    .brand { display: flex; align-items: center; min-width: 245px; }
+    .brand img { width: 176px; height: 62px; object-fit: contain; object-position: left center; }
+    .languages { display: flex; gap: 7px; }
+    .language {
+      min-width: 82px; height: 48px; padding: 0 13px;
+      border: 1px solid rgba(255,255,255,.22); border-radius: 13px;
+      color: #dbeaff; background: rgba(255,255,255,.06); font-weight: 700;
+    }
+    .language.active { color: var(--navy); background: white; border-color: white; }
+    main { min-height: 0; display: grid; grid-template-columns: 405px 1fr; }
+    aside {
+      min-height: 0; padding: 22px 20px 20px 24px;
+      background: #f7fbfe; border-right: 1px solid var(--line);
+    }
+    .aside-title { margin: 0 0 6px; color: var(--muted); font-size: 13px; font-weight: 800; letter-spacing: .11em; text-transform: uppercase; }
+    .aside-help { margin: 0 0 17px; font-size: 19px; font-weight: 750; }
+    .destinations { height: calc(100% - 65px); display: grid; grid-template-columns: 1fr 1fr; grid-auto-rows: 1fr; gap: 11px; }
+    .destination {
+      position: relative; min-height: 112px; padding: 13px 11px;
+      display: flex; flex-direction: column; align-items: flex-start; justify-content: space-between;
+      border: 1px solid var(--line); border-radius: 18px; color: var(--ink); background: white;
+      box-shadow: 0 5px 14px rgba(20, 58, 92, .05); text-align: left;
+      transition: transform .15s ease, border-color .15s ease, background .15s ease;
+      overflow: hidden;
+    }
+    .destination::before {
+      content: ""; position: absolute; width: 110px; height: 110px; right: -42px; top: -45px;
+      border-radius: 50%; background: linear-gradient(145deg, rgba(8,120,230,.12), rgba(60,190,214,.03));
+    }
+    .destination::after {
+      content: ""; position: absolute; left: 12px; right: 12px; bottom: 44px; height: 1px;
+      background: linear-gradient(90deg, var(--line), transparent);
+    }
+    .destination:active { transform: scale(.98); }
+    .destination.active { color: white; background: var(--blue); border-color: var(--blue); box-shadow: 0 10px 24px rgba(8,120,230,.24); }
+    .destination-icon {
+      position: relative; width: 46px; height: 46px; display: grid; place-items: center;
+      border-radius: 12px; color: var(--blue); background: var(--sky);
+    }
+    .destination.active .destination-icon { color: white; background: rgba(255,255,255,.18); }
+    .destination-icon svg { width: 26px; height: 26px; }
+    .destination-copy { position: relative; z-index: 1; width: 100%; }
+    .destination-label { display: block; max-width: 100%; font-size: 16px; line-height: 1.12; font-weight: 850; }
+    .destination-meta { display: block; margin-top: 5px; padding-right: 22px; color: var(--muted); font-size: 11px; line-height: 1.2; font-weight: 650; }
+    .destination-arrow { position: absolute; right: 12px; bottom: 14px; color: var(--blue); font-size: 21px; font-weight: 500; }
+    .destination.active .destination-meta, .destination.active .destination-arrow { color: rgba(255,255,255,.78); }
+    .content { position: relative; min-width: 0; min-height: 0; padding: 26px 30px 24px; overflow: hidden; }
+    .content::before {
+      content: ""; position: absolute; width: 430px; height: 430px; right: -210px; top: -220px;
+      border: 68px solid rgba(8,120,230,.07); border-radius: 50%; pointer-events: none;
+    }
+    .panel { position: relative; height: 100%; display: flex; flex-direction: column; }
+    .eyebrow { color: var(--blue); font-size: 13px; font-weight: 900; letter-spacing: .13em; text-transform: uppercase; }
+    h1 { max-width: 720px; margin: 12px 0 10px; color: var(--navy); font-size: clamp(35px, 4vw, 54px); line-height: 1.02; letter-spacing: -.035em; }
+    .lead { max-width: 690px; margin: 0; color: var(--muted); font-size: 20px; line-height: 1.42; }
+    .welcome-art {
+      position: relative; overflow: hidden;
+      flex: 1; min-height: 120px; margin: 18px 0 15px; display: flex; align-items: center; gap: 26px;
+      padding: 20px 26px; border: 1px solid #cadfee; border-radius: 24px;
+      color: white; background:
+        linear-gradient(90deg, rgba(3,30,55,.9), rgba(5,65,105,.64)),
+        url("assets/kazan-sky-attract.png") center 54% / cover;
+      box-shadow: var(--shadow);
+    }
+    .route-art { position: relative; flex: 1; min-width: 250px; height: 100%; overflow: hidden; }
+    .route-line {
+      position: absolute; left: 7%; right: 8%; top: 49%; height: 5px;
+      border-radius: 8px; background: repeating-linear-gradient(90deg, #76d2ff 0 18px, transparent 18px 30px);
+      background-size: 60px 5px; animation: routeFlow 1.8s linear infinite;
+    }
+    .route-dot { position: absolute; top: calc(49% - 13px); width: 30px; height: 30px; border: 7px solid white; border-radius: 50%; background: var(--blue); }
+    .route-dot.start { left: 4%; }
+    .route-dot.end { right: 5%; background: var(--orange); border-color: var(--orange); box-shadow: 0 0 0 8px rgba(255,176,0,.18); }
+    .plane {
+      position: absolute; z-index: 2; left: 7%; top: 49%; width: 72px; height: 72px;
+      object-fit: contain; filter: drop-shadow(0 7px 8px rgba(0,22,43,.48));
+      animation: routeFlight 5.2s cubic-bezier(.36,.05,.2,1) infinite;
+    }
+    .art-copy { position: relative; z-index: 2; width: 250px; }
+    .art-copy strong { display: block; font-size: 25px; line-height: 1.12; }
+    .art-copy span { display: block; margin-top: 9px; color: #c9dff1; font-size: 15px; line-height: 1.35; }
+    .action-row { display: flex; gap: 13px; }
+    .primary, .secondary, .danger {
+      min-height: 64px; padding: 0 25px; display: inline-flex; align-items: center; justify-content: center; gap: 11px;
+      border-radius: 17px; font-size: 18px; font-weight: 850;
+    }
+    .primary { border: 0; color: white; background: var(--blue); box-shadow: 0 10px 24px rgba(8,120,230,.22); }
+    .secondary { border: 2px solid #b9d3e8; color: var(--navy); background: white; }
+    .danger { border: 2px solid #f0c1c1; color: var(--danger); background: #fff9f9; }
+    .action-row button { flex: 1; }
+    .button-icon { width: 24px; height: 24px; }
+    .details-card {
+      flex: 1; min-height: 210px; margin: 18px 0; padding: 26px;
+      display: grid; grid-template-columns: 84px 1fr; align-content: center; gap: 22px;
+      border: 1px solid #cadeee; border-radius: 24px; background: white; box-shadow: var(--shadow);
+    }
+    .detail-icon { width: 84px; height: 84px; display: grid; place-items: center; border-radius: 24px; color: var(--blue); background: var(--sky); }
+    .detail-icon svg { width: 47px; height: 47px; }
+    .zone { display: inline-block; margin-bottom: 8px; padding: 6px 10px; border-radius: 8px; color: #07589f; background: #e9f5ff; font-size: 13px; font-weight: 850; }
+    .detail-copy h2 { margin: 0 0 9px; font-size: 28px; color: var(--navy); }
+    .detail-copy p { margin: 0; color: var(--muted); font-size: 18px; line-height: 1.4; }
+    .notice { margin-top: 13px; color: #9b6100; font-size: 14px; font-weight: 700; }
+    .ticket-card {
+      flex: 1; margin: 17px 0; display: grid; grid-template-columns: 1.25fr .75fr;
+      border: 1px solid #cbddeb; border-radius: 24px; overflow: hidden; background: white; box-shadow: var(--shadow);
+    }
+    .ticket-main { padding: 25px 28px; }
+    .passenger { margin-bottom: 21px; color: var(--muted); font-size: 15px; }
+    .passenger strong { display: block; margin-top: 4px; color: var(--navy); font-size: 24px; }
+    .flight-line { display: flex; align-items: flex-end; gap: 22px; }
+    .flight-number strong { display: block; font-size: 40px; color: var(--navy); letter-spacing: -.03em; }
+    .ticket-label { color: var(--muted); font-size: 12px; font-weight: 800; letter-spacing: .09em; text-transform: uppercase; }
+    .ticket-value { display: block; margin-top: 5px; color: var(--navy); font-size: 20px; font-weight: 800; }
+    .ticket-side { padding: 25px; display: grid; grid-template-columns: 1fr 1fr; align-content: center; gap: 12px; color: white; background: var(--navy-2); }
+    .ticket-stat { padding: 14px; border: 1px solid rgba(255,255,255,.16); border-radius: 14px; background: rgba(255,255,255,.07); }
+    .ticket-side .ticket-label { color: #a9c7e0; }
+    .ticket-side .ticket-value { color: white; font-size: 24px; }
+    .journey { flex: 1; display: grid; place-items: center; text-align: center; }
+    .journey-ring {
+      width: 146px; height: 146px; margin: 0 auto 20px; display: grid; place-items: center;
+      border: 5px solid #cce7fb; border-top-color: var(--blue); border-radius: 50%;
+      animation: spin 2.2s linear infinite;
+    }
+    .journey-ring svg { width: 62px; height: 62px; color: var(--blue); animation: counterspin 2.2s linear infinite; }
+    .journey h1 { margin-inline: auto; }
+    .journey .lead { margin-inline: auto; }
+    .status-pill { margin: 18px auto 0; padding: 10px 15px; display: inline-flex; align-items: center; gap: 9px; border-radius: 99px; color: #08724d; background: #e4f7ef; font-weight: 800; }
+    .journey-error { margin: 14px auto 0; color: var(--danger); font-size: 15px; font-weight: 800; }
+    .pulse { width: 9px; height: 9px; border-radius: 50%; background: var(--green); box-shadow: 0 0 0 6px rgba(28,155,104,.13); }
+    .modal {
+      position: fixed; z-index: 20; inset: 0; display: none; place-items: center;
+      padding: 28px; background: rgba(2, 16, 31, .78); backdrop-filter: blur(6px);
+    }
+    .modal.open { display: grid; }
+    .scan-dialog { width: min(720px, 100%); padding: 31px; border-radius: 27px; background: white; box-shadow: 0 28px 80px rgba(0,0,0,.3); text-align: center; }
+    .scan-visual {
+      width: 116px; height: 116px; margin: 0 auto 18px; display: grid; place-items: center;
+      border: 3px solid var(--blue); border-radius: 28px; color: var(--blue); background: var(--sky);
+    }
+    .scan-visual svg { width: 62px; height: 62px; }
+    .scan-dialog h2 { margin: 0 0 8px; color: var(--navy); font-size: 31px; }
+    .scan-dialog p { margin: 0 auto 19px; max-width: 520px; color: var(--muted); font-size: 18px; line-height: 1.4; }
+    .scan-form { display: flex; gap: 10px; margin: 0 auto 15px; max-width: 580px; }
+    .scan-form input { min-width: 0; flex: 1; height: 61px; padding: 0 18px; border: 2px solid #b7cfe2; border-radius: 15px; color: var(--navy); background: white; font-size: 20px; user-select: text; }
+    .scan-form button { min-width: 140px; }
+    .scan-error { min-height: 23px; margin-bottom: 12px; color: var(--danger); font-weight: 750; }
+    .hidden { display: none !important; }
+    .offline {
+      position: fixed; z-index: 30; left: 50%; bottom: 12px; transform: translateX(-50%);
+      padding: 9px 15px; border-radius: 99px; color: white; background: var(--danger); font-size: 13px; font-weight: 800;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes counterspin { to { transform: rotate(-360deg); } }
+    @keyframes skyBreath { to { transform: scale(1.035) translateY(-.7%); } }
+    @keyframes tapPulse { 70% { box-shadow: 0 0 0 13px rgba(255,255,255,0); } 100% { box-shadow: 0 0 0 0 rgba(255,255,255,0); } }
+    @keyframes planeForward {
+      0% { opacity: 0; transform: translateY(0) scale(.5); }
+      18% { opacity: 1; }
+      100% { opacity: 0; transform: translateY(-72vh) scale(4.2); }
+    }
+    @keyframes whiteReveal { to { bottom: 0; } }
+    @keyframes routeFlow { to { background-position: 60px 0; } }
+    @keyframes routeFlight {
+      0% { left: 7%; opacity: 0; transform: translate(-50%,-50%) rotate(90deg) scale(.45); }
+      8% { opacity: 1; transform: translate(-50%,-50%) rotate(90deg) scale(.72); }
+      68% { left: 86%; opacity: 1; transform: translate(-50%,-54%) rotate(90deg) scale(1); }
+      86% { left: 95%; opacity: 1; transform: translate(-50%,-50%) rotate(90deg) scale(.55); }
+      94%, 100% { left: 95%; opacity: 0; transform: translate(-50%,-50%) rotate(90deg) scale(.28); }
+    }
+    @media (max-width: 950px) {
+      header { padding: 0 16px; }
+      .brand { min-width: 190px; }
+      .brand span { display: none; }
+      .language { min-width: 65px; padding: 0 8px; }
+      main { grid-template-columns: 330px 1fr; }
+      aside { padding: 17px 14px; }
+      .content { padding: 21px; }
+      .art-copy { display: none; }
+      .ticket-card { grid-template-columns: 1fr; }
+      .ticket-side { grid-template-columns: repeat(4, 1fr); padding: 15px; }
+    }
+    @media (orientation: portrait) {
+      html, body { overflow: auto; }
+      .shell { min-height: 100%; height: auto; grid-template-rows: auto 1fr; }
+      header { min-height: 130px; flex-wrap: wrap; gap: 8px; padding-block: 12px; }
+      .languages { width: 100%; }
+      .language { flex: 1; }
+      main { display: flex; flex-direction: column; }
+      aside { border-right: 0; border-bottom: 1px solid var(--line); }
+      .destinations { height: auto; grid-template-columns: repeat(3, 1fr); }
+      .content { min-height: 620px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation: none !important; transition-duration: .001ms !important; }
+      .plane, .attract-plane { display: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <div id="attractScreen" class="attract" role="button" tabindex="0" aria-label="Touch the screen to begin" data-i18n-aria="touchToStart">
+    <img class="attract-bg" src="assets/kazan-sky-clear.png" alt="">
+    <div class="attract-shade"></div>
+    <img class="attract-cloud left" src="assets/kazan-clouds-left.png" alt="">
+    <img class="attract-cloud right" src="assets/kazan-clouds-right.png" alt="">
+    <div class="attract-content">
+      <img class="attract-logo" src="assets/kazan-airport-logo-white.png" alt="Kazan International Airport">
+      <div class="attract-start" data-i18n="touchToStart">Коснитесь экрана, чтобы начать</div>
+    </div>
+    <img class="attract-plane" src="assets/realistic-airliner-balanced.png" alt="">
+    <div class="attract-wipe"></div>
+  </div>
+  <div class="shell">
+    <header>
+      <div class="brand" aria-label="Kazan International Airport">
+        <img src="assets/kazan-airport-logo-white.png" alt="Kazan International Airport">
+      </div>
+      <nav class="languages" aria-label="Language" data-i18n-aria="languageLabel">
+        <button class="language active" data-lang="ru" lang="ru">Русский</button>
+        <button class="language" data-lang="en" lang="en">English</button>
+        <button class="language" data-lang="zh" lang="zh">中文</button>
+        <button class="language" data-lang="tt" lang="tt">Татарча</button>
+      </nav>
+    </header>
+    <main>
+      <aside>
+        <p class="aside-title" data-i18n="services">Airport services</p>
+        <p class="aside-help" data-i18n="where">Where do you need to go?</p>
+        <div id="destinations" class="destinations"></div>
+      </aside>
+      <section class="content" aria-live="polite">
+        <div id="welcomePanel" class="panel">
+          <span class="eyebrow" data-i18n="welcomeEyebrow">Welcome to the airport</span>
+          <h1 data-i18n="welcomeTitle">I’ll help you find your way</h1>
+          <p class="lead" data-i18n="welcomeLead">Choose a place on the left or scan your ticket. I can show the information and escort you there.</p>
+          <div class="welcome-art">
+            <div class="route-art" aria-hidden="true">
+              <div class="route-line"></div><span class="route-dot start"></span><span class="route-dot end"></span>
+              <img class="plane" src="assets/realistic-airliner-balanced.png" alt="">
+            </div>
+            <div class="art-copy"><strong data-i18n="artTitle">From here to your destination</strong><span data-i18n="artLead">The robot builds a safe route and avoids obstacles along the way.</span></div>
+          </div>
+          <button class="primary" id="openScan">
+            <svg class="button-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M3 5V3h4M17 3h4v4M21 17v4h-4M7 21H3v-4M7 8v8M10 8v8M14 8v8M17 8v8"/></svg>
+            <span data-i18n="scanTicket">Scan ticket</span>
+          </button>
+        </div>
+        <div id="detailsPanel" class="panel hidden">
+          <span class="eyebrow" data-i18n="location">Location</span>
+          <h1 id="detailTitle"></h1>
+          <div class="details-card">
+            <div id="detailIcon" class="detail-icon"></div>
+            <div class="detail-copy">
+              <span id="detailZone" class="zone hidden"></span>
+              <h2 data-i18n="howToFind">How to find it</h2>
+              <p id="detailDescription"></p>
+              <div id="routeNotice" class="notice hidden" data-i18n="routeUnavailable">Escort route is temporarily unavailable. Please use the information desk.</div>
+            </div>
+          </div>
+          <div class="action-row">
+            <button class="secondary" id="detailsBack" data-i18n="back">Back</button>
+            <button class="primary" id="escortButton" data-i18n="escort">Escort me</button>
+          </div>
+        </div>
+        <div id="ticketPanel" class="panel hidden" tabindex="-1">
+          <span class="eyebrow" data-i18n="ticketFound">Ticket found</span>
+          <h1 data-i18n="flightInformation">Your flight information</h1>
+          <div class="ticket-card">
+            <div class="ticket-main">
+              <div class="passenger"><span data-i18n="passenger">Passenger</span><strong id="passengerName">—</strong></div>
+              <div class="flight-line">
+                <div class="flight-number"><span class="ticket-label" data-i18n="flight">Flight</span><strong id="flightNumber">—</strong></div>
+                <div><span class="ticket-label" data-i18n="departure">Departure</span><span class="ticket-value" id="departureTime">—</span></div>
+              </div>
+            </div>
+            <div class="ticket-side">
+              <div class="ticket-stat"><span class="ticket-label" data-i18n="checkIn">Check-in</span><span class="ticket-value" id="checkInValue">—</span></div>
+              <div class="ticket-stat"><span class="ticket-label" data-i18n="gate">Gate</span><span class="ticket-value" id="gateValue">—</span></div>
+            </div>
+          </div>
+          <div id="ticketNotice" class="notice hidden" data-i18n="ticketRouteUnavailable">Flight data is available, but the escort route is not configured.</div>
+          <div class="action-row">
+            <button class="secondary" id="ticketBack" data-i18n="done">Done</button>
+            <button class="primary" id="ticketEscort" data-i18n="escortToCheckIn">Escort to check-in</button>
+          </div>
+        </div>
+        <div id="journeyPanel" class="panel hidden">
+          <div class="journey">
+            <div>
+              <div class="journey-ring"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a5 5 0 0 0-5 5v2H5a3 3 0 0 0-3 3v5a3 3 0 0 0 3 3h1v2h2v-2h8v2h2v-2h1a3 3 0 0 0 3-3v-5a3 3 0 0 0-3-3h-2V7a5 5 0 0 0-5-5Zm-3 5a3 3 0 0 1 6 0v2H9V7Zm-3 7a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3Zm12 0a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3Z"/></svg></div>
+              <span class="eyebrow" data-i18n="followMe">Follow me</span>
+              <h1 id="journeyTitle" data-i18n="routeStarted">We’re on our way</h1>
+              <p class="lead" id="journeyLead" data-i18n="stayClose">Please stay close to the robot and keep the path clear.</p>
+              <div id="journeyStatus" class="status-pill"><span class="pulse"></span><span data-i18n="safeRoute">Safe route is active</span></div>
+              <div id="journeyError" class="journey-error hidden"></div>
+            </div>
+          </div>
+          <button class="danger" id="cancelEscort" data-i18n="stopEscort">Stop escort</button>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div id="scanModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="scanTitle">
+    <div class="scan-dialog">
+      <div class="scan-visual"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M3 5V3h4M17 3h4v4M21 17v4h-4M7 21H3v-4M7 8v8M10 8v8M14 8v8M17 8v8"/></svg></div>
+      <h2 id="scanTitle" data-i18n="scanTitle">Scan your ticket</h2>
+      <p data-i18n="scanLead">Hold the barcode in front of the scanner. Flight information will appear automatically.</p>
+      <form id="scanForm" class="scan-form">
+        <input id="ticketCode" type="text" inputmode="text" autocomplete="off" aria-label="Ticket barcode" data-i18n-aria="ticketBarcode">
+        <button class="primary" type="submit" data-i18n="checkTicket">Check</button>
+      </form>
+      <div id="scanError" class="scan-error"></div>
+      <button id="closeScan" class="secondary" data-i18n="cancel">Cancel</button>
+    </div>
+  </div>
+  <div id="offline" class="offline hidden" data-i18n="offline">No connection to the robot</div>
+
+  <script>
+    const ICONS = {
+      "check-in": '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M7 9h5M7 13h3M16 8v8M14 12h4"/></svg>',
+      gates: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 21V4h12v17M16 9h4v12M8 8h4M8 12h4M8 16h4"/></svg>',
+      baggage: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="7" width="16" height="13" rx="2"/><path d="M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2M8 20v1M16 20v1"/></svg>',
+      toilet: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="7" cy="4" r="2"/><circle cx="17" cy="4" r="2"/><path d="M4 9h6l-1 6v6H5v-6L4 9ZM14 9h6l1 6h-3v6h-2v-6h-3l1-6Z"/></svg>',
+      information: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7h.01"/></svg>',
+      exit: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 8V3H4v18h10v-5M9 12h12M18 9l3 3-3 3"/></svg>'
+    };
+    const COPY = {
+      ru: {
+        brand:"Аэропорт",brandSub:"Робот-помощник пассажира",services:"Сервисы аэропорта",where:"Куда вам нужно?",languageLabel:"Выбор языка",ticketBarcode:"Штрихкод билета",touchToStart:"Коснитесь экрана, чтобы начать",
+        welcomeEyebrow:"Добро пожаловать в аэропорт",welcomeTitle:"Помогу найти нужное место",welcomeLead:"Выберите место слева или отсканируйте билет. Я покажу информацию и могу проводить вас.",
+        artTitle:"Отсюда — до нужного места",artLead:"Робот построит безопасный маршрут и объедет препятствия.",scanTicket:"Сканировать билет",
+        location:"Расположение",howToFind:"Как найти",routeUnavailable:"Маршрут сопровождения временно недоступен. Обратитесь на стойку информации.",
+        back:"Назад",escort:"Проводить меня",ticketFound:"Билет найден",flightInformation:"Информация о вашем рейсе",passenger:"Пассажир",flight:"Рейс",
+        departure:"Вылет",checkIn:"Регистрация",gate:"Выход",ticketRouteUnavailable:"Данные рейса найдены, но маршрут сопровождения не настроен.",
+        done:"Готово",escortToCheckIn:"Проводить к регистрации",followMe:"Следуйте за мной",routeStarted:"Мы отправляемся",stayClose:"Пожалуйста, держитесь рядом с роботом и не перекрывайте ему путь.",
+        safeRoute:"Безопасный маршрут активен",stopEscort:"Остановить сопровождение",scanTitle:"Отсканируйте билет",scanLead:"Поднесите штрихкод к сканеру. Информация о рейсе появится автоматически.",
+        checkTicket:"Проверить",cancel:"Отмена",offline:"Нет связи с роботом",notFound:"Билет не найден. Проверьте штрихкод или обратитесь к сотруднику.",
+        databaseUnavailable:"Сервис проверки билетов временно недоступен.",invalidTicket:"Этот билет сейчас недействителен.",startFailed:"Не удалось построить безопасный маршрут.",stopFailed:"Не удалось остановить робота. Не отходите и позовите сотрудника.",
+        arrived:"Мы прибыли",arrivedLead:"Вы на месте. Хорошего путешествия!",routeStopped:"Маршрут остановлен",routeStoppedLead:"Движение было прервано. Выберите место ещё раз или обратитесь к сотруднику.",noDescription:"Точное расположение уточните на стойке информации.",
+        kinds:{"check-in":"Регистрация","gates":"Выходы на посадку","baggage":"Выдача багажа","toilet":"Туалет","information":"Стойка информации","exit":"Выход"},
+        kindHints:{"check-in":"Стойки и оформление","gates":"Зоны вылета","baggage":"Зал прилёта","toilet":"Ближайший","information":"Помощь пассажирам","exit":"К транспорту"}
+      },
+      en: {
+        brand:"Airport",brandSub:"Passenger assistance robot",services:"Airport services",where:"Where do you need to go?",languageLabel:"Language selection",ticketBarcode:"Ticket barcode",touchToStart:"Touch the screen to begin",
+        welcomeEyebrow:"Welcome to the airport",welcomeTitle:"I’ll help you find your way",welcomeLead:"Choose a place on the left or scan your ticket. I can show the information and escort you there.",
+        artTitle:"From here to your destination",artLead:"The robot builds a safe route and avoids obstacles along the way.",scanTicket:"Scan ticket",
+        location:"Location",howToFind:"How to find it",routeUnavailable:"Escort route is temporarily unavailable. Please use the information desk.",
+        back:"Back",escort:"Escort me",ticketFound:"Ticket found",flightInformation:"Your flight information",passenger:"Passenger",flight:"Flight",
+        departure:"Departure",checkIn:"Check-in",gate:"Gate",ticketRouteUnavailable:"Flight data is available, but the escort route is not configured.",
+        done:"Done",escortToCheckIn:"Escort to check-in",followMe:"Follow me",routeStarted:"We’re on our way",stayClose:"Please stay close to the robot and keep the path clear.",
+        safeRoute:"Safe route is active",stopEscort:"Stop escort",scanTitle:"Scan your ticket",scanLead:"Hold the barcode in front of the scanner. Flight information will appear automatically.",
+        checkTicket:"Check",cancel:"Cancel",offline:"No connection to the robot",notFound:"Ticket not found. Check the barcode or ask an airport employee.",
+        databaseUnavailable:"Ticket checking is temporarily unavailable.",invalidTicket:"This ticket is not currently active.",startFailed:"A safe route could not be built.",stopFailed:"The robot could not be stopped. Stay here and call an airport employee.",
+        arrived:"We have arrived",arrivedLead:"You are at your destination. Have a good journey!",routeStopped:"Route stopped",routeStoppedLead:"The journey was interrupted. Choose the destination again or ask an airport employee.",noDescription:"Please ask at the information desk for the exact location.",
+        kinds:{"check-in":"Check-in","gates":"Boarding gates","baggage":"Baggage claim","toilet":"Restrooms","information":"Information desk","exit":"Exit"},
+        kindHints:{"check-in":"Desks and assistance","gates":"Departure zones","baggage":"Arrivals hall","toilet":"Nearest facility","information":"Passenger help","exit":"Ground transport"}
+      },
+      zh: {
+        brand:"机场向导",brandSub:"旅客服务机器人",services:"机场服务",where:"您要去哪里？",languageLabel:"语言选择",ticketBarcode:"机票条码",touchToStart:"触摸屏幕开始",
+        welcomeEyebrow:"欢迎来到机场",welcomeTitle:"我来帮您找到目的地",welcomeLead:"请在左侧选择地点或扫描机票。我会显示信息，也可以带您前往。",
+        artTitle:"从这里到您的目的地",artLead:"机器人将规划安全路线并避开障碍物。",scanTicket:"扫描机票",
+        location:"位置",howToFind:"如何到达",routeUnavailable:"引导路线暂时不可用，请前往问讯处。",
+        back:"返回",escort:"带我去",ticketFound:"已找到机票",flightInformation:"您的航班信息",passenger:"旅客",flight:"航班",
+        departure:"起飞时间",checkIn:"值机柜台",gate:"登机口",ticketRouteUnavailable:"已找到航班信息，但引导路线尚未配置。",
+        done:"完成",escortToCheckIn:"带我去值机",followMe:"请跟我来",routeStarted:"我们出发了",stayClose:"请跟紧机器人，并保持路线畅通。",
+        safeRoute:"安全路线已启用",stopEscort:"停止引导",scanTitle:"扫描您的机票",scanLead:"请将条码对准扫描器，航班信息会自动显示。",
+        checkTicket:"查询",cancel:"取消",offline:"无法连接机器人",notFound:"未找到机票，请检查条码或咨询机场工作人员。",
+        databaseUnavailable:"机票查询服务暂时不可用。",invalidTicket:"此机票当前无效。",startFailed:"无法规划安全路线。",stopFailed:"机器人无法停止。请留在原地并呼叫机场工作人员。",
+        arrived:"我们到了",arrivedLead:"您已到达目的地，祝您旅途愉快！",routeStopped:"路线已停止",routeStoppedLead:"行程已中断。请重新选择目的地或咨询机场工作人员。",noDescription:"确切位置请咨询问讯处。",
+        kinds:{"check-in":"值机","gates":"登机口","baggage":"行李提取","toilet":"洗手间","information":"问讯处","exit":"出口"},
+        kindHints:{"check-in":"柜台和服务","gates":"出发区域","baggage":"到达大厅","toilet":"最近设施","information":"旅客帮助","exit":"地面交通"}
+      },
+      tt: {
+        brand:"Аэропорт",brandSub:"Юлчыларга ярдәмче робот",services:"Аэропорт хезмәтләре",where:"Сезгә кая барырга?",languageLabel:"Тел сайлау",ticketBarcode:"Билет штрихкоды",touchToStart:"Башлау өчен экранга кагылыгыз",
+        welcomeEyebrow:"Аэропортка рәхим итегез",welcomeTitle:"Кирәкле урынны табарга булышам",welcomeLead:"Сул яктагы урынны сайлагыз яки билетны сканерлагыз. Мин мәгълүмат күрсәтәм һәм озата алам.",
+        artTitle:"Моннан — кирәкле урынга",artLead:"Робот куркынычсыз юл төзи һәм киртәләрне урап үтә.",scanTicket:"Билетны сканерлау",
+        location:"Урнашу",howToFind:"Ничек табарга",routeUnavailable:"Озату маршруты вакытлыча эшләми. Мәгълүмат өстәленә мөрәҗәгать итегез.",
+        back:"Артка",escort:"Мине озат",ticketFound:"Билет табылды",flightInformation:"Сезнең рейс турында мәгълүмат",passenger:"Юлчы",flight:"Рейс",
+        departure:"Очып китү",checkIn:"Теркәлү",gate:"Утыру чыгуы",ticketRouteUnavailable:"Рейс мәгълүматы табылды, ләкин озату маршруты көйләнмәгән.",
+        done:"Әзер",escortToCheckIn:"Теркәлүгә озат",followMe:"Минем арттан барыгыз",routeStarted:"Без юлга чыктык",stayClose:"Зинһар, робот янында булыгыз һәм аның юлын япмагыз.",
+        safeRoute:"Куркынычсыз маршрут актив",stopEscort:"Озатуны туктату",scanTitle:"Билетны сканерлагыз",scanLead:"Штрихкодны сканерга якын китерегез. Рейс мәгълүматы автомат рәвештә күренәчәк.",
+        checkTicket:"Тикшерү",cancel:"Баш тарту",offline:"Робот белән элемтә юк",notFound:"Билет табылмады. Штрихкодны тикшерегез яки хезмәткәргә мөрәҗәгать итегез.",
+        databaseUnavailable:"Билет тикшерү хезмәте вакытлыча эшләми.",invalidTicket:"Бу билет хәзер гамәлдә түгел.",startFailed:"Куркынычсыз маршрут төзеп булмады.",stopFailed:"Роботны туктатып булмады. Урыныгызда калыгыз һәм хезмәткәрне чакырыгыз.",
+        arrived:"Без килеп җиттек",arrivedLead:"Сез кирәкле урында. Хәерле юл!",routeStopped:"Маршрут туктатылды",routeStoppedLead:"Хәрәкәт өзелде. Урынны яңадан сайлагыз яки хезмәткәргә мөрәҗәгать итегез.",noDescription:"Төгәл урынны мәгълүмат өстәлендә сорагыз.",
+        kinds:{"check-in":"Теркәлү","gates":"Утыру чыгу юллары","baggage":"Багаж алу","toilet":"Бәдрәф","information":"Мәгълүмат өстәле","exit":"Чыгу"},
+        kindHints:{"check-in":"Өстәлләр һәм ярдәм","gates":"Очып китү зоналары","baggage":"Килү залы","toilet":"Иң якыны","information":"Юлчыларга ярдәм","exit":"Транспортка"}
+      }
+    };
+
+    const panels = ["welcomePanel", "detailsPanel", "ticketPanel", "journeyPanel"];
+    let lang = localStorage.getItem("airport-language") || "ru";
+    let destinations = [];
+    let selectedDestination = null;
+    let ticket = null;
+    let activeDestinationId = null;
+    let navigationSeen = false;
+    let cancellationPending = false;
+    let journeyState = "moving";
+    let attractVisible = true;
+    let scanReturnFocus = null;
+    let idleTimer;
+
+    const $ = id => document.getElementById(id);
+    const t = key => COPY[lang][key] || COPY.en[key] || key;
+    const localized = (object, fallback = "") => object?.[lang] || object?.en || object?.ru || fallback;
+    const showPanel = id => panels.forEach(name => $(name).classList.toggle("hidden", name !== id));
+
+    function applyLanguage(next) {
+      lang = COPY[next] ? next : "ru";
+      localStorage.setItem("airport-language", lang);
+      document.documentElement.lang = lang === "zh" ? "zh-CN" : lang;
+      document.title = t("brand");
+      document.querySelectorAll("[data-i18n]").forEach(el => {
+        const value = t(el.dataset.i18n);
+        if (value) el.textContent = value;
+      });
+      document.querySelectorAll("[data-i18n-aria]").forEach(el => {
+        const value = t(el.dataset.i18nAria);
+        if (value) el.setAttribute("aria-label", value);
+      });
+      document.querySelectorAll(".language").forEach(button => {
+        const active = button.dataset.lang === lang;
+        button.classList.toggle("active", active);
+        button.setAttribute("aria-pressed", String(active));
+      });
+      renderDestinations();
+      if (selectedDestination) renderDetails(selectedDestination);
+      if (ticket) renderTicket(ticket);
+      renderJourneyText();
+      resetIdle();
+    }
+
+    function renderDestinations() {
+      $("destinations").innerHTML = destinations.map(destination => {
+        const label = localized(destination.labels, t("kinds")[destination.kind] || destination.kind);
+        const meta = t("kindHints")[destination.kind] || "";
+        const active = selectedDestination?.id === destination.id ? " active" : "";
+        return `<button class="destination${active}" data-id="${escapeHtml(destination.id)}"><span class="destination-icon">${ICONS[destination.kind] || ICONS.information}</span><span class="destination-copy"><span class="destination-label">${escapeHtml(label)}</span><span class="destination-meta">${escapeHtml(meta)}</span></span><span class="destination-arrow" aria-hidden="true">›</span></button>`;
+      }).join("");
+      document.querySelectorAll(".destination").forEach(button => button.addEventListener("click", () => selectDestination(button.dataset.id)));
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? "").replace(/[&<>"']/g, character => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[character]));
+    }
+
+    function selectDestination(id) {
+      selectedDestination = destinations.find(item => item.id === id) || null;
+      if (!selectedDestination) return;
+      clearTicketData();
+      renderDestinations();
+      renderDetails(selectedDestination);
+      showPanel("detailsPanel");
+      resetIdle();
+    }
+
+    function renderDetails(destination) {
+      const label = localized(destination.labels, t("kinds")[destination.kind] || destination.kind);
+      $("detailTitle").textContent = label;
+      $("detailIcon").innerHTML = ICONS[destination.kind] || ICONS.information;
+      $("detailDescription").textContent = localized(destination.descriptions, t("noDescription"));
+      $("detailZone").textContent = destination.zone || "";
+      $("detailZone").classList.toggle("hidden", !destination.zone);
+      $("escortButton").disabled = !destination.enabled;
+      $("escortButton").classList.toggle("hidden", !destination.enabled);
+      $("routeNotice").classList.toggle("hidden", destination.enabled);
+    }
+
+    function openScan() {
+      scanReturnFocus = document.activeElement;
+      $("scanModal").classList.add("open");
+      document.querySelector(".shell").inert = true;
+      $("scanError").textContent = "";
+      $("ticketCode").value = "";
+      setTimeout(() => $("ticketCode").focus(), 80);
+      resetIdle();
+    }
+
+    function closeScan(restoreFocus = true) {
+      $("scanModal").classList.remove("open");
+      document.querySelector(".shell").inert = false;
+      if (restoreFocus && scanReturnFocus && scanReturnFocus.isConnected) scanReturnFocus.focus();
+      scanReturnFocus = null;
+      resetIdle();
+    }
+
+    function trapScanFocus(event) {
+      if (event.key !== "Tab") return;
+      const focusable = [...$("scanModal").querySelectorAll("input, button:not([disabled])")]
+        .filter(element => element.offsetParent !== null);
+      if (!focusable.length) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    }
+
+    async function lookupTicket(code) {
+      $("scanError").textContent = "";
+      try {
+        const response = await fetch("/api/ticket/lookup", {
+          method: "POST", headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({code}), cache: "no-store"
+        });
+        const result = await response.json();
+        if (!result.ok) {
+          const key = result.error === "ticket_database_unavailable" ? "databaseUnavailable" : result.error === "ticket_not_active" ? "invalidTicket" : "notFound";
+          $("scanError").textContent = t(key);
+          $("ticketCode").select();
+          return;
+        }
+        ticket = result.ticket;
+        selectedDestination = destinations.find(item => item.id === ticket.destinationId) || null;
+        closeScan(false);
+        renderTicket(ticket);
+        renderDestinations();
+        showPanel("ticketPanel");
+        $("ticketPanel").focus();
+        resetIdle();
+      } catch (_) {
+        $("scanError").textContent = t("databaseUnavailable");
+      }
+    }
+
+    function renderTicket(data) {
+      $("passengerName").textContent = data.passengerName || "—";
+      $("flightNumber").textContent = data.flight || "—";
+      $("departureTime").textContent = data.departureTime || "—";
+      $("checkInValue").textContent = data.checkIn || "—";
+      $("gateValue").textContent = data.gate || "—";
+      $("ticketEscort").classList.toggle("hidden", !data.canEscort);
+      $("ticketNotice").classList.toggle("hidden", data.canEscort);
+    }
+
+    async function startEscort(destinationId) {
+      if (!destinationId) return;
+      try {
+        const response = await fetch("/api/escort", {
+          method: "POST", headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({destinationId}), cache: "no-store"
+        });
+        const result = await response.json();
+        if (!result.ok) {
+          alert(t("startFailed"));
+          return;
+        }
+        activeDestinationId = destinationId;
+        navigationSeen = false;
+        cancellationPending = false;
+        journeyState = "moving";
+        $("journeyError").classList.add("hidden");
+        $("journeyError").textContent = "";
+        renderJourneyText();
+        showPanel("journeyPanel");
+        resetIdle(false);
+      } catch (_) {
+        alert(t("startFailed"));
+      }
+    }
+
+    async function cancelEscort() {
+      if (!activeDestinationId) {
+        goHome();
+        return;
+      }
+      cancellationPending = true;
+      try {
+        const response = await fetch("/api/escort/cancel", {method: "POST", cache: "no-store"});
+        const result = await response.json();
+        if (!response.ok || !result.ok) throw new Error("stop rejected");
+        activeDestinationId = null;
+        navigationSeen = false;
+        cancellationPending = false;
+        goHome();
+      } catch (_) {
+        journeyState = "cancel-error";
+        renderJourneyText();
+        $("offline").classList.remove("hidden");
+      }
+    }
+
+    function clearTicketData() {
+      ticket = null;
+      ["passengerName", "flightNumber", "departureTime", "checkInValue", "gateValue"].forEach(id => {
+        $(id).textContent = "—";
+      });
+    }
+
+    function renderJourneyText() {
+      if (journeyState === "arrived") {
+        $("journeyTitle").textContent = t("arrived");
+        $("journeyLead").textContent = t("arrivedLead");
+      } else if (journeyState === "interrupted") {
+        $("journeyTitle").textContent = t("routeStopped");
+        $("journeyLead").textContent = t("routeStoppedLead");
+      } else {
+        $("journeyTitle").textContent = t("routeStarted");
+        $("journeyLead").textContent = t("stayClose");
+      }
+      const hasError = journeyState === "cancel-error";
+      $("journeyError").textContent = hasError ? t("stopFailed") : "";
+      $("journeyError").classList.toggle("hidden", !hasError);
+      const finished = journeyState === "arrived" || journeyState === "interrupted" || !activeDestinationId;
+      $("journeyStatus").classList.toggle("hidden", finished);
+      $("cancelEscort").textContent = activeDestinationId ? t("stopEscort") : t("done");
+      $("cancelEscort").classList.toggle("danger", !!activeDestinationId);
+      $("cancelEscort").classList.toggle("primary", !activeDestinationId);
+    }
+
+    function goHome() {
+      selectedDestination = null;
+      clearTicketData();
+      activeDestinationId = null;
+      cancellationPending = false;
+      renderDestinations();
+      showPanel("welcomePanel");
+      resetIdle();
+    }
+
+    function beginExperience() {
+      const screen = $("attractScreen");
+      if (!attractVisible || screen.classList.contains("departing")) return;
+      attractVisible = false;
+      screen.inert = true;
+      screen.classList.add("departing");
+      const transitionMs = matchMedia("(prefers-reduced-motion: reduce)").matches ? 80 : 1800;
+      setTimeout(() => {
+        screen.classList.add("hidden");
+        screen.classList.remove("departing");
+        resetIdle();
+      }, transitionMs);
+    }
+
+    function returnToAttract() {
+      if (activeDestinationId) return;
+      goHome();
+      clearTimeout(idleTimer);
+      const screen = $("attractScreen");
+      screen.classList.remove("hidden", "departing");
+      screen.inert = false;
+      attractVisible = true;
+      screen.focus();
+    }
+
+    function resetIdle(enabled = true) {
+      clearTimeout(idleTimer);
+      if (enabled && !attractVisible && !activeDestinationId && !$("scanModal").classList.contains("open")) {
+        idleTimer = setTimeout(returnToAttract, 90000);
+      }
+    }
+
+    async function pollRobot() {
+      try {
+        if (activeDestinationId && !cancellationPending) {
+          const heartbeatResponse = await fetch("/api/escort/heartbeat", {method: "POST", cache: "no-store"});
+          if (!heartbeatResponse.ok && !cancellationPending) {
+            activeDestinationId = null;
+            navigationSeen = false;
+            goHome();
+            return setTimeout(pollRobot, 1000);
+          }
+        }
+        const response = await fetch("/api/scan", {cache: "no-store"});
+        const data = await response.json();
+        $("offline").classList.toggle("hidden", !data.stale && data.ok !== false);
+        if (activeDestinationId) {
+          if (data.goal) navigationSeen = true;
+          if (navigationSeen && !data.goal) {
+            activeDestinationId = null;
+            navigationSeen = false;
+            journeyState = cancellationPending
+              ? "cancel-error"
+              : data.nav_status === "arrived" ? "arrived" : "interrupted";
+            cancellationPending = false;
+            renderJourneyText();
+            resetIdle();
+          }
+        }
+      } catch (_) {
+        $("offline").classList.remove("hidden");
+      }
+      setTimeout(pollRobot, 1000);
+    }
+
+    async function restoreEscort() {
+      try {
+        const response = await fetch("/api/airport/status", {cache: "no-store"});
+        const result = await response.json();
+        if (result.ok && result.active && result.destinationId) {
+          attractVisible = false;
+          $("attractScreen").classList.add("hidden");
+          activeDestinationId = result.destinationId;
+          navigationSeen = true;
+          journeyState = "moving";
+          renderJourneyText();
+          showPanel("journeyPanel");
+          await fetch("/api/escort/heartbeat", {method: "POST", cache: "no-store"});
+        }
+      } catch (_) {}
+    }
+
+    async function loadDestinations() {
+      try {
+        const response = await fetch("/api/airport/destinations", {cache: "no-store"});
+        const result = await response.json();
+        destinations = Array.isArray(result.destinations) ? result.destinations : [];
+      } catch (_) {
+        destinations = Object.keys(COPY.en.kinds).map(kind => ({id: kind, kind, enabled: false}));
+      }
+      renderDestinations();
+    }
+
+    document.querySelectorAll(".language").forEach(button => button.addEventListener("click", () => applyLanguage(button.dataset.lang)));
+    $("attractScreen").addEventListener("click", beginExperience);
+    $("attractScreen").addEventListener("keydown", event => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        beginExperience();
+      }
+    });
+    $("openScan").addEventListener("click", openScan);
+    $("closeScan").addEventListener("click", closeScan);
+    $("scanModal").addEventListener("keydown", trapScanFocus);
+    $("scanModal").addEventListener("click", event => { if (event.target === $("scanModal")) closeScan(); });
+    $("scanForm").addEventListener("submit", event => { event.preventDefault(); lookupTicket($("ticketCode").value); });
+    $("detailsBack").addEventListener("click", goHome);
+    $("ticketBack").addEventListener("click", goHome);
+    $("escortButton").addEventListener("click", () => startEscort(selectedDestination?.id));
+    $("ticketEscort").addEventListener("click", () => startEscort(ticket?.destinationId));
+    $("cancelEscort").addEventListener("click", cancelEscort);
+    document.addEventListener("pointerdown", () => resetIdle(), {passive: true});
+    document.addEventListener("keydown", event => {
+      resetIdle();
+      if (event.key === "Escape" && $("scanModal").classList.contains("open")) closeScan();
+    });
+
+    async function initialize() {
+      applyLanguage(lang);
+      await loadDestinations();
+      await restoreEscort();
+      pollRobot();
+    }
+    initialize();
+  </script>
+</body>
+</html>

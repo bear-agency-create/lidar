@@ -117,5 +117,4 @@ OCC_SOLID = 1.0
 OCC_EDGE = 0.85
 
 WEB_UI_PATH = Path(__file__).resolve().parent / "web_ui.html"
-_MONITOR_ROOT = Path(__file__).resolve().parents[1] / "monitor"
-AIRPORT_UI_PATH = _MONITOR_ROOT / "airport_ui.html"
+AIRPORT_UI_PATH = Path(__file__).resolve().parent / "airport_ui.html"
