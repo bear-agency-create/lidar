@@ -11,13 +11,11 @@ from pathlib import Path
 from typing import Any
 
 
-DEFAULT_SERVICES: tuple[dict[str, Any], ...] = (
-    {"id": "check-in", "kind": "check-in", "enabled": False},
-    {"id": "gates", "kind": "gates", "enabled": False},
-    {"id": "baggage", "kind": "baggage", "enabled": False},
-    {"id": "toilet", "kind": "toilet", "enabled": False},
-    {"id": "information", "kind": "information", "enabled": False},
-    {"id": "exit", "kind": "exit", "enabled": False},
+PRIMARY_KINDS: tuple[str, ...] = ("check-in", "baggage", "information", "exit")
+
+DEFAULT_SERVICES: tuple[dict[str, Any], ...] = tuple(
+    {"id": kind, "kind": kind, "enabled": False, "zone": "", "labels": {}, "descriptions": {}}
+    for kind in PRIMARY_KINDS
 )
 
 
@@ -45,9 +43,68 @@ class Destination:
 class AirportService:
     """Loads calibrated waypoints and resolves scanned tickets from SQLite."""
 
-    def __init__(self, destinations_path: Path, tickets_db_path: Path) -> None:
+    def __init__(
+        self,
+        destinations_path: Path,
+        tickets_db_path: Path,
+        primary_buttons_path: Path | None = None,
+    ) -> None:
         self.destinations_path = destinations_path
         self.tickets_db_path = tickets_db_path
+        self.primary_buttons_path = primary_buttons_path
+
+    def _load_primary_buttons(self) -> list[dict[str, str]]:
+        if self.primary_buttons_path is None or not self.primary_buttons_path.exists():
+            return [{"id": kind, "kind": kind} for kind in PRIMARY_KINDS]
+        try:
+            raw = json.loads(self.primary_buttons_path.read_text(encoding="utf-8"))
+        except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
+            raise ValueError(f"invalid primary buttons file: {exc}") from exc
+        items = raw.get("buttons") if isinstance(raw, dict) else None
+        if not isinstance(items, list) or not items:
+            raise ValueError("primary buttons file must contain a non-empty buttons array")
+        buttons: list[dict[str, str]] = []
+        for item in items:
+            if not isinstance(item, dict):
+                raise ValueError("every primary button must be an object")
+            kind = str(item.get("kind", "")).strip()
+            if not kind:
+                raise ValueError("every primary button requires kind")
+            button_id = str(item.get("id") or kind).strip()
+            if not button_id:
+                raise ValueError("primary button id must be non-empty")
+            buttons.append({"id": button_id, "kind": kind})
+        return buttons
+
+    def _resolve_primary_destinations(
+        self,
+        destinations: dict[str, Destination] | None,
+        *,
+        configured: bool,
+    ) -> list[dict[str, Any]]:
+        buttons = self._load_primary_buttons()
+        by_id = destinations or {}
+        by_kind: dict[str, Destination] = {}
+        for destination in by_id.values():
+            by_kind.setdefault(destination.kind, destination)
+
+        result: list[dict[str, Any]] = []
+        for button in buttons:
+            destination = by_id.get(button["id"]) or by_kind.get(button["kind"])
+            if destination is not None and configured:
+                result.append(destination.public_dict())
+            else:
+                result.append(
+                    {
+                        "id": button["id"],
+                        "kind": button["kind"],
+                        "zone": "",
+                        "labels": {},
+                        "descriptions": {},
+                        "enabled": False,
+                    }
+                )
+        return result
 
     def _load_destinations(self) -> dict[str, Destination]:
         if not self.destinations_path.exists():
@@ -93,18 +150,22 @@ class AirportService:
     def public_destinations(self) -> dict[str, Any]:
         try:
             destinations = self._load_destinations()
+            primary = self._resolve_primary_destinations(
+                destinations,
+                configured=bool(destinations),
+            )
         except ValueError as exc:
             return {"ok": False, "error": str(exc), "destinations": list(DEFAULT_SERVICES)}
         if not destinations:
             return {
                 "ok": True,
                 "configured": False,
-                "destinations": list(DEFAULT_SERVICES),
+                "destinations": primary,
             }
         return {
             "ok": True,
             "configured": True,
-            "destinations": [item.public_dict() for item in destinations.values()],
+            "destinations": primary,
         }
 
     def get_destination(self, destination_id: str) -> Destination | None:
@@ -159,4 +220,3 @@ class AirportService:
             "canEscort": destination is not None,
         }
         return {"ok": True, "ticket": ticket}
-

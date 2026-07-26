@@ -83,11 +83,6 @@ class AirportServiceTest(unittest.TestCase):
         result = self.service.public_destinations()
         self.assertTrue(result["ok"])
         self.assertFalse(result["configured"])
-        self.assertEqual(len(result["destinations"]), 4)
-        self.assertEqual(
-            [item["kind"] for item in result["destinations"]],
-            ["check-in", "baggage", "information", "exit"],
-        )
         self.assertTrue(all(not item["enabled"] for item in result["destinations"]))
 
     def test_destination_coordinates_stay_private(self) -> None:

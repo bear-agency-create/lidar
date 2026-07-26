@@ -1,0 +1,8 @@
+{
+  "buttons": [
+    {"id": "check-in", "kind": "check-in"},
+    {"id": "baggage", "kind": "baggage"},
+    {"id": "information", "kind": "information"},
+    {"id": "exit", "kind": "exit"}
+  ]
+}

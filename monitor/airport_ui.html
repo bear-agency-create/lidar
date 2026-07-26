@@ -115,9 +115,9 @@
     }
     .aside-title { margin: 0 0 6px; color: var(--muted); font-size: 13px; font-weight: 800; letter-spacing: .11em; text-transform: uppercase; }
     .aside-help { margin: 0 0 17px; font-size: 19px; font-weight: 750; }
-    .destinations { height: calc(100% - 65px); display: grid; grid-template-columns: 1fr 1fr; grid-auto-rows: 1fr; gap: 11px; }
+    .destinations { height: calc(100% - 65px); display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 14px; }
     .destination {
-      position: relative; min-height: 112px; padding: 13px 11px;
+      position: relative; min-height: 148px; padding: 18px 14px;
       display: flex; flex-direction: column; align-items: flex-start; justify-content: space-between;
       border: 1px solid var(--line); border-radius: 18px; color: var(--ink); background: white;
       box-shadow: 0 5px 14px rgba(20, 58, 92, .05); text-align: left;
@@ -135,14 +135,14 @@
     .destination:active { transform: scale(.98); }
     .destination.active { color: white; background: var(--blue); border-color: var(--blue); box-shadow: 0 10px 24px rgba(8,120,230,.24); }
     .destination-icon {
-      position: relative; width: 46px; height: 46px; display: grid; place-items: center;
+      position: relative; width: 54px; height: 54px; display: grid; place-items: center;
       border-radius: 12px; color: var(--blue); background: var(--sky);
     }
     .destination.active .destination-icon { color: white; background: rgba(255,255,255,.18); }
     .destination-icon svg { width: 26px; height: 26px; }
     .destination-copy { position: relative; z-index: 1; width: 100%; }
-    .destination-label { display: block; max-width: 100%; font-size: 16px; line-height: 1.12; font-weight: 850; }
-    .destination-meta { display: block; margin-top: 5px; padding-right: 22px; color: var(--muted); font-size: 11px; line-height: 1.2; font-weight: 650; }
+    .destination-label { display: block; max-width: 100%; font-size: 18px; line-height: 1.12; font-weight: 850; }
+    .destination-meta { display: block; margin-top: 7px; padding-right: 22px; color: var(--muted); font-size: 13px; line-height: 1.25; font-weight: 650; }
     .destination-arrow { position: absolute; right: 12px; bottom: 14px; color: var(--blue); font-size: 21px; font-weight: 500; }
     .destination.active .destination-meta, .destination.active .destination-arrow { color: rgba(255,255,255,.78); }
     .content { position: relative; min-width: 0; min-height: 0; padding: 26px 30px 24px; overflow: hidden; }
@@ -288,7 +288,7 @@
       .language { flex: 1; }
       main { display: flex; flex-direction: column; }
       aside { border-right: 0; border-bottom: 1px solid var(--line); }
-      .destinations { height: auto; grid-template-columns: repeat(3, 1fr); }
+      .destinations { height: auto; grid-template-columns: 1fr 1fr; grid-template-rows: auto auto; }
       .content { min-height: 620px; }
     }
     @media (prefers-reduced-motion: reduce) {

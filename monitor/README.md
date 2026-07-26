@@ -1,41 +1,60 @@
-# Airport visitor monitor (10.1″ kiosk)
+# Monitor — экран 10.1″ для пассажира
 
-Touchscreen interface for the Kazan airport assistance robot: animated sky opening,
-multilingual wayfinding, ticket scan, and safe escort to calibrated destinations.
+Четвёртое направление робота рядом с `arduino/`, `lidar_map/` и `camera/`.
 
-Optimized for **1280×800** landscape (10.1-inch monitor). Also works in portrait.
+Сенсорный интерфейс аэропорта Казань: небо при старте, 4 главные кнопки,
+скан билета, проводка роботом.
 
-## Contents
+## 4 главные кнопки
 
-| Path | Purpose |
-|---|---|
-| `airport_ui.html` | Full kiosk UI (attract screen, services, ticket scan, escort) |
-| `airport_service.py` | Destination config + SQLite ticket lookup |
-| `assets/` | Sky, clouds, Kazan airport logo, aircraft sprites |
-| `test_airport_*.py` | Unit tests |
-| `AIRPORT_KIOSK.md` | Deployment and configuration |
-| `integration/lidar_map/` | Robot stack hooks (`http_api`, `config`, `bridge`, `main`) |
+Порядок и состав задаются в **`primary_buttons.json`** — можно менять когда угодно,
+без правки HTML:
 
-## Languages
+```json
+{
+  "buttons": [
+    {"id": "check-in", "kind": "check-in"},
+    {"id": "baggage", "kind": "baggage"},
+    {"id": "information", "kind": "information"},
+    {"id": "exit", "kind": "exit"}
+  ]
+}
+```
 
-Russian, English, Chinese (中文), Tatar (Татарча).
+По умолчанию на экране:
 
-## Quick preview
+| Кнопка | Назначение |
+|--------|------------|
+| Регистрация | стойки check-in |
+| Багаж | выдача / приём багажа |
+| Информация | стойка помощи |
+| Выход | выход из терминала |
 
-From the repo root:
+Координаты для проводки робота — в `~/robot_nav/config/airport_destinations.json`
+(см. `AIRPORT_KIOSK.md`).
+
+## Содержимое
+
+| Файл | Назначение |
+|------|------------|
+| `airport_ui.html` | интерфейс киоска |
+| `airport_service.py` | билеты + точки назначения |
+| `primary_buttons.json` | **4 главные кнопки (редактируемые)** |
+| `assets/` | небо, облака, логотип, самолёт |
+| `AIRPORT_KIOSK.md` | настройка на роботе |
+
+## Превью
 
 ```bash
 cd monitor
 python3 -m http.server 8877
 ```
 
-Open `http://127.0.0.1:8877/airport_ui.html`
+Открыть: `http://127.0.0.1:8877/airport_ui.html`
 
-For full robot integration (navigation, ticket API, escort), run the lidar stack
-with the files in `integration/lidar_map/` merged into `lidar_map/` — see
-`AIRPORT_KIOSK.md`.
+На роботе интерфейс отдаётся с `:8765/` через `lidar_map/` (см. `AIRPORT_KIOSK.md`).
 
-## Tests
+## Тесты
 
 ```bash
 python3 -m unittest discover -s monitor -p "test_airport*.py" -v

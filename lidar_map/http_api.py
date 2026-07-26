@@ -15,6 +15,7 @@ from config import (
     AIRPORT_KIOSK_ALLOWED_CLIENTS,
     AIRPORT_TICKETS_DB_PATH,
     AIRPORT_UI_PATH,
+    PRIMARY_BUTTONS_PATH,
     WEB_UI_PATH,
 )
 from logutil import get_logger
@@ -135,7 +136,11 @@ def send_json(handler: BaseHTTPRequestHandler, payload: dict[str, Any], code: in
 
 
 def make_handler(bridge):
-    airport = AirportService(AIRPORT_DESTINATIONS_PATH, AIRPORT_TICKETS_DB_PATH)
+    airport = AirportService(
+        AIRPORT_DESTINATIONS_PATH,
+        AIRPORT_TICKETS_DB_PATH,
+        PRIMARY_BUTTONS_PATH,
+    )
     kiosk_navigation = KioskNavigationSession(bridge)
 
     class Handler(BaseHTTPRequestHandler):

@@ -119,3 +119,4 @@ OCC_EDGE = 0.85
 WEB_UI_PATH = Path(__file__).resolve().parent / "web_ui.html"
 _MONITOR_ROOT = Path(__file__).resolve().parents[1] / "monitor"
 AIRPORT_UI_PATH = _MONITOR_ROOT / "airport_ui.html"
+PRIMARY_BUTTONS_PATH = _MONITOR_ROOT / "primary_buttons.json"

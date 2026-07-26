@@ -7,7 +7,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
 HTML_PATH = ROOT / "airport_ui.html"
-HTTP_PATH = ROOT / "integration/lidar_map/http_api.py"
+HTTP_PATH = ROOT.parent / "lidar_map" / "http_api.py"
 
 
 class AirportUiAssetTest(unittest.TestCase):
