@@ -1,0 +1,6 @@
+# На Pi без монитора можно заменить на opencv-python-headless
+opencv-python>=4.8.0
+numpy>=1.24.0
+python-dotenv>=1.0.0
+# Нужен только для CAMERA_SOURCE=rtsp (Tapo):
+# pytapo>=3.3.0

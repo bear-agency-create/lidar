@@ -6,6 +6,7 @@ __pycache__/
 venv/
 .env
 .env.*
+!.env.example
 *.log
 .idea/
 .vscode/
@@ -13,3 +14,4 @@ venv/
 .arduino/
 **/build/
 **/mega_build/
+camera/.venv/
