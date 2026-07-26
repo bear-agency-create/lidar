@@ -1,0 +1,15 @@
+{
+  "cal_tps": [510, 734, 2103, 1389],
+  "pidv_kp_x1000": 400,
+  "pidv_ki_x1000": 2000,
+  "frb_pct": 105,
+  "yaw_kp": 2.0,
+  "yaw_deadband_deg": 2.0,
+  "trim_w": {
+    "fwd": 0.55,
+    "back": 0.55,
+    "strl": -0.25,
+    "strr": 0.35
+  },
+  "notes": "Recalibrated 2026-07-26 for new floor; FR encoder weak; trims boosted after residual yaw on verify."
+}

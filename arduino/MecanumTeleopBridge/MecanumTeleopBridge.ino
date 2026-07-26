@@ -22,9 +22,10 @@
     RESET_ODOM                   zero encoders + pose -> ODOM_OK
     SET_POSE x_mm y_mm th        override pose -> POSE_OK
     ENC?                         raw per-wheel encoder counts
-    SET_PIDV kp ki               velocity-loop gains x1000 (default 500 2500)
+    SET_PIDV kp ki               velocity-loop gains x1000 (default 350 1800)
     SET_CAL fl fr rl rr          full-scale ticks/s per wheel
     SET_FRB pct                  FR reverse-direction scale in percent
+    SET_FRF pct                  FR forward-direction scale in percent
 
   Telemetry every 80 ms (L/R are resolution-normalized tick sums):
     POS X=<mm> Y=<mm> Th=<rad> L=<ticks> R=<ticks> C=<max PI corr>
@@ -59,19 +60,19 @@ static const unsigned long CMD_TIMEOUT_MS = 1200;
 static const unsigned long POS_PERIOD_MS = 80;
 static const unsigned long CTRL_PERIOD_MS = 25;
 
-// Full-scale ticks/s per wheel at mix 1.0 (PWM ~200), measured on floor.
-static float calTps[4] = {572.0f, 336.0f, 1960.0f, 1423.0f};   // FL FR RL RR
+// Full-scale ticks/s per wheel at mix 1.0 (PWM ~200), measured 2026-07-26 new floor.
+static float calTps[4] = {510.0f, 734.0f, 2103.0f, 1389.0f};   // FL FR RL RR
 
 // Wheels with trustworthy encoders (index: 0=FL 1=FR 2=RL 3=RR)
 static const bool encTrusted[4] = {true, false, true, true};
 
-// FR runs feedforward-only; its reverse direction needs a scale fix
-// (lidar-tuned 2026-07-24, SET_FRB sweep minimum around 108%).
-static float frRevScale = 1.08f;
+// FR runs feedforward-only; both directions need scale fixes on changing floors.
+static float frRevScale = 1.05f;
+static float frFwdScale = 1.12f;   // FR lags on new floor; boost forward FF
 
-// Per-wheel velocity PI (normalized units)
-static float velKp = 0.500f;
-static float velKi = 2.500f;
+// Per-wheel velocity PI (normalized units) — milder defaults for new surfaces
+static float velKp = 0.350f;
+static float velKi = 1.800f;
 static const float VEL_INT_MAX = 0.35f;
 static const float EMA_ALPHA = 0.30f;
 static const float RAMP_STEP = 0.09f;      // max mix change per control tick
@@ -212,7 +213,10 @@ static void applyMotors(float dt, const long dTicks[4]) {
     }
     if (!encTrusted[i]) {
       out[i] = target[i];   // feedforward only
-      if (i == 1 && out[i] < 0.0f) out[i] *= frRevScale;
+      if (i == 1) {
+        if (out[i] < 0.0f) out[i] *= frRevScale;
+        else if (out[i] > 0.0f) out[i] *= frFwdScale;
+      }
       continue;
     }
     // Reset integrator on direction reversal to avoid windup kick.
@@ -355,6 +359,17 @@ static void handleLine(char *line) {
       Serial.print(F("FRB_OK ")); Serial.println(pct);
     } else {
       Serial.println(F("FRB_ERR"));
+    }
+    return;
+  }
+  if (!strncmp(line, "SET_FRF", 7)) {
+    char *p = line + 7;
+    int pct = nextInt(&p);
+    if (pct >= 40 && pct <= 200) {
+      frFwdScale = (float)pct / 100.0f;
+      Serial.print(F("FRF_OK ")); Serial.println(pct);
+    } else {
+      Serial.println(F("FRF_ERR"));
     }
     return;
   }

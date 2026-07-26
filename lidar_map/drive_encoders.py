@@ -32,17 +32,79 @@ except ImportError:
     get_logger = None  # type: ignore[assignment]
 
 CMD_FILE = Path("/tmp/robot_cmd.json")
+CAL_FILE = Path(os.environ.get("DRIVE_CAL_FILE", str(Path(__file__).resolve().parent / "drive_cal.json")))
 PORT = os.environ.get("MEGA_DEV", "/dev/ttyUSB0")
 BAUD = 115200
 STALE_SEC = 0.9   # tolerate WiFi/SSH hiccups from the web remote
 POS_RE = re.compile(r"POS X=([-\d.]+) Y=([-\d.]+) Th=([-\d.]+)")
 
-# Lidar yaw hold
-YAW_KP = float(os.environ.get("YAW_KP", "1.8"))      # rad/s per rad of drift
-YAW_W_MAX = 0.8                                      # rad/s correction clamp
-YAW_DEADBAND = math.radians(2.5)                     # ignore parallax noise
+# Lidar yaw hold (overridden by drive_cal.json when present)
+YAW_KP = float(os.environ.get("YAW_KP", "1.2"))      # rad/s per rad of drift
+YAW_W_MAX = 0.65                                     # rad/s correction clamp
+YAW_DEADBAND = math.radians(3.0)                     # ignore parallax noise
 YAW_MAX_SHIFT_DEG = 25.0
 SCAN_STALE_SEC = 0.6
+
+DEFAULT_CAL = {
+    "cal_tps": [510, 734, 2103, 1389],
+    "pidv_kp_x1000": 400,
+    "pidv_ki_x1000": 2000,
+    "frb_pct": 105,
+    "yaw_kp": 2.0,
+    "yaw_deadband_deg": 2.0,
+    "trim_w": {"fwd": 0.55, "back": 0.55, "strl": -0.25, "strr": 0.35},
+}
+
+
+def load_cal() -> dict:
+    cal = dict(DEFAULT_CAL)
+    cal["trim_w"] = dict(DEFAULT_CAL["trim_w"])
+    try:
+        if CAL_FILE.is_file():
+            data = json.loads(CAL_FILE.read_text(encoding="utf-8"))
+            if isinstance(data, dict):
+                cal.update({k: data[k] for k in data if k != "trim_w"})
+                tw = data.get("trim_w") or {}
+                if isinstance(tw, dict):
+                    for k in ("fwd", "back", "strl", "strr"):
+                        if k in tw:
+                            cal["trim_w"][k] = float(tw[k])
+    except (OSError, json.JSONDecodeError, TypeError, ValueError):
+        pass
+    return cal
+
+
+def apply_mega_cal(ser: serial.Serial, cal: dict, log: logging.Logger) -> None:
+    """Push floor calibration into Mega firmware (runtime, survives until reboot)."""
+    tps = cal.get("cal_tps") or DEFAULT_CAL["cal_tps"]
+    if len(tps) == 4:
+        line = f"SET_CAL {int(tps[0])} {int(tps[1])} {int(tps[2])} {int(tps[3])}\n"
+        ser.write(line.encode())
+        time.sleep(0.08)
+    kp = int(cal.get("pidv_kp_x1000", 350))
+    ki = int(cal.get("pidv_ki_x1000", 1800))
+    ser.write(f"SET_PIDV {kp} {ki}\n".encode())
+    time.sleep(0.08)
+    frb = int(cal.get("frb_pct", 108))
+    ser.write(f"SET_FRB {frb}\n".encode())
+    time.sleep(0.08)
+    log.info(
+        "mega cal applied SET_CAL=%s SET_PIDV=%s %s SET_FRB=%s",
+        tps, kp, ki, frb,
+    )
+
+
+def direction_trim_w(vx: float, vy: float, trim: dict) -> float:
+    """Feedforward yaw trim for pure translation on the current floor."""
+    if abs(vx) < 0.02 and abs(vy) < 0.02:
+        return 0.0
+    if abs(vx) >= abs(vy):
+        key = "fwd" if vx > 0 else "back"
+        scale = min(1.0, abs(vx) / 0.25)
+    else:
+        key = "strl" if vy > 0 else "strr"
+        scale = min(1.0, abs(vy) / 0.25)
+    return float(trim.get(key, 0.0)) * scale
 
 
 def _clean(ranges) -> np.ndarray:
@@ -152,6 +214,13 @@ def main() -> None:
     except ImportError as e:
         raise SystemExit(f"ROS2 python deps missing: {e}") from e
 
+    global YAW_KP, YAW_DEADBAND
+
+    cal = load_cal()
+    YAW_KP = float(os.environ.get("YAW_KP", cal.get("yaw_kp", YAW_KP)))
+    YAW_DEADBAND = math.radians(float(cal.get("yaw_deadband_deg", 3.0)))
+    trim_w = dict(cal.get("trim_w") or {})
+
     rclpy.init()
     node = rclpy.create_node("mega_teleop_bridge")
     odom_pub = node.create_publisher(Odometry, "odom", 10)
@@ -164,10 +233,14 @@ def main() -> None:
         s = serial.Serial(PORT, BAUD, timeout=0.05)
         time.sleep(2.0)
         s.reset_input_buffer()
+        apply_mega_cal(s, cal, log)
         return s
 
     ser = open_serial()
-    msg = f"drive_encoders on {PORT} (lidar yaw hold kp={YAW_KP})"
+    msg = (
+        f"drive_encoders on {PORT} (yaw_kp={YAW_KP} cal={cal.get('cal_tps')} "
+        f"frb={cal.get('frb_pct')} trim={trim_w})"
+    )
     node.get_logger().info(msg)
     log.info(msg)
     last_stop = False
@@ -184,8 +257,9 @@ def main() -> None:
                 line = raw.decode("ascii", errors="ignore").strip()
                 m = POS_RE.search(line)
                 if not m:
-                    if line.startswith("ENC ") or line.startswith("READY"):
+                    if line.startswith(("ENC ", "READY", "CAL_OK", "PIDV_OK", "FRB_OK")):
                         node.get_logger().info(line)
+                        log.info(line)
                     continue
                 x_mm = float(m.group(1))
                 y_mm = float(m.group(2))
@@ -222,7 +296,7 @@ def main() -> None:
             time.sleep(0.5)
             continue
 
-        vx = vy = w = 0.0
+        vx = vy = w_cmd = 0.0
         fresh = False
         try:
             if CMD_FILE.is_file():
@@ -232,12 +306,13 @@ def main() -> None:
                     fresh = True
                     vx = float(data.get("vx", 0.0))
                     vy = float(data.get("vy", 0.0))
-                    w = float(data.get("w", 0.0))
+                    w_cmd = float(data.get("w", 0.0))
         except (OSError, json.JSONDecodeError, TypeError, ValueError):
             fresh = False
 
-        moving = fresh and (abs(vx) > 0.02 or abs(vy) > 0.02 or abs(w) > 0.05)
-        translating = moving and abs(w) <= 0.05
+        moving = fresh and (abs(vx) > 0.02 or abs(vy) > 0.02 or abs(w_cmd) > 0.05)
+        # Pure translation: user is not commanding a turn — enable alignment.
+        translating = moving and abs(w_cmd) <= 0.05
 
         if translating and not holding:
             hold.start()
@@ -248,8 +323,10 @@ def main() -> None:
 
         try:
             if moving:
+                w = w_cmd
                 if holding:
-                    w = hold.correction()
+                    # Floor feedforward trim + lidar fine correction (not replace user w).
+                    w = direction_trim_w(vx, vy, trim_w) + hold.correction()
                 vx_mm = int(max(-700, min(700, vx * 1000.0 * 1.8)))
                 vy_mm = int(max(-700, min(700, vy * 1000.0 * 1.8)))
                 w_mrad = int(max(-2500, min(2500, w * 1000.0)))
