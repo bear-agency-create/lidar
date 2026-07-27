@@ -36,8 +36,8 @@ def main() -> None:
             rclpy.spin_once(bridge, timeout_sec=0.05)
 
     threading.Thread(target=spin, daemon=True, name="ros-spin").start()
-    print(f"http://0.0.0.0:{PORT}/  (airport visitor kiosk)", flush=True)
-    print(f"http://0.0.0.0:{PORT}/operator  (drive map + web teleop)", flush=True)
+    print(f"http://0.0.0.0:{PORT}/  (drive map + web teleop)", flush=True)
+    print(f"http://0.0.0.0:{PORT}/kiosk  (airport visitor kiosk)", flush=True)
     print(f"map memory: {MAP_PATH}", flush=True)
     log.info("HTTP listening on %s:%s map=%s", HOST, PORT, MAP_PATH)
     try:

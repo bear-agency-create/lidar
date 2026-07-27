@@ -1,7 +1,7 @@
 # Airport visitor kiosk
 
-The visitor interface is served at `/`. The existing map and teleoperation
-console remains available at `/operator`.
+The visitor interface is served at `/kiosk`. The map and teleoperation
+console is the default page at `/` (also `/operator`).
 
 ## Local preview (Windows / no ROS)
 

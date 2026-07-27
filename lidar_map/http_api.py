@@ -154,7 +154,16 @@ def make_handler(bridge):
             origin = self.headers.get("Origin")
             host = self.headers.get("Host", "")
             origin_allowed = not origin or urlsplit(origin).netloc == host
-            if client_ip in AIRPORT_KIOSK_ALLOWED_CLIENTS and origin_allowed:
+            allowed = AIRPORT_KIOSK_ALLOWED_CLIENTS
+            # "*" = open LAN access for operator map / teleop from PC
+            ip_ok = (
+                "*" in allowed
+                or client_ip in allowed
+                or client_ip.startswith("172.21.")
+                or client_ip.startswith("127.")
+                or client_ip in {"::1", "0:0:0:0:0:0:0:1"}
+            )
+            if ip_ok and origin_allowed:
                 return True
             send_json(self, {"ok": False, "error": "kiosk_access_denied"}, 403)
             log.warning("blocked control request from %s origin=%s", client_ip, origin or "-")
@@ -162,7 +171,16 @@ def make_handler(bridge):
 
         def do_GET(self) -> None:  # noqa: N802
             path = self.path.split("?", 1)[0]
-            if path in ("/", "/index.html", "/kiosk"):
+            # Drive map / teleop is the default console again.
+            if path in ("/", "/index.html", "/operator", "/operator.html"):
+                body = load_html(WEB_UI_PATH)
+                self.send_response(200)
+                self.send_header("Content-Type", "text/html; charset=utf-8")
+                self.send_header("Content-Length", str(len(body)))
+                self.end_headers()
+                self.wfile.write(body)
+                return
+            if path == "/kiosk":
                 body = load_html(AIRPORT_UI_PATH)
                 self.send_response(200)
                 self.send_header("Content-Type", "text/html; charset=utf-8")
@@ -175,16 +193,6 @@ def make_handler(bridge):
                 self.send_response(200)
                 self.send_header("Content-Type", "image/png")
                 self.send_header("Cache-Control", "public, max-age=86400")
-                self.send_header("Content-Length", str(len(body)))
-                self.end_headers()
-                self.wfile.write(body)
-                return
-            if path in ("/operator", "/operator.html"):
-                if not self._allow_kiosk_control():
-                    return
-                body = load_html(WEB_UI_PATH)
-                self.send_response(200)
-                self.send_header("Content-Type", "text/html; charset=utf-8")
                 self.send_header("Content-Length", str(len(body)))
                 self.end_headers()
                 self.wfile.write(body)
