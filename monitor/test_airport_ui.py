@@ -65,6 +65,11 @@ class AirportUiAssetTest(unittest.TestCase):
         self.assertIn("stopCameraScan", self.html)
         self.assertIn('data-i18n="manualEntry"', self.html)
 
+    def test_demo_tickets_cover_sample_codes(self) -> None:
+        self.assertIn("DEMO_TICKETS", self.html)
+        self.assertIn("KZzKQhLbySCrKtkfNh9xSD2Q", self.html)
+        self.assertIn("lookupDemoTicket", self.html)
+
 
 if __name__ == "__main__":
     unittest.main()

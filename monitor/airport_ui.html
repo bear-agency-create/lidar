@@ -38,7 +38,7 @@
       height: 800px;
       overflow: hidden;
       background: #edf5fb;
-      box-shadow: 0 0 0 2px #0e1620, 0 28px 80px rgba(0, 0, 0, .5);
+      box-shadow: 0 28px 80px rgba(0, 0, 0, .35);
       flex-shrink: 0;
     }
     .kiosk-badge {
@@ -354,20 +354,27 @@
     .detail-copy p { margin: 0; color: var(--muted); font-size: 18px; line-height: 1.4; }
     .notice { margin-top: 13px; color: #9b6100; font-size: 14px; font-weight: 700; }
     .ticket-card {
-      flex: 1; margin: 17px 0; display: grid; grid-template-columns: 1.25fr .75fr;
-      border: 1px solid #cbddeb; border-radius: 24px; overflow: hidden; background: white; box-shadow: var(--shadow);
+      flex: 1; margin: 17px 0; display: grid; grid-template-columns: 1.4fr 1fr;
+      border: 1px solid #cadeee; border-radius: 24px; overflow: hidden;
+      background: white; box-shadow: var(--shadow);
     }
-    .ticket-main { padding: 25px 28px; }
-    .passenger { margin-bottom: 21px; color: var(--muted); font-size: 15px; }
-    .passenger strong { display: block; margin-top: 4px; color: var(--navy); font-size: 24px; }
-    .flight-line { display: flex; align-items: flex-end; gap: 22px; }
-    .flight-number strong { display: block; font-size: 40px; color: var(--navy); letter-spacing: -.03em; }
+    .ticket-main { padding: 28px 30px; display: flex; flex-direction: column; justify-content: center; gap: 28px; }
+    .passenger { color: var(--muted); font-size: 14px; font-weight: 700; }
+    .passenger strong { display: block; margin-top: 6px; color: var(--navy); font-size: 26px; font-weight: 800; }
+    .flight-line { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+    .flight-number strong { display: block; margin-top: 6px; font-size: 40px; color: var(--navy); letter-spacing: -.03em; font-weight: 850; }
     .ticket-label { color: var(--muted); font-size: 12px; font-weight: 800; letter-spacing: .09em; text-transform: uppercase; }
-    .ticket-value { display: block; margin-top: 5px; color: var(--navy); font-size: 20px; font-weight: 800; }
-    .ticket-side { padding: 25px; display: grid; grid-template-columns: 1fr 1fr; align-content: center; gap: 12px; color: white; background: var(--navy-2); }
-    .ticket-stat { padding: 14px; border: 1px solid rgba(255,255,255,.16); border-radius: 14px; background: rgba(255,255,255,.07); }
+    .ticket-value { display: block; margin-top: 6px; color: var(--navy); font-size: 28px; font-weight: 800; }
+    .ticket-side {
+      padding: 28px 24px; display: grid; grid-template-columns: 1fr; align-content: center; gap: 14px;
+      color: white; background: var(--navy-2);
+    }
+    .ticket-stat {
+      padding: 16px 18px; border: 1px solid rgba(255,255,255,.14); border-radius: 14px;
+      background: rgba(255,255,255,.06);
+    }
     .ticket-side .ticket-label { color: #a9c7e0; }
-    .ticket-side .ticket-value { color: white; font-size: 24px; }
+    .ticket-side .ticket-value { color: white; font-size: 30px; }
     .journey { flex: 1; display: grid; place-items: center; text-align: center; }
     .journey-ring {
       width: 146px; height: 146px; margin: 0 auto 20px; display: grid; place-items: center;
@@ -418,7 +425,7 @@
     .scan-form { display: flex; gap: 10px; margin: 0 auto 12px; max-width: 580px; }
     .scan-form input { min-width: 0; flex: 1; height: 58px; padding: 0 18px; border: 2px solid #b7cfe2; border-radius: 15px; color: var(--navy); background: white; font-size: 20px; user-select: text; }
     .scan-form button { min-width: 140px; }
-    .scan-error { min-height: 23px; margin-bottom: 10px; color: var(--danger); font-weight: 750; }
+    .scan-error { min-height: 23px; margin-bottom: 10px; color: var(--danger); font-weight: 750; font-size: 15px; }
     .hidden { display: none !important; }
     .offline {
       position: absolute; z-index: 30; left: 50%; bottom: 12px; transform: translateX(-50%);
@@ -493,7 +500,7 @@
       .content { padding: 21px; }
       .art-copy { display: none; }
       .ticket-card { grid-template-columns: 1fr; }
-      .ticket-side { grid-template-columns: repeat(4, 1fr); padding: 15px; }
+      .ticket-side { grid-template-columns: 1fr 1fr; padding: 18px; }
     }
     @media (orientation: portrait) {
       html, body { overflow: auto; }
@@ -665,6 +672,14 @@
       exit: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 8V3H4v18h10v-5M9 12h12M18 9l3 3-3 3"/></svg>'
     };
     const PLACE_ITEMS = ["restaurants", "souvenirs", "toilet", "cafe", "pharmacy"];
+    /* Локальный превью без lidar_map API: эти коды работают в ручном вводе / камере */
+    const DEMO_TICKETS = {
+      "KZzKQhLbySCrKtkfNh9xSD2Q": {passengerName:"Ivanov Alexey",flight:"SU1245",departureTime:"08:40",checkIn:"A03",gate:"12",destinationId:"check-in-a",canEscort:false},
+      "KZnbU6xaJONFbGzCxQ-B6u_w": {passengerName:"Petrova Maria",flight:"FZ991",departureTime:"11:15",checkIn:"B07",gate:"18",destinationId:"check-in-a",canEscort:false},
+      "KZwcE-kMAIppgkb-OFjxWuNA": {passengerName:"Chen Wei",flight:"CZ3602",departureTime:"14:05",checkIn:"C02",gate:"5",destinationId:"check-in-a",canEscort:false},
+      "KZ6kWBB_W8PPYxZM1cFxarTQ": {passengerName:"Karimova Aliya",flight:"U62214",departureTime:"16:50",checkIn:"A11",gate:"9",destinationId:"check-in-a",canEscort:false},
+      "KZaXTLNCGPD9Ynmf9hH_zMHw": {passengerName:"John Smith",flight:"TK1470",departureTime:"19:25",checkIn:"D01",gate:"22",destinationId:"check-in-a",canEscort:false}
+    };
     const COPY = {
       ru: {
         brand:"Аэропорт",brandSub:"Робот-помощник пассажира",services:"Сервисы аэропорта",where:"Куда вам нужно?",languageLabel:"Выбор языка",ticketBarcode:"Штрихкод билета",touchToStart:"Коснитесь экрана, чтобы начать",
@@ -674,6 +689,7 @@
         back:"Назад",escort:"Проводить меня",ticketFound:"Билет найден",flightInformation:"Информация о вашем рейсе",passenger:"Пассажир",flight:"Рейс",
         departure:"Вылет",checkIn:"Регистрация",gate:"Выход",ticketRouteUnavailable:"Данные рейса найдены, но маршрут сопровождения не настроен.",
         done:"Готово",escortToCheckIn:"Проводить к регистрации",followMe:"Следуйте за мной",routeStarted:"Мы отправляемся",stayClose:"Пожалуйста, держитесь рядом с роботом и не перекрывайте ему путь.",
+        ticketConfirmed:"Подтверждён",boardingDetails:"Посадка",
         safeRoute:"Безопасный маршрут активен",stopEscort:"Остановить сопровождение",scanTitle:"Отсканируйте билет",scanLead:"Наведите штрихкод на камеру — или введите код вручную ниже.",
         cameraStarting:"Включаем камеру…",cameraScanning:"Наведите штрихкод на камеру",cameraUnavailable:"Камера недоступна — введите код вручную",cameraNoDecoder:"Камера включена. Если код не считывается, введите его вручную.",manualEntry:"Ручной ввод",
         checkTicket:"Проверить",cancel:"Отмена",offline:"Нет связи с роботом",notFound:"Билет не найден. Проверьте штрихкод или обратитесь к сотруднику.",
@@ -693,6 +709,7 @@
         back:"Back",escort:"Escort me",ticketFound:"Ticket found",flightInformation:"Your flight information",passenger:"Passenger",flight:"Flight",
         departure:"Departure",checkIn:"Check-in",gate:"Gate",ticketRouteUnavailable:"Flight data is available, but the escort route is not configured.",
         done:"Done",escortToCheckIn:"Escort to check-in",followMe:"Follow me",routeStarted:"We’re on our way",stayClose:"Please stay close to the robot and keep the path clear.",
+        ticketConfirmed:"Confirmed",boardingDetails:"Boarding",
         safeRoute:"Safe route is active",stopEscort:"Stop escort",scanTitle:"Scan your ticket",scanLead:"Point the barcode at the camera — or type the code below.",
         cameraStarting:"Starting camera…",cameraScanning:"Point the barcode at the camera",cameraUnavailable:"Camera unavailable — enter the code manually",cameraNoDecoder:"Camera is on. If it does not read the code, type it manually.",manualEntry:"Manual entry",
         checkTicket:"Check",cancel:"Cancel",offline:"No connection to the robot",notFound:"Ticket not found. Check the barcode or ask an airport employee.",
@@ -712,6 +729,7 @@
         back:"返回",escort:"带我去",ticketFound:"已找到机票",flightInformation:"您的航班信息",passenger:"旅客",flight:"航班",
         departure:"起飞时间",checkIn:"值机柜台",gate:"登机口",ticketRouteUnavailable:"已找到航班信息，但引导路线尚未配置。",
         done:"完成",escortToCheckIn:"带我去值机",followMe:"请跟我来",routeStarted:"我们出发了",stayClose:"请跟紧机器人，并保持路线畅通。",
+        ticketConfirmed:"已确认",boardingDetails:"登机信息",
         safeRoute:"安全路线已启用",stopEscort:"停止引导",scanTitle:"扫描您的机票",scanLead:"将条码对准摄像头，或在下方手动输入代码。",
         cameraStarting:"正在启动摄像头…",cameraScanning:"请将条码对准摄像头",cameraUnavailable:"无法使用摄像头 — 请手动输入代码",cameraNoDecoder:"摄像头已开启。如无法识别，请手动输入。",manualEntry:"手动输入",
         checkTicket:"查询",cancel:"取消",offline:"无法连接机器人",notFound:"未找到机票，请检查条码或咨询机场工作人员。",
@@ -731,6 +749,7 @@
         back:"Артка",escort:"Мине озат",ticketFound:"Билет табылды",flightInformation:"Сезнең рейс турында мәгълүмат",passenger:"Юлчы",flight:"Рейс",
         departure:"Очып китү",checkIn:"Теркәлү",gate:"Утыру чыгуы",ticketRouteUnavailable:"Рейс мәгълүматы табылды, ләкин озату маршруты көйләнмәгән.",
         done:"Әзер",escortToCheckIn:"Теркәлүгә озат",followMe:"Минем арттан барыгыз",routeStarted:"Без юлга чыктык",stayClose:"Зинһар, робот янында булыгыз һәм аның юлын япмагыз.",
+        ticketConfirmed:"Расланды",boardingDetails:"Утыру",
         safeRoute:"Куркынычсыз маршрут актив",stopEscort:"Озатуны туктату",scanTitle:"Билетны сканерлагыз",scanLead:"Штрихкодны камерага якын китерегез — яки кодны кулдан языгыз.",
         cameraStarting:"Камераны кабызабыз…",cameraScanning:"Штрихкодны камерага якын китерегез",cameraUnavailable:"Камера эшләми — кодны кулдан языгыз",cameraNoDecoder:"Камера кабык. Укылмаса, кодны кулдан языгыз.",manualEntry:"Кулдан кертү",
         checkTicket:"Тикшерү",cancel:"Баш тарту",offline:"Робот белән элемтә юк",notFound:"Билет табылмады. Штрихкодны тикшерегез яки хезмәткәргә мөрәҗәгать итегез.",
@@ -1007,6 +1026,24 @@
       }
     }
 
+    function applyTicketSuccess(ticketData) {
+      ticket = ticketData;
+      selectedDestination = destinations.find(item => item.id === ticket.destinationId) || null;
+      closeScan(false);
+      renderTicket(ticket);
+      renderDestinations();
+      showPanel("ticketPanel");
+      $("ticketPanel").focus();
+      resetIdle();
+    }
+
+    function lookupDemoTicket(normalized) {
+      const demo = DEMO_TICKETS[normalized];
+      if (!demo) return false;
+      applyTicketSuccess({...demo});
+      return true;
+    }
+
     async function lookupTicket(code) {
       const normalized = normalizeTicketCode(code);
       $("scanError").textContent = "";
@@ -1023,23 +1060,28 @@
           method: "POST", headers: {"Content-Type": "application/json"},
           body: JSON.stringify({code: normalized}), cache: "no-store"
         });
-        const result = await response.json();
-        if (!result.ok) {
+        const raw = await response.text();
+        let result = null;
+        try { result = JSON.parse(raw); } catch (_) { result = null; }
+        if (result && result.ok && result.ticket) {
+          applyTicketSuccess(result.ticket);
+          return;
+        }
+        if (result && !result.ok) {
           const key = result.error === "ticket_database_unavailable" ? "databaseUnavailable" : result.error === "ticket_not_active" ? "invalidTicket" : "notFound";
+          // Если робот-API недоступен по БД — всё равно пробуем демо-коды для превью
+          if (result.error === "ticket_database_unavailable" && lookupDemoTicket(normalized)) return;
           $("scanError").textContent = t(key);
           $("ticketCode").select();
           ticketLookupInFlight = false;
           return;
         }
-        ticket = result.ticket;
-        selectedDestination = destinations.find(item => item.id === ticket.destinationId) || null;
-        closeScan(false);
-        renderTicket(ticket);
-        renderDestinations();
-        showPanel("ticketPanel");
-        $("ticketPanel").focus();
-        resetIdle();
+        // Статический preview (нет /api) — демо-билеты
+        if (lookupDemoTicket(normalized)) return;
+        $("scanError").textContent = t("databaseUnavailable");
+        ticketLookupInFlight = false;
       } catch (_) {
+        if (lookupDemoTicket(normalized)) return;
         $("scanError").textContent = t("databaseUnavailable");
         ticketLookupInFlight = false;
       }

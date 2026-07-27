@@ -3,6 +3,18 @@
 The visitor interface is served at `/`. The existing map and teleoperation
 console remains available at `/operator`.
 
+## Local preview (Windows / no ROS)
+
+From the `monitor/` folder:
+
+```bash
+python preview_server.py
+```
+
+Open **http://127.0.0.1:8877/** — the UI loads at `/`, ticket lookup and
+destination stubs work without `lidar_map`. Sample ticket codes are in
+`monitor/data/sample_ticket_codes.txt`.
+
 The layout is optimized for a 10.1-inch, 1280×800 landscape touchscreen and
 also adapts to portrait orientation.
 

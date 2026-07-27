@@ -1,0 +1,17 @@
+Sample ticket barcode codes
+Use Code 128 (alphanumeric). Exact string, no spaces.
+
+1. KZzKQhLbySCrKtkfNh9xSD2Q
+   Ivanov Alexey | SU1245 | dep 08:40 | desk A03 | gate 12 | valid
+
+2. KZnbU6xaJONFbGzCxQ-B6u_w
+   Petrova Maria | FZ991 | dep 11:15 | desk B07 | gate 18 | valid
+
+3. KZwcE-kMAIppgkb-OFjxWuNA
+   Chen Wei | CZ3602 | dep 14:05 | desk C02 | gate 5 | checked-in
+
+4. KZ6kWBB_W8PPYxZM1cFxarTQ
+   Karimova Aliya | U62214 | dep 16:50 | desk A11 | gate 9 | boarding
+
+5. KZaXTLNCGPD9Ynmf9hH_zMHw
+   John Smith | TK1470 | dep 19:25 | desk D01 | gate 22 | valid
