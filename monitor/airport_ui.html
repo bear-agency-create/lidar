@@ -331,6 +331,33 @@
       border: 1px solid #cadeee; border-radius: 24px; background: white; box-shadow: var(--shadow);
       overflow: hidden;
     }
+    .route-map-wrap {
+      flex: 1; min-height: 0; margin: 14px 0 12px; padding: 12px;
+      display: flex; flex-direction: column; gap: 10px;
+      border: 1px solid #cadeee; border-radius: 24px; background: white; box-shadow: var(--shadow);
+    }
+    .route-map-legend {
+      display: flex; flex-wrap: wrap; gap: 14px 22px; padding: 0 4px;
+      color: var(--muted); font-size: 14px; font-weight: 700;
+    }
+    .route-map-legend span { display: inline-flex; align-items: center; gap: 8px; }
+    .route-map-legend i {
+      width: 16px; height: 16px; border-radius: 50%; display: inline-block;
+    }
+    .route-map-legend .lg-a { background: var(--blue); }
+    .route-map-legend .lg-b { background: var(--orange); }
+    .route-map-legend .lg-path {
+      width: 22px; height: 4px; border-radius: 99px; background: var(--blue);
+    }
+    .route-map-canvas-box {
+      position: relative; flex: 1; min-height: 180px; border-radius: 16px; overflow: hidden;
+      background: #e7eef5; border: 1px solid #d5e3ef;
+    }
+    #routeMapCanvas { display: block; width: 100%; height: 100%; }
+    .route-map-status {
+      min-height: 20px; color: var(--muted); font-size: 14px; font-weight: 650;
+    }
+    .route-map-status.error { color: var(--danger); }
     .place-item {
       min-height: 0; height: 100%; padding: 16px 18px;
       display: flex; flex-direction: column; justify-content: center; gap: 0;
@@ -588,6 +615,26 @@
             <button class="primary" id="escortButton" data-i18n="escort">Escort me</button>
           </div>
         </div>
+        <div id="mapPanel" class="panel hidden">
+          <span class="eyebrow" data-i18n="routeMapEyebrow">Route</span>
+          <h1 id="mapTitle" data-i18n="routeMapTitle">Check-in</h1>
+          <p class="lead" data-i18n="routeMapLead">Point A is your start. Point B is the destination. The blue line is the best path.</p>
+          <div class="route-map-wrap">
+            <div class="route-map-legend">
+              <span><i class="lg-a"></i><span data-i18n="routePointA">A — you are here</span></span>
+              <span><i class="lg-b"></i><span data-i18n="routePointB">B — check-in</span></span>
+              <span><i class="lg-path"></i><span data-i18n="routePath">Optimal route</span></span>
+            </div>
+            <div class="route-map-canvas-box">
+              <canvas id="routeMapCanvas" width="640" height="400" aria-label="Route map"></canvas>
+            </div>
+            <div id="routeMapStatus" class="route-map-status"></div>
+          </div>
+          <div class="action-row">
+            <button class="secondary" id="mapBack" data-i18n="back">Back</button>
+            <button class="primary" id="mapRefresh" data-i18n="routeRebuild">New route</button>
+          </div>
+        </div>
         <div id="placesPanel" class="panel hidden">
           <span class="eyebrow" data-i18n="placesEyebrow">Places</span>
           <h1 data-i18n="placesTitle">Places in the airport</h1>
@@ -696,6 +743,9 @@
         databaseUnavailable:"Сервис проверки билетов временно недоступен.",invalidTicket:"Этот билет сейчас недействителен.",startFailed:"Не удалось построить безопасный маршрут.",stopFailed:"Не удалось остановить робота. Не отходите и позовите сотрудника.",
         arrived:"Мы прибыли",arrivedLead:"Вы на месте. Хорошего путешествия!",routeStopped:"Маршрут остановлен",routeStoppedLead:"Движение было прервано. Выберите место ещё раз или обратитесь к сотруднику.",noDescription:"Точное расположение уточните на стойке информации.",
         placesEyebrow:"Места",placesTitle:"Места в аэропорту",placesLead:"Рестораны, сувениры, туалет и другие точки — выберите нужное.",
+        routeMapEyebrow:"Маршрут",routeMapTitle:"Регистрация",routeMapLead:"Точка A — старт. Точка B — регистрация. Синяя линия — оптимальный путь.",
+        routePointA:"A — вы здесь",routePointB:"B — регистрация",routePath:"Оптимальный маршрут",routeRebuild:"Новый маршрут",
+        routeMapLoading:"Строим маршрут…",routeMapError:"Не удалось построить маршрут",routeMapReady:"Маршрут готов",
         kinds:{"check-in":"Регистрация","gates":"Выходы на посадку","baggage":"Выдача багажа","places":"Места","information":"Стойка информации","exit":"Выход"},
         kindHints:{"check-in":"Стойки и оформление","gates":"Зоны вылета","baggage":"Зал прилёта","places":"Рестораны, сувениры, туалет…","information":"Помощь пассажирам","exit":"К транспорту"},
         placeNames:{"restaurants":"Рестораны","souvenirs":"Сувениры","toilet":"Туалет","cafe":"Кафе","pharmacy":"Аптека"},
@@ -716,6 +766,9 @@
         databaseUnavailable:"Ticket checking is temporarily unavailable.",invalidTicket:"This ticket is not currently active.",startFailed:"A safe route could not be built.",stopFailed:"The robot could not be stopped. Stay here and call an airport employee.",
         arrived:"We have arrived",arrivedLead:"You are at your destination. Have a good journey!",routeStopped:"Route stopped",routeStoppedLead:"The journey was interrupted. Choose the destination again or ask an airport employee.",noDescription:"Please ask at the information desk for the exact location.",
         placesEyebrow:"Places",placesTitle:"Places in the airport",placesLead:"Restaurants, souvenirs, restrooms and more — pick what you need.",
+        routeMapEyebrow:"Route",routeMapTitle:"Check-in",routeMapLead:"Point A is your start. Point B is check-in. The blue line is the best path.",
+        routePointA:"A — you are here",routePointB:"B — check-in",routePath:"Optimal route",routeRebuild:"New route",
+        routeMapLoading:"Building route…",routeMapError:"Could not build a route",routeMapReady:"Route ready",
         kinds:{"check-in":"Check-in","gates":"Boarding gates","baggage":"Baggage claim","places":"Places","information":"Information desk","exit":"Exit"},
         kindHints:{"check-in":"Desks and assistance","gates":"Departure zones","baggage":"Arrivals hall","places":"Restaurants, shops, restrooms…","information":"Passenger help","exit":"Ground transport"},
         placeNames:{"restaurants":"Restaurants","souvenirs":"Souvenirs","toilet":"Restrooms","cafe":"Café","pharmacy":"Pharmacy"},
@@ -736,6 +789,9 @@
         databaseUnavailable:"机票查询服务暂时不可用。",invalidTicket:"此机票当前无效。",startFailed:"无法规划安全路线。",stopFailed:"机器人无法停止。请留在原地并呼叫机场工作人员。",
         arrived:"我们到了",arrivedLead:"您已到达目的地，祝您旅途愉快！",routeStopped:"路线已停止",routeStoppedLead:"行程已中断。请重新选择目的地或咨询机场工作人员。",noDescription:"确切位置请咨询问讯处。",
         placesEyebrow:"场所",placesTitle:"机场内场所",placesLead:"餐厅、纪念品、洗手间等 — 请选择您需要的。",
+        routeMapEyebrow:"路线",routeMapTitle:"值机",routeMapLead:"A 为起点，B 为值机柜台，蓝线为最优路径。",
+        routePointA:"A — 您在这里",routePointB:"B — 值机",routePath:"最优路线",routeRebuild:"新路线",
+        routeMapLoading:"正在规划路线…",routeMapError:"无法规划路线",routeMapReady:"路线已就绪",
         kinds:{"check-in":"值机","gates":"登机口","baggage":"行李提取","places":"场所","information":"问讯处","exit":"出口"},
         kindHints:{"check-in":"柜台和服务","gates":"出发区域","baggage":"到达大厅","places":"餐厅、商店、洗手间…","information":"旅客帮助","exit":"地面交通"},
         placeNames:{"restaurants":"餐厅","souvenirs":"纪念品","toilet":"洗手间","cafe":"咖啡厅","pharmacy":"药店"},
@@ -756,6 +812,9 @@
         databaseUnavailable:"Билет тикшерү хезмәте вакытлыча эшләми.",invalidTicket:"Бу билет хәзер гамәлдә түгел.",startFailed:"Куркынычсыз маршрут төзеп булмады.",stopFailed:"Роботны туктатып булмады. Урыныгызда калыгыз һәм хезмәткәрне чакырыгыз.",
         arrived:"Без килеп җиттек",arrivedLead:"Сез кирәкле урында. Хәерле юл!",routeStopped:"Маршрут туктатылды",routeStoppedLead:"Хәрәкәт өзелде. Урынны яңадан сайлагыз яки хезмәткәргә мөрәҗәгать итегез.",noDescription:"Төгәл урынны мәгълүмат өстәлендә сорагыз.",
         placesEyebrow:"Урыннар",placesTitle:"Аэропорттагы урыннар",placesLead:"Рестораннар, сувенирлар, бәдрәф һәм башкалар — кирәклесен сайлагыз.",
+        routeMapEyebrow:"Маршрут",routeMapTitle:"Теркәлү",routeMapLead:"A — башлангыч. B — теркәлү. Зәңгәр сызык — иң яхшы юл.",
+        routePointA:"A — сез монда",routePointB:"B — теркәлү",routePath:"Оптималь маршрут",routeRebuild:"Яңа маршрут",
+        routeMapLoading:"Маршрут төзелә…",routeMapError:"Маршрут төзеп булмады",routeMapReady:"Маршрут әзер",
         kinds:{"check-in":"Теркәлү","gates":"Утыру чыгу юллары","baggage":"Багаж алу","places":"Урыннар","information":"Мәгълүмат өстәле","exit":"Чыгу"},
         kindHints:{"check-in":"Өстәлләр һәм ярдәм","gates":"Очып китү зоналары","baggage":"Килү залы","places":"Рестораннар, кибетләр, бәдрәф…","information":"Юлчыларга ярдәм","exit":"Транспортка"},
         placeNames:{"restaurants":"Рестораннар","souvenirs":"Сувенирлар","toilet":"Бәдрәф","cafe":"Кафе","pharmacy":"Аптека"},
@@ -763,7 +822,7 @@
       }
     };
 
-    const panels = ["welcomePanel", "detailsPanel", "placesPanel", "ticketPanel", "journeyPanel"];
+    const panels = ["welcomePanel", "detailsPanel", "placesPanel", "mapPanel", "ticketPanel", "journeyPanel"];
     let lang = localStorage.getItem("airport-language") || "ru";
     let destinations = [];
     let selectedDestination = null;
@@ -880,15 +939,119 @@
       if (!selectedDestination) return;
       clearTicketData();
       if (selectedDestination.kind === "places" || selectedDestination.kind === "toilet") {
-        // toilet legacy → same places catalog
         openPlacesPanel();
         return;
       }
       placesContext = false;
       renderDestinations();
+      if (selectedDestination.kind === "check-in") {
+        openRouteMapPanel(selectedDestination);
+        return;
+      }
       renderDetails(selectedDestination);
       showPanel("detailsPanel");
       resetIdle();
+    }
+
+    async function openRouteMapPanel(destination) {
+      const label = localized(destination?.labels, t("kinds")[destination?.kind] || t("routeMapTitle"));
+      $("mapTitle").textContent = label;
+      showPanel("mapPanel");
+      resetIdle();
+      await loadAndDrawRouteMap();
+    }
+
+    async function loadAndDrawRouteMap(seed) {
+      const status = $("routeMapStatus");
+      status.classList.remove("error");
+      status.textContent = t("routeMapLoading");
+      try {
+        const query = seed == null ? "" : `?seed=${encodeURIComponent(seed)}`;
+        const response = await fetch(`/api/map/preview${query}`, {cache: "no-store"});
+        const data = await response.json();
+        if (!data.ok) {
+          status.classList.add("error");
+          status.textContent = t("routeMapError");
+          return;
+        }
+        drawRouteMap(data);
+        const sourceNote = data.source === "remembered" ? "" : "";
+        status.textContent = `${t("routeMapReady")}${sourceNote}`;
+      } catch (_) {
+        status.classList.add("error");
+        status.textContent = t("routeMapError");
+      }
+    }
+
+    function drawRouteMap(data) {
+      const canvas = $("routeMapCanvas");
+      const box = canvas.parentElement;
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const cssW = Math.max(320, box.clientWidth || 640);
+      const cssH = Math.max(220, box.clientHeight || 360);
+      canvas.width = Math.round(cssW * dpr);
+      canvas.height = Math.round(cssH * dpr);
+      canvas.style.width = `${cssW}px`;
+      canvas.style.height = `${cssH}px`;
+      const ctx = canvas.getContext("2d");
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+      const gw = data.width || 1;
+      const gh = data.height || 1;
+      const pad = 16;
+      const scale = Math.min((cssW - pad * 2) / gw, (cssH - pad * 2) / gh);
+      const ox = (cssW - gw * scale) / 2;
+      const oy = (cssH - gh * scale) / 2;
+      const cell = Math.max(scale, 1);
+
+      ctx.fillStyle = "#e7eef5";
+      ctx.fillRect(0, 0, cssW, cssH);
+
+      // Soft floor rectangle
+      ctx.fillStyle = "#f4f8fc";
+      ctx.fillRect(ox, oy, gw * scale, gh * scale);
+
+      ctx.fillStyle = "#1e3a55";
+      for (const wall of data.walls || []) {
+        const x = ox + wall[0] * scale;
+        const y = oy + wall[1] * scale;
+        ctx.fillRect(x, y, cell + 0.4, cell + 0.4);
+      }
+
+      const path = data.path || [];
+      if (path.length > 1) {
+        ctx.strokeStyle = "#0878e6";
+        ctx.lineWidth = Math.max(3, scale * 1.6);
+        ctx.lineJoin = "round";
+        ctx.lineCap = "round";
+        ctx.beginPath();
+        path.forEach((point, index) => {
+          const x = ox + (point[0] + 0.5) * scale;
+          const y = oy + (point[1] + 0.5) * scale;
+          if (index === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        });
+        ctx.stroke();
+      }
+
+      function drawMarker(point, color, label) {
+        if (!point) return;
+        const x = ox + (point.x + 0.5) * scale;
+        const y = oy + (point.y + 0.5) * scale;
+        const r = Math.max(10, scale * 3.2);
+        ctx.beginPath();
+        ctx.fillStyle = color;
+        ctx.arc(x, y, r, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "#fff";
+        ctx.font = `700 ${Math.max(12, r)}px Arial, sans-serif`;
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText(label, x, y + 0.5);
+      }
+
+      drawMarker(data.pointA, "#0878e6", "A");
+      drawMarker(data.pointB, "#ffb000", "B");
     }
 
     function renderDetails(destination) {
@@ -1303,6 +1466,8 @@
     $("scanForm").addEventListener("submit", event => { event.preventDefault(); lookupTicket($("ticketCode").value); });
     $("detailsBack").addEventListener("click", detailsBack);
     $("placesBack").addEventListener("click", goHome);
+    $("mapBack").addEventListener("click", goHome);
+    $("mapRefresh").addEventListener("click", () => loadAndDrawRouteMap(Date.now() % 100000));
     $("ticketBack").addEventListener("click", goHome);
     $("escortButton").addEventListener("click", () => startEscort(selectedDestination?.id));
     $("ticketEscort").addEventListener("click", () => startEscort(ticket?.destinationId));

@@ -10,12 +10,16 @@ import sys
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import Any
-from urllib.parse import urlsplit
+from urllib.parse import parse_qs, urlsplit
 
 ROOT = Path(__file__).resolve().parent
 HOST = "127.0.0.1"
 PORT = 8877
 TICKET_CODE_RE = re.compile(r"^[A-Za-z0-9_-]{1,128}$")
+
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+from map_route import build_route_preview  # noqa: E402
 
 DEMO_TICKETS: dict[str, dict[str, Any]] = {
     "KZzKQhLbySCrKtkfNh9xSD2Q": {
@@ -174,6 +178,13 @@ class PreviewHandler(SimpleHTTPRequestHandler):
             return self._send_json({"ok": True, "online": True, "preview": True})
         if path == "/api/scan":
             return self._send_json({"ok": True, "preview": True, "navigating": False})
+        if path == "/api/map/preview":
+            query = parse_qs(urlsplit(self.path).query)
+            seed_raw = (query.get("seed") or [None])[0]
+            seed = int(seed_raw) if seed_raw and str(seed_raw).lstrip("-").isdigit() else None
+            result = build_route_preview(seed=seed)
+            status = 200 if result.get("ok") else 404
+            return self._send_json(result, status=status)
         return super().do_GET()
 
     def do_POST(self) -> None:  # noqa: N802

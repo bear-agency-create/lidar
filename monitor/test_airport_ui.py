@@ -70,6 +70,13 @@ class AirportUiAssetTest(unittest.TestCase):
         self.assertIn("KZzKQhLbySCrKtkfNh9xSD2Q", self.html)
         self.assertIn("lookupDemoTicket", self.html)
 
+    def test_check_in_opens_route_map_panel(self) -> None:
+        self.assertIn('id="mapPanel"', self.html)
+        self.assertIn('id="routeMapCanvas"', self.html)
+        self.assertIn("openRouteMapPanel", self.html)
+        self.assertIn("/api/map/preview", self.html)
+        self.assertIn('kind === "check-in"', self.html)
+
 
 if __name__ == "__main__":
     unittest.main()
