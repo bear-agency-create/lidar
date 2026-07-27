@@ -746,6 +746,7 @@
         routeMapEyebrow:"Маршрут",routeMapTitle:"Регистрация",routeMapLead:"Точка A — старт. Точка B — регистрация. Синяя линия — оптимальный путь.",
         routePointA:"A — вы здесь",routePointB:"B — регистрация",routePath:"Оптимальный маршрут",routeRebuild:"Новый маршрут",
         routeMapLoading:"Строим маршрут…",routeMapError:"Не удалось построить маршрут",routeMapReady:"Маршрут готов",
+        routeMapFromMemory:"по сохранённой карте",routeMapDemo:"демо-план (нет remembered map)",
         kinds:{"check-in":"Регистрация","gates":"Выходы на посадку","baggage":"Выдача багажа","places":"Места","information":"Стойка информации","exit":"Выход"},
         kindHints:{"check-in":"Стойки и оформление","gates":"Зоны вылета","baggage":"Зал прилёта","places":"Рестораны, сувениры, туалет…","information":"Помощь пассажирам","exit":"К транспорту"},
         placeNames:{"restaurants":"Рестораны","souvenirs":"Сувениры","toilet":"Туалет","cafe":"Кафе","pharmacy":"Аптека"},
@@ -769,6 +770,7 @@
         routeMapEyebrow:"Route",routeMapTitle:"Check-in",routeMapLead:"Point A is your start. Point B is check-in. The blue line is the best path.",
         routePointA:"A — you are here",routePointB:"B — check-in",routePath:"Optimal route",routeRebuild:"New route",
         routeMapLoading:"Building route…",routeMapError:"Could not build a route",routeMapReady:"Route ready",
+        routeMapFromMemory:"from saved map",routeMapDemo:"demo floor (no remembered map)",
         kinds:{"check-in":"Check-in","gates":"Boarding gates","baggage":"Baggage claim","places":"Places","information":"Information desk","exit":"Exit"},
         kindHints:{"check-in":"Desks and assistance","gates":"Departure zones","baggage":"Arrivals hall","places":"Restaurants, shops, restrooms…","information":"Passenger help","exit":"Ground transport"},
         placeNames:{"restaurants":"Restaurants","souvenirs":"Souvenirs","toilet":"Restrooms","cafe":"Café","pharmacy":"Pharmacy"},
@@ -792,6 +794,7 @@
         routeMapEyebrow:"路线",routeMapTitle:"值机",routeMapLead:"A 为起点，B 为值机柜台，蓝线为最优路径。",
         routePointA:"A — 您在这里",routePointB:"B — 值机",routePath:"最优路线",routeRebuild:"新路线",
         routeMapLoading:"正在规划路线…",routeMapError:"无法规划路线",routeMapReady:"路线已就绪",
+        routeMapFromMemory:"来自已保存地图",routeMapDemo:"演示平面图（无 remembered map）",
         kinds:{"check-in":"值机","gates":"登机口","baggage":"行李提取","places":"场所","information":"问讯处","exit":"出口"},
         kindHints:{"check-in":"柜台和服务","gates":"出发区域","baggage":"到达大厅","places":"餐厅、商店、洗手间…","information":"旅客帮助","exit":"地面交通"},
         placeNames:{"restaurants":"餐厅","souvenirs":"纪念品","toilet":"洗手间","cafe":"咖啡厅","pharmacy":"药店"},
@@ -815,6 +818,7 @@
         routeMapEyebrow:"Маршрут",routeMapTitle:"Теркәлү",routeMapLead:"A — башлангыч. B — теркәлү. Зәңгәр сызык — иң яхшы юл.",
         routePointA:"A — сез монда",routePointB:"B — теркәлү",routePath:"Оптималь маршрут",routeRebuild:"Яңа маршрут",
         routeMapLoading:"Маршрут төзелә…",routeMapError:"Маршрут төзеп булмады",routeMapReady:"Маршрут әзер",
+        routeMapFromMemory:"сакланган картадан",routeMapDemo:"демо-план (remembered map юк)",
         kinds:{"check-in":"Теркәлү","gates":"Утыру чыгу юллары","baggage":"Багаж алу","places":"Урыннар","information":"Мәгълүмат өстәле","exit":"Чыгу"},
         kindHints:{"check-in":"Өстәлләр һәм ярдәм","gates":"Очып китү зоналары","baggage":"Килү залы","places":"Рестораннар, кибетләр, бәдрәф…","information":"Юлчыларга ярдәм","exit":"Транспортка"},
         placeNames:{"restaurants":"Рестораннар","souvenirs":"Сувенирлар","toilet":"Бәдрәф","cafe":"Кафе","pharmacy":"Аптека"},
@@ -975,7 +979,9 @@
           return;
         }
         drawRouteMap(data);
-        const sourceNote = data.source === "remembered" ? "" : "";
+        const sourceNote = data.source === "remembered"
+          ? ` — ${t("routeMapFromMemory")}`
+          : ` — ${t("routeMapDemo")}`;
         status.textContent = `${t("routeMapReady")}${sourceNote}`;
       } catch (_) {
         status.classList.add("error");

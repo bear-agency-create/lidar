@@ -3,11 +3,12 @@
 from __future__ import annotations
 
 import json
+import sys
 import threading
 import time
 from http.server import BaseHTTPRequestHandler
 from typing import Any
-from urllib.parse import urlsplit
+from urllib.parse import parse_qs, urlsplit
 
 from airport_service import AirportService
 from config import (
@@ -21,6 +22,15 @@ from config import (
 from logutil import get_logger
 
 log = get_logger("http")
+
+_MONITOR_DIR = str(AIRPORT_UI_PATH.parent)
+if _MONITOR_DIR not in sys.path:
+    sys.path.insert(0, _MONITOR_DIR)
+try:
+    from map_route import build_route_preview as _build_route_preview
+except ImportError:  # pragma: no cover - missing monitor package
+    _build_route_preview = None
+    log.warning("map_route unavailable — /api/map/preview disabled")
 
 _HTML_CACHE: dict[str, bytes] = {}
 _ASSET_CACHE: dict[str, bytes] = {}
@@ -199,6 +209,26 @@ def make_handler(bridge):
                 return
             if path == "/api/airport/destinations":
                 send_json(self, airport.public_destinations())
+                return
+            if path == "/api/map/preview":
+                if _build_route_preview is None:
+                    send_json(self, {"ok": False, "error": "map_preview_unavailable"}, 503)
+                    return
+                query = parse_qs(urlsplit(self.path).query)
+                seed_raw = (query.get("seed") or [None])[0]
+                seed: int | None = None
+                if seed_raw is not None:
+                    try:
+                        seed = int(str(seed_raw))
+                    except ValueError:
+                        seed = None
+                try:
+                    result = _build_route_preview(seed=seed)
+                except Exception:  # noqa: BLE001
+                    log.exception("map preview failed")
+                    send_json(self, {"ok": False, "error": "map_preview_failed"}, 500)
+                    return
+                send_json(self, result, 200 if result.get("ok") else 404)
                 return
             if path == "/api/airport/status":
                 if not self._allow_kiosk_control():
