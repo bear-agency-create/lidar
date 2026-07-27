@@ -83,7 +83,7 @@ class AirportServiceTest(unittest.TestCase):
         result = self.service.public_destinations()
         self.assertTrue(result["ok"])
         self.assertFalse(result["configured"])
-        self.assertEqual(len(result["destinations"]), 4)
+        self.assertEqual(len(result["destinations"]), 6)
         self.assertEqual(
             [item["kind"] for item in result["destinations"]],
             ["check-in", "baggage", "information", "exit"],

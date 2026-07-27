@@ -21,6 +21,10 @@ echo "GitHub: $(git -C "$CLONE_DIR" log -1 --oneline)"
 rm -rf "$TARGET"
 cp -a "$CLONE_DIR/lidar_map" "$TARGET"
 [ -d "$CLONE_DIR/arduino" ] && cp -a "$CLONE_DIR/arduino" "$HOME/robot_nav/arduino"
+if [ -d "$CLONE_DIR/monitor" ]; then
+  rm -rf "$HOME/robot_nav/monitor"
+  cp -a "$CLONE_DIR/monitor" "$HOME/robot_nav/monitor"
+fi
 
 chmod +x "$TARGET/start_drive_map.sh" "$TARGET/update_from_github.sh"
 

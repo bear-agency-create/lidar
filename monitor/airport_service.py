@@ -11,7 +11,14 @@ from pathlib import Path
 from typing import Any
 
 
-PRIMARY_KINDS: tuple[str, ...] = ("check-in", "baggage", "information", "exit")
+PRIMARY_KINDS: tuple[str, ...] = (
+    "check-in",
+    "gates",
+    "baggage",
+    "places",
+    "information",
+    "exit",
+)
 
 DEFAULT_SERVICES: tuple[dict[str, Any], ...] = tuple(
     {"id": kind, "kind": kind, "enabled": False, "zone": "", "labels": {}, "descriptions": {}}
