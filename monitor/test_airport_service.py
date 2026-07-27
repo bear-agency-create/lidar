@@ -21,7 +21,9 @@ class AirportServiceTest(unittest.TestCase):
                 {
                     "buttons": [
                         {"id": "check-in", "kind": "check-in"},
+                        {"id": "gates", "kind": "gates"},
                         {"id": "baggage", "kind": "baggage"},
+                        {"id": "places", "kind": "places"},
                         {"id": "information", "kind": "information"},
                         {"id": "exit", "kind": "exit"},
                     ]
