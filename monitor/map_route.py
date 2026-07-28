@@ -170,6 +170,83 @@ def load_remembered_as_display_grid(path: Path | None = None) -> list[list[bool]
     return _clean_walls(walls)
 
 
+def load_remembered_with_meta(path: Path | None = None) -> tuple[list[list[bool]], dict[str, float]] | None:
+    """Return remembered map projected to display grid + projection metadata."""
+    candidates = (path,) if path is not None else REMEMBERED_MAP_CANDIDATES
+    data = None
+    for candidate in candidates:
+        if not candidate.is_file():
+            continue
+        try:
+            data = json.loads(candidate.read_text(encoding="utf-8"))
+            break
+        except (json.JSONDecodeError, OSError):
+            continue
+    if data is None:
+        return None
+
+    src_w = int(data.get("w") or 0)
+    src_h = int(data.get("h") or 0)
+    if src_w < 8 or src_h < 8:
+        return None
+    res = float(data.get("res") or 0.05)
+    origin_x = float(data.get("origin_x") or 0.0)
+    origin_y = float(data.get("origin_y") or 0.0)
+
+    solid = set()
+    sparse = data.get("sparse")
+    if isinstance(sparse, list):
+        for item in sparse:
+            if not isinstance(item, (list, tuple)) or len(item) < 2:
+                continue
+            idx, lo = int(item[0]), float(item[1])
+            if lo >= OCC_SOLID:
+                solid.add((idx % src_w, idx // src_w))
+    elif isinstance(data.get("logodds"), list):
+        for idx, lo in enumerate(data["logodds"]):
+            if float(lo) >= OCC_SOLID:
+                solid.add((idx % src_w, idx // src_w))
+    if not solid:
+        return None
+
+    xs = [p[0] for p in solid]
+    ys = [p[1] for p in solid]
+    pad = 8
+    min_x, max_x = max(0, min(xs) - pad), min(src_w - 1, max(xs) + pad)
+    min_y, max_y = max(0, min(ys) - pad), min(src_h - 1, max(ys) + pad)
+    bw = max(1, max_x - min_x + 1)
+    bh = max(1, max_y - min_y + 1)
+
+    out_w, out_h = GRID_W, GRID_H
+    walls = _empty(out_w, out_h)
+    src_w_span = max(1, bw - 1)
+    src_h_span = max(1, bh - 1)
+    scale = min((out_w - 1) / src_w_span, (out_h - 1) / src_h_span)
+    used_w = src_w_span * scale
+    used_h = src_h_span * scale
+    x_off = (out_w - 1 - used_w) * 0.5
+    y_off = (out_h - 1 - used_h) * 0.5
+    for sx, sy in solid:
+        dx = int(round((sx - min_x) * scale + x_off))
+        dy = int(round((sy - min_y) * scale + y_off))
+        if 0 <= dx < out_w and 0 <= dy < out_h:
+            walls[dy][dx] = True
+
+    meta = {
+        "min_x": float(min_x),
+        "min_y": float(min_y),
+        "scale": float(scale),
+        "x_off": float(x_off),
+        "y_off": float(y_off),
+        "origin_x": origin_x,
+        "origin_y": origin_y,
+        "res": res,
+        "src_w": float(src_w),
+        "src_h": float(src_h),
+    }
+    return _clean_walls(walls), meta
+
+
 def _clean_walls(walls: list[list[bool]]) -> list[list[bool]]:
     """Light morphological close: fill tiny holes so walls look solid."""
     h = len(walls)
@@ -334,25 +411,80 @@ def simplify_path(path: list[tuple[int, int]], blocked: set[tuple[int, int]]) ->
     return out
 
 
-def get_display_walls() -> tuple[list[list[bool]], str]:
-    remembered = load_remembered_as_display_grid()
+def get_display_walls() -> tuple[list[list[bool]], str, dict[str, float] | None]:
+    remembered = load_remembered_with_meta()
     if remembered is not None:
-        return remembered, "remembered"
+        walls, meta = remembered
+        return walls, "remembered", meta
     demo = load_demo_floor()
     if demo is None:
         demo = build_demo_floor()
         save_demo_floor()
-    return demo, "demo"
+    return demo, "demo", None
 
 
-def build_route_preview(seed: int | None = None) -> dict[str, Any]:
-    walls, source = get_display_walls()
+def _robot_to_display(
+    robot_pose: dict[str, Any] | None,
+    meta: dict[str, float] | None,
+) -> tuple[int, int] | None:
+    if not robot_pose or not meta:
+        return None
+    try:
+        rx = float(robot_pose.get("x"))
+        ry = float(robot_pose.get("y"))
+    except (TypeError, ValueError):
+        return None
+    res = float(meta["res"])
+    if res <= 0.0:
+        return None
+    sx = (rx - float(meta["origin_x"])) / res
+    sy = (ry - float(meta["origin_y"])) / res
+    dx = int(round((sx - float(meta["min_x"])) * float(meta["scale"]) + float(meta["x_off"])))
+    dy = int(round((sy - float(meta["min_y"])) * float(meta["scale"]) + float(meta["y_off"])))
+    return dx, dy
+
+
+def _nearest_free(
+    start: tuple[int, int] | None,
+    blocked: set[tuple[int, int]],
+    w: int,
+    h: int,
+    max_radius: int = 24,
+) -> tuple[int, int] | None:
+    if start is None:
+        return None
+    sx, sy = start
+    if 0 <= sx < w and 0 <= sy < h and (sx, sy) not in blocked:
+        return sx, sy
+    for r in range(1, max_radius + 1):
+        for dy in range(-r, r + 1):
+            for dx in (-r, r):
+                x, y = sx + dx, sy + dy
+                if 0 <= x < w and 0 <= y < h and (x, y) not in blocked:
+                    return x, y
+        for dx in range(-r + 1, r):
+            for dy in (-r, r):
+                x, y = sx + dx, sy + dy
+                if 0 <= x < w and 0 <= y < h and (x, y) not in blocked:
+                    return x, y
+    return None
+
+
+def build_route_preview(seed: int | None = None, robot_pose: dict[str, Any] | None = None) -> dict[str, Any]:
+    walls, source, meta = get_display_walls()
     h = len(walls)
     w = len(walls[0]) if h else 0
     blocked = inflate(walls, radius=1)
     free = free_cells(blocked, w, h)
     rng = random.Random(seed)
-    pair = pick_random_pair(free, min_dist=40.0, rng=rng)
+    robot_anchor = _nearest_free(_robot_to_display(robot_pose, meta), blocked, w, h)
+    pair = None
+    if robot_anchor is not None and free:
+        far = [p for p in free if abs(p[0] - robot_anchor[0]) + abs(p[1] - robot_anchor[1]) >= 30]
+        if far:
+            pair = (robot_anchor, rng.choice(far))
+    if pair is None:
+        pair = pick_random_pair(free, min_dist=40.0, rng=rng)
     if pair is None:
         return {"ok": False, "error": "no_free_space"}
     point_a, point_b = pair

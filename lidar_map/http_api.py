@@ -225,7 +225,8 @@ def make_handler(bridge):
                     except ValueError:
                         seed = None
                 try:
-                    result = _build_route_preview(seed=seed)
+                    snapshot = bridge.snapshot()
+                    result = _build_route_preview(seed=seed, robot_pose=snapshot.get("pose"))
                 except Exception:  # noqa: BLE001
                     log.exception("map preview failed")
                     send_json(self, {"ok": False, "error": "map_preview_failed"}, 500)
