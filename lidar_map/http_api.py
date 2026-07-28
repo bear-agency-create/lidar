@@ -170,6 +170,8 @@ def make_handler(bridge):
                 "*" in allowed
                 or client_ip in allowed
                 or client_ip.startswith("172.21.")
+                or client_ip.startswith("10.")
+                or client_ip.startswith("192.168.")
                 or client_ip.startswith("127.")
                 or client_ip in {"::1", "0:0:0:0:0:0:0:1"}
             )
