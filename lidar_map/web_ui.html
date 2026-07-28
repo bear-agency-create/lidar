@@ -84,6 +84,7 @@ let data = null;
 let panX = 0, panY = 0;
 let drag = null;
 let mapFrozen = false;
+const VIEW_MARGIN_CELLS = 3;
 
 const VX = 0.45, VY = 0.35, W = 1.2;
 const CMDS = {
@@ -349,66 +350,46 @@ function draw() {
     const res = m.resolution;
     const origin = m.origin;
     const s = Math.max(1.0, res * scale);
-    // Quick lookup of occupied cells for wall outlines
-    const occ = new Set();
+    // Draw only cells visible in the current viewport (huge perf win on big maps).
+    const halfWm = (w / scale) * 0.5 + res * VIEW_MARGIN_CELLS;
+    const halfHm = (h / scale) * 0.5 + res * VIEW_MARGIN_CELLS;
+    const minWx = viewX - halfHm;
+    const maxWx = viewX + halfHm;
+    const minWy = viewY - halfWm;
+    const maxWy = viewY + halfWm;
+
+    const free = [];
+    const hard = [];
+    const soft = [];
+    const temp = [];
     for (const cell of m.cells) {
-      if (cell[2] === 100 || cell[2] === 90) occ.add(cell[0] + ',' + cell[1]);
-    }
-    ctx.fillStyle = 'rgba(80,80,80,0.40)';
-    for (const cell of m.cells) {
-      if (cell[2] !== 0) continue;
       const wx = origin[0] + (cell[0] + 0.5) * res;
       const wy = origin[1] + (cell[1] + 0.5) * res;
+      if (wx < minWx || wx > maxWx || wy < minWy || wy > maxWy) continue;
+      const v = cell[2];
+      if (v === 0) free.push([wx, wy]);
+      else if (v === 100) hard.push([wx, wy]);
+      else if (v === 90) soft.push([wx, wy]);
+      else if (v === 50) temp.push([wx, wy]);
+    }
+
+    ctx.fillStyle = 'rgba(80,80,80,0.40)';
+    for (const [wx, wy] of free) {
       const [x,y] = worldToScreen(wx, wy, cx, cy, viewX, viewY);
       ctx.fillRect(x - s/2, y - s/2, s, s);
     }
-    // Soft fill for solid furniture/walls
-    for (const cell of m.cells) {
-      if (cell[2] !== 100 && cell[2] !== 90) continue;
-      const wx = origin[0] + (cell[0] + 0.5) * res;
-      const wy = origin[1] + (cell[1] + 0.5) * res;
+    ctx.fillStyle = 'rgba(210,210,210,0.55)';
+    for (const [wx, wy] of soft) {
       const [x,y] = worldToScreen(wx, wy, cx, cy, viewX, viewY);
-      ctx.fillStyle = cell[2] === 90 ? 'rgba(210,210,210,0.55)' : 'rgba(232,232,232,0.70)';
       ctx.fillRect(x - s/2, y - s/2, s + 0.2, s + 0.2);
     }
-    // Sharp wall outlines: only draw edges facing free space
-    ctx.strokeStyle = '#f5f5f5';
-    ctx.lineWidth = Math.max(1.5, scale * 0.04);
-    ctx.lineJoin = 'round';
-    ctx.beginPath();
-    for (const cell of m.cells) {
-      if (cell[2] !== 100 && cell[2] !== 90) continue;
-      const ix = cell[0], iy = cell[1];
-      const wx0 = origin[0] + ix * res;
-      const wy0 = origin[1] + iy * res;
-      const wx1 = wx0 + res;
-      const wy1 = wy0 + res;
-      const corners = [
-        worldToScreen(wx0, wy0, cx, cy, viewX, viewY),
-        worldToScreen(wx0, wy1, cx, cy, viewX, viewY),
-        worldToScreen(wx1, wy1, cx, cy, viewX, viewY),
-        worldToScreen(wx1, wy0, cx, cy, viewX, viewY),
-      ];
-      const edgeFree = [
-        !occ.has(ix + ',' + (iy - 1)),
-        !occ.has((ix - 1) + ',' + iy),
-        !occ.has(ix + ',' + (iy + 1)),
-        !occ.has((ix + 1) + ',' + iy),
-      ];
-      const pairs = [[0,3],[0,1],[1,2],[3,2]];
-      for (let e = 0; e < 4; e++) {
-        if (!edgeFree[e]) continue;
-        const a = corners[pairs[e][0]], b = corners[pairs[e][1]];
-        ctx.moveTo(a[0], a[1]);
-        ctx.lineTo(b[0], b[1]);
-      }
+    ctx.fillStyle = 'rgba(232,232,232,0.70)';
+    for (const [wx, wy] of hard) {
+      const [x,y] = worldToScreen(wx, wy, cx, cy, viewX, viewY);
+      ctx.fillRect(x - s/2, y - s/2, s + 0.2, s + 0.2);
     }
-    ctx.stroke();
     ctx.fillStyle = '#fa0';
-    for (const cell of m.cells) {
-      if (cell[2] !== 50) continue;
-      const wx = origin[0] + (cell[0] + 0.5) * res;
-      const wy = origin[1] + (cell[1] + 0.5) * res;
+    for (const [wx, wy] of temp) {
       const [x,y] = worldToScreen(wx, wy, cx, cy, viewX, viewY);
       ctx.fillRect(x - s/2, y - s/2, s + 0.5, s + 0.5);
     }
@@ -591,7 +572,7 @@ async function tick() {
   } catch (e) {
     document.getElementById('info').textContent = 'нет связи — открой http://0.0.0.0:8765/';
   }
-  setTimeout(tick, 100);
+  setTimeout(tick, 120);
 }
 resize();
 tick();
