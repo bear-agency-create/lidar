@@ -287,15 +287,42 @@ def make_handler(bridge):
                     snapshot = bridge.snapshot()
                     pose = stabilized_preview_pose(snapshot.get("pose"))
                     robot = snapshot.get("robot") if isinstance(snapshot.get("robot"), dict) else {}
-                    robot_radius = float(robot.get("radius", 0.48) or 0.48)
-                    goal_xy = stabilized_preview_goal(snapshot.get("goal"))
-                    result = _build_route_preview(
-                        seed=seed,
-                        robot_pose=pose,
-                        goal_xy=goal_xy,
-                        robot_radius_m=robot_radius,
-                        live_map=snapshot.get("map"),
-                    )
+                    goal_xy = snapshot.get("selected_goal") or stabilized_preview_goal(snapshot.get("goal"))
+                    route_path = snapshot.get("selected_path") or snapshot.get("path") or []
+                    live_map = snapshot.get("map")
+                    if isinstance(live_map, dict) and pose:
+                        result = {
+                            "ok": True,
+                            "source": "live",
+                            "coordinateSpace": "world",
+                            "map": live_map,
+                            "robot": robot,
+                            "pointA": {
+                                "x": float(pose.get("x", 0.0)),
+                                "y": float(pose.get("y", 0.0)),
+                                "label": "A",
+                            },
+                            "pointB": (
+                                {
+                                    "x": float(goal_xy[0]),
+                                    "y": float(goal_xy[1]),
+                                    "label": "B",
+                                }
+                                if isinstance(goal_xy, (list, tuple)) and len(goal_xy) >= 2
+                                else None
+                            ),
+                            "path": route_path,
+                            "pathLength": len(route_path),
+                        }
+                    else:
+                        robot_radius = float(robot.get("radius", 0.48) or 0.48)
+                        result = _build_route_preview(
+                            seed=seed,
+                            robot_pose=pose,
+                            goal_xy=goal_xy,
+                            robot_radius_m=robot_radius,
+                            live_map=live_map,
+                        )
                 except Exception:  # noqa: BLE001
                     log.exception("map preview failed")
                     send_json(self, {"ok": False, "error": "map_preview_failed"}, 500)

@@ -66,7 +66,7 @@
     <div>W/↑ вперёд · S/↓ назад · ←→ боком (пока не настраиваем) · Z/C поворот · Space стоп</div>
     <div>Кликни по странице, потом держи клавиши. Отпустил — стоп.</div>
     <div><b>заново</b> — сброс. <b>заморозить комнату</b> — стены навечно; люди = оранжевые временно.</div>
-    <div>После заморозки клик = <b>точка B</b>. <b>A</b> = где робот сейчас → едет меканумом к B.</div>
+    <div>Клик по карте = <b>точка B</b>. <b>A</b> = где робот сейчас → едет меканумом к B.</div>
     <div>6 стоек рамы (углы + середины боков) лидар <b>не видит</b> — в карту не пишутся.</div>
     <div><span class="sw" style="background:#f44"></span><b>красные</b> — лидар сейчас</div>
     <div><span class="sw" style="background:#eee;border:1px solid #777"></span><b>белое + контур</b> — стены / мебель</div>
@@ -266,9 +266,8 @@ canvas.addEventListener('wheel', (e) => {
 }, {passive:false});
 
 canvas.addEventListener('pointerdown', (e) => {
-  if (follow && !mapFrozen) return;
-  if (mapFrozen && !e.shiftKey) {
-    // Click = navigate to world point (avoid people)
+  if (!e.shiftKey) {
+    // Click = navigate to world point (works in both normal and frozen mode).
     const r = canvas.parentElement.getBoundingClientRect();
     const cx = r.width/2, cy = r.height/2;
     const pose = (data && data.pose) || {x:0,y:0};

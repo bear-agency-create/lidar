@@ -63,6 +63,8 @@ class ScanBridge(Node):
         self._temp: dict[int, float] = {}
         self._nav_path: list[tuple[float, float]] = []
         self._nav_goal: tuple[float, float] | None = None
+        self._selected_path: list[tuple[float, float]] = []
+        self._selected_goal: tuple[float, float] | None = None
         self._nav_i = 0
         self._nav_status = "idle"
         self._last_scan_t = 0.0
@@ -310,8 +312,6 @@ class ScanBridge(Node):
 
     def set_goal(self, gx: float, gy: float) -> dict[str, Any]:
         with self._lock:
-            if not self._map_frozen:
-                return {"ok": False, "error": "сначала заморозь комнату"}
             x = float(self._pose["x"])
             y = float(self._pose["y"])
             temp = dict(self._temp)
@@ -322,6 +322,8 @@ class ScanBridge(Node):
         with self._lock:
             self._nav_path = list(result["path"])
             self._nav_goal = (float(gx), float(gy))
+            self._selected_path = list(result["path"])
+            self._selected_goal = (float(gx), float(gy))
             self._nav_i = 0
             self._nav_status = "navigating"
         return {
@@ -374,6 +376,8 @@ class ScanBridge(Node):
             frozen = self._map_frozen
             path = [[p[0], p[1]] for p in self._nav_path]
             goal = list(self._nav_goal) if self._nav_goal else None
+            selected_path = [[p[0], p[1]] for p in self._selected_path]
+            selected_goal = list(self._selected_goal) if self._selected_goal else None
             nav_status = self._nav_status
             robot = {
                 "length": ROBOT_LENGTH_M,
@@ -393,6 +397,8 @@ class ScanBridge(Node):
                     "map": self.omap.to_dict(temp_cells),
                     "path": path,
                     "goal": goal,
+                    "selected_path": selected_path,
+                    "selected_goal": selected_goal,
                     "nav_status": nav_status,
                     "map_align": "",
                     "robot": robot,
@@ -415,6 +421,8 @@ class ScanBridge(Node):
                 "temp_hits": len(temp_cells),
                 "path": path,
                 "goal": goal,
+                "selected_path": selected_path,
+                "selected_goal": selected_goal,
                 "nav_status": nav_status,
                 "map_align": "",
                 "robot": robot,
@@ -442,6 +450,8 @@ class ScanBridge(Node):
             self._temp.clear()
             self._nav_path = []
             self._nav_goal = None
+            self._selected_path = []
+            self._selected_goal = None
             self._nav_i = 0
             self._nav_status = "cancelled"
             self._map_bootstrap_scans = 120
