@@ -310,8 +310,8 @@ def build_live_map_with_meta(live_map: dict[str, Any] | None) -> tuple[list[list
     if not isinstance(live_map, dict):
         return None
     try:
-        src_w = int(live_map.get("w") or 0)
-        src_h = int(live_map.get("h") or 0)
+        src_w = int(live_map.get("w") or live_map.get("width") or 0)
+        src_h = int(live_map.get("h") or live_map.get("height") or 0)
         res = float(live_map.get("resolution") or 0.05)
         origin = live_map.get("origin") or [0.0, 0.0]
         origin_x = float(origin[0])
