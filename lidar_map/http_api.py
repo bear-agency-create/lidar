@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import math
 import sys
 import threading
 import time
@@ -153,6 +154,39 @@ def make_handler(bridge):
         PRIMARY_BUTTONS_PATH,
     )
     kiosk_navigation = KioskNavigationSession(bridge)
+    preview_pose_lock = threading.Lock()
+    preview_pose_state: dict[str, Any] = {"pose": None, "ts": 0.0}
+
+    def stabilized_preview_pose(raw_pose: dict[str, Any] | None) -> dict[str, Any] | None:
+        """Suppress tiny localization jitter so kiosk point A stays stable."""
+        if not raw_pose or not raw_pose.get("ok"):
+            return raw_pose
+        try:
+            x = float(raw_pose.get("x", 0.0))
+            y = float(raw_pose.get("y", 0.0))
+            yaw = float(raw_pose.get("yaw", 0.0))
+        except (TypeError, ValueError):
+            return raw_pose
+        now = time.monotonic()
+        with preview_pose_lock:
+            last = preview_pose_state.get("pose")
+            last_ts = float(preview_pose_state.get("ts") or 0.0)
+            if isinstance(last, dict) and (now - last_ts) < 30.0:
+                try:
+                    lx = float(last.get("x", x))
+                    ly = float(last.get("y", y))
+                    lyaw = float(last.get("yaw", yaw))
+                except (TypeError, ValueError):
+                    lx, ly, lyaw = x, y, yaw
+                # If movement is tiny, keep previous stable point.
+                dist = math.hypot(x - lx, y - ly)
+                dyaw = abs((yaw - lyaw + math.pi) % (2.0 * math.pi) - math.pi)
+                if dist < 0.22 and dyaw < math.radians(14.0):
+                    return last
+            stable = {"x": x, "y": y, "yaw": yaw, "ok": True}
+            preview_pose_state["pose"] = stable
+            preview_pose_state["ts"] = now
+            return stable
 
     class Handler(BaseHTTPRequestHandler):
         def log_message(self, fmt: str, *args: Any) -> None:
@@ -226,7 +260,8 @@ def make_handler(bridge):
                         seed = None
                 try:
                     snapshot = bridge.snapshot()
-                    result = _build_route_preview(seed=seed, robot_pose=snapshot.get("pose"))
+                    pose = stabilized_preview_pose(snapshot.get("pose"))
+                    result = _build_route_preview(seed=seed, robot_pose=pose)
                 except Exception:  # noqa: BLE001
                     log.exception("map preview failed")
                     send_json(self, {"ok": False, "error": "map_preview_failed"}, 500)
