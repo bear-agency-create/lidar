@@ -333,15 +333,38 @@ def build_live_map_with_meta(live_map: dict[str, Any] | None) -> tuple[list[list
             continue
         if 0 <= ix < src_w and 0 <= iy < src_h and val >= 90:
             solid.add((ix, iy))
-    return _project_solid_to_display(
-        solid,
-        src_w,
-        src_h,
-        origin_x=origin_x,
-        origin_y=origin_y,
-        res=res,
-        pad=2,
-    )
+    if not solid:
+        return None
+    # For live lidar map keep projection frame fixed to full map extents.
+    # This prevents A/B jitter caused by changing occupied bounding boxes.
+    out_w, out_h = GRID_W, GRID_H
+    walls = _empty(out_w, out_h)
+    src_w_span = max(1, src_w - 1)
+    src_h_span = max(1, src_h - 1)
+    scale = min((out_w - 1) / src_w_span, (out_h - 1) / src_h_span)
+    used_w = src_w_span * scale
+    used_h = src_h_span * scale
+    x_off = (out_w - 1 - used_w) * 0.5
+    y_off = (out_h - 1 - used_h) * 0.5
+    for sx, sy in solid:
+        dx = int(round(sx * scale + x_off))
+        dy = int(round(sy * scale + y_off))
+        if 0 <= dx < out_w and 0 <= dy < out_h:
+            ox, oy = _orient_display(dx, dy, out_w, out_h)
+            walls[oy][ox] = True
+    meta = {
+        "min_x": 0.0,
+        "min_y": 0.0,
+        "scale": float(scale),
+        "x_off": float(x_off),
+        "y_off": float(y_off),
+        "origin_x": origin_x,
+        "origin_y": origin_y,
+        "res": res,
+        "src_w": float(src_w),
+        "src_h": float(src_h),
+    }
+    return _clean_walls(walls), meta
 
 
 def _clean_walls(walls: list[list[bool]]) -> list[list[bool]]:
