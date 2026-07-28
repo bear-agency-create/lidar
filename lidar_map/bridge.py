@@ -311,12 +311,7 @@ class ScanBridge(Node):
         return {"ok": True, "frozen": was, "hits": self.omap.to_dict().get("hits", 0)}
 
     def set_goal(self, gx: float, gy: float) -> dict[str, Any]:
-        with self._lock:
-            x = float(self._pose["x"])
-            y = float(self._pose["y"])
-            temp = dict(self._temp)
-        blocked = build_blocked(self.omap, temp, time.time())
-        result = plan_path(self.omap, blocked, (x, y), (float(gx), float(gy)))
+        result = self._plan_goal(gx, gy)
         if not result.get("ok"):
             return result
         with self._lock:
@@ -331,7 +326,40 @@ class ScanBridge(Node):
             "path_len": result["path_len"],
             "goal": result["goal"],
             "start": result["start"],
+            "started": True,
         }
+
+    def set_selected_goal(self, gx: float, gy: float) -> dict[str, Any]:
+        result = self._plan_goal(gx, gy)
+        if not result.get("ok"):
+            return result
+        with self._lock:
+            self._selected_path = list(result["path"])
+            self._selected_goal = (float(gx), float(gy))
+            if self._nav_goal is None:
+                self._nav_status = "selected"
+        return {
+            "ok": True,
+            "path_len": result["path_len"],
+            "goal": result["goal"],
+            "start": result["start"],
+            "started": False,
+        }
+
+    def start_selected_goal(self) -> dict[str, Any]:
+        with self._lock:
+            goal = self._selected_goal
+        if goal is None:
+            return {"ok": False, "error": "goal_not_selected"}
+        return self.set_goal(float(goal[0]), float(goal[1]))
+
+    def _plan_goal(self, gx: float, gy: float) -> dict[str, Any]:
+        with self._lock:
+            x = float(self._pose["x"])
+            y = float(self._pose["y"])
+            temp = dict(self._temp)
+        blocked = build_blocked(self.omap, temp, time.time())
+        return plan_path(self.omap, blocked, (x, y), (float(gx), float(gy)))
 
     def _nav_tick(self) -> None:
         with self._lock:

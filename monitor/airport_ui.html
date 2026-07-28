@@ -766,6 +766,7 @@
         placesEyebrow:"Места",placesTitle:"Места в аэропорту",placesLead:"Рестораны, сувениры, туалет и другие точки — выберите нужное.",
         routeMapEyebrow:"Маршрут",routeMapTitle:"Регистрация",routeMapLead:"Точка A — старт. Точка B — регистрация. Синяя линия — оптимальный путь.",
         routePointA:"A — вы здесь",routePointB:"B — регистрация",routePath:"Оптимальный маршрут",routeGo:"Поехали",
+        routeGoStarted:"Робот начал движение к точке B",routeGoFailed:"Не удалось начать движение",routeGoNoGoal:"Сначала поставьте точку B на карте лидара",
         routeMapLoading:"Строим маршрут…",routeMapError:"Не удалось построить маршрут",routeMapReady:"Маршрут готов",
         routeMapLive:"из карты лидара",routeMapFromMemory:"по сохранённой карте",routeMapDemo:"демо-план (нет remembered map)",routeMapNoGoal:"поставьте точку B на карте лидара",
         kinds:{"check-in":"Регистрация","gates":"Выходы на посадку","baggage":"Выдача багажа","places":"Места","information":"Стойка информации","exit":"Выход"},
@@ -790,6 +791,7 @@
         placesEyebrow:"Places",placesTitle:"Places in the airport",placesLead:"Restaurants, souvenirs, restrooms and more — pick what you need.",
         routeMapEyebrow:"Route",routeMapTitle:"Check-in",routeMapLead:"Point A is your start. Point B is check-in. The blue line is the best path.",
         routePointA:"A — you are here",routePointB:"B — check-in",routePath:"Optimal route",routeGo:"Let's go",
+        routeGoStarted:"Robot started moving to point B",routeGoFailed:"Could not start movement",routeGoNoGoal:"Set point B on the lidar map first",
         routeMapLoading:"Building route…",routeMapError:"Could not build a route",routeMapReady:"Route ready",
         routeMapLive:"from live lidar map",routeMapFromMemory:"from saved map",routeMapDemo:"demo floor (no remembered map)",routeMapNoGoal:"set point B on the lidar map",
         kinds:{"check-in":"Check-in","gates":"Boarding gates","baggage":"Baggage claim","places":"Places","information":"Information desk","exit":"Exit"},
@@ -814,6 +816,7 @@
         placesEyebrow:"场所",placesTitle:"机场内场所",placesLead:"餐厅、纪念品、洗手间等 — 请选择您需要的。",
         routeMapEyebrow:"路线",routeMapTitle:"值机",routeMapLead:"A 为起点，B 为值机柜台，蓝线为最优路径。",
         routePointA:"A — 您在这里",routePointB:"B — 值机",routePath:"最优路线",routeGo:"出发",
+        routeGoStarted:"机器人已开始前往 B 点",routeGoFailed:"无法开始移动",routeGoNoGoal:"请先在激光雷达地图上设置 B 点",
         routeMapLoading:"正在规划路线…",routeMapError:"无法规划路线",routeMapReady:"路线已就绪",
         routeMapLive:"来自实时激光雷达地图",routeMapFromMemory:"来自已保存地图",routeMapDemo:"演示平面图（无 remembered map）",routeMapNoGoal:"请在激光雷达地图上设置 B 点",
         kinds:{"check-in":"值机","gates":"登机口","baggage":"行李提取","places":"场所","information":"问讯处","exit":"出口"},
@@ -838,6 +841,7 @@
         placesEyebrow:"Урыннар",placesTitle:"Аэропорттагы урыннар",placesLead:"Рестораннар, сувенирлар, бәдрәф һәм башкалар — кирәклесен сайлагыз.",
         routeMapEyebrow:"Маршрут",routeMapTitle:"Теркәлү",routeMapLead:"A — башлангыч. B — теркәлү. Зәңгәр сызык — иң яхшы юл.",
         routePointA:"A — сез монда",routePointB:"B — теркәлү",routePath:"Оптималь маршрут",routeGo:"Киттек",
+        routeGoStarted:"Робот B ноктасына таба хәрәкәт башлады",routeGoFailed:"Хәрәкәтне башлап булмады",routeGoNoGoal:"Башта лидар картасында B ноктасын куегыз",
         routeMapLoading:"Маршрут төзелә…",routeMapError:"Маршрут төзеп булмады",routeMapReady:"Маршрут әзер",
         routeMapLive:"лидар картасыннан",routeMapFromMemory:"сакланган картадан",routeMapDemo:"демо-план (remembered map юк)",routeMapNoGoal:"лидар картасында B ноктасын куегыз",
         kinds:{"check-in":"Теркәлү","gates":"Утыру чыгу юллары","baggage":"Багаж алу","places":"Урыннар","information":"Мәгълүмат өстәле","exit":"Чыгу"},
@@ -1644,9 +1648,36 @@
     $("detailsBack").addEventListener("click", detailsBack);
     $("placesBack").addEventListener("click", goHome);
     $("mapBack").addEventListener("click", goHome);
-    $("mapGo").addEventListener("click", () => {
-      // Placeholder button per product request.
-      resetIdle();
+    $("mapGo").addEventListener("click", async () => {
+      const status = $("routeMapStatus");
+      try {
+        const preview = lastRoutePreview || {};
+        if (!preview.pointB) {
+          status.classList.add("error");
+          status.textContent = t("routeGoNoGoal");
+          return;
+        }
+        const response = await fetch("/api/goal", {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({start: true}),
+          cache: "no-store",
+        });
+        const result = await response.json();
+        if (!response.ok || !result.ok) {
+          status.classList.add("error");
+          status.textContent = `${t("routeGoFailed")}: ${result.error || "unknown"}`;
+          return;
+        }
+        status.classList.remove("error");
+        status.textContent = t("routeGoStarted");
+        await loadAndDrawRouteMap();
+      } catch (_) {
+        status.classList.add("error");
+        status.textContent = t("routeGoFailed");
+      } finally {
+        resetIdle();
+      }
     });
     $("ticketBack").addEventListener("click", goHome);
     $("escortButton").addEventListener("click", () => startEscort(selectedDestination?.id));

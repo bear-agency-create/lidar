@@ -281,10 +281,10 @@ canvas.addEventListener('pointerdown', (e) => {
     fetch('/api/goal', {
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({x: wx, y: wy}),
+      body: JSON.stringify({x: wx, y: wy, start: false}),
     }).then(r => r.json()).then(j => {
       document.getElementById('info').textContent = j.ok
-        ? ('A→B путь ' + (j.path_len||0) + ' | цель (' + wx.toFixed(1) + ',' + wy.toFixed(1) + ')')
+        ? ('точка B выбрана | путь ' + (j.path_len||0) + ' | (' + wx.toFixed(1) + ',' + wy.toFixed(1) + ')')
         : ('нет пути A→B: ' + (j.error || ''));
     }).catch(() => {});
     return;

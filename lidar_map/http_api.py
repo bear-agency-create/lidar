@@ -415,13 +415,22 @@ def make_handler(bridge):
                 return
             if path.startswith("/api/goal"):
                 data = read_json_body(self)
+                start_now = bool(data.get("start", False))
+                has_xy = "x" in data and "y" in data
+                if start_now and not has_xy:
+                    result = bridge.start_selected_goal()
+                    send_json(self, result, 200 if result.get("ok") else 409)
+                    return
+                if not has_xy:
+                    send_json(self, {"ok": False, "error": "bad goal"}, 400)
+                    return
                 try:
-                    gx = float(data.get("x", 0.0))
-                    gy = float(data.get("y", 0.0))
+                    gx = float(data.get("x"))
+                    gy = float(data.get("y"))
                 except (TypeError, ValueError):
                     send_json(self, {"ok": False, "error": "bad goal"}, 400)
                     return
-                result = bridge.set_goal(gx, gy)
+                result = bridge.set_goal(gx, gy) if start_now else bridge.set_selected_goal(gx, gy)
                 if result.get("ok"):
                     update_preview_goal(result.get("goal"))
                 send_json(self, result)
