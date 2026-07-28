@@ -10,7 +10,10 @@ from pathlib import Path
 from typing import Any
 
 ROOT = Path(__file__).resolve().parent
-REMEMBERED_MAP = Path.home() / "robot_nav" / "maps" / "remembered_occupancy.json"
+REMEMBERED_MAP_CANDIDATES = (
+    ROOT / "data" / "remembered_occupancy.json",
+    Path.home() / "robot_nav" / "maps" / "remembered_occupancy.json",
+)
 DEMO_MAP = ROOT / "data" / "demo_floor.json"
 
 # Display / planning grid size for the visitor map
@@ -102,13 +105,19 @@ def load_demo_floor(path: Path = DEMO_MAP) -> list[list[bool]] | None:
         return None
 
 
-def load_remembered_as_display_grid(path: Path = REMEMBERED_MAP) -> list[list[bool]] | None:
+def load_remembered_as_display_grid(path: Path | None = None) -> list[list[bool]] | None:
     """Load sparse occupancy and downsample into a clean visitor grid."""
-    if not path.is_file():
-        return None
-    try:
-        data = json.loads(path.read_text(encoding="utf-8"))
-    except (json.JSONDecodeError, OSError):
+    candidates = (path,) if path is not None else REMEMBERED_MAP_CANDIDATES
+    data = None
+    for candidate in candidates:
+        if not candidate.is_file():
+            continue
+        try:
+            data = json.loads(candidate.read_text(encoding="utf-8"))
+            break
+        except (json.JSONDecodeError, OSError):
+            continue
+    if data is None:
         return None
 
     src_w = int(data.get("w") or 0)
