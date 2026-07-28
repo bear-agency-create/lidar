@@ -156,6 +156,8 @@ def make_handler(bridge):
     kiosk_navigation = KioskNavigationSession(bridge)
     preview_pose_lock = threading.Lock()
     preview_pose_state: dict[str, Any] = {"pose": None, "ts": 0.0}
+    preview_goal_lock = threading.Lock()
+    preview_goal_state: dict[str, Any] = {"goal": None, "ts": 0.0}
 
     def stabilized_preview_pose(raw_pose: dict[str, Any] | None) -> dict[str, Any] | None:
         """Suppress tiny localization jitter so kiosk point A stays stable."""
@@ -187,6 +189,29 @@ def make_handler(bridge):
             preview_pose_state["pose"] = stable
             preview_pose_state["ts"] = now
             return stable
+
+    def update_preview_goal(goal_xy: Any) -> None:
+        if not isinstance(goal_xy, (list, tuple)) or len(goal_xy) < 2:
+            return
+        try:
+            gx = float(goal_xy[0])
+            gy = float(goal_xy[1])
+        except (TypeError, ValueError):
+            return
+        with preview_goal_lock:
+            preview_goal_state["goal"] = [gx, gy]
+            preview_goal_state["ts"] = time.monotonic()
+
+    def stabilized_preview_goal(current_goal: Any) -> list[float] | None:
+        if isinstance(current_goal, (list, tuple)) and len(current_goal) >= 2:
+            update_preview_goal(current_goal)
+            return [float(current_goal[0]), float(current_goal[1])]
+        with preview_goal_lock:
+            last = preview_goal_state.get("goal")
+            last_ts = float(preview_goal_state.get("ts") or 0.0)
+            if isinstance(last, list) and len(last) == 2 and (time.monotonic() - last_ts) < 3600.0:
+                return [float(last[0]), float(last[1])]
+        return None
 
     class Handler(BaseHTTPRequestHandler):
         def log_message(self, fmt: str, *args: Any) -> None:
@@ -263,11 +288,13 @@ def make_handler(bridge):
                     pose = stabilized_preview_pose(snapshot.get("pose"))
                     robot = snapshot.get("robot") if isinstance(snapshot.get("robot"), dict) else {}
                     robot_radius = float(robot.get("radius", 0.48) or 0.48)
+                    goal_xy = stabilized_preview_goal(snapshot.get("goal"))
                     result = _build_route_preview(
                         seed=seed,
                         robot_pose=pose,
-                        goal_xy=snapshot.get("goal"),
+                        goal_xy=goal_xy,
                         robot_radius_m=robot_radius,
+                        live_map=snapshot.get("map"),
                     )
                 except Exception:  # noqa: BLE001
                     log.exception("map preview failed")
@@ -345,6 +372,7 @@ def make_handler(bridge):
                 result = bridge.set_goal(destination.x, destination.y)
                 if result.get("ok"):
                     result["destinationId"] = destination.id
+                    update_preview_goal(result.get("goal"))
                     kiosk_navigation.start(destination.id)
                 send_json(self, result, 200 if result.get("ok") else 409)
                 return
@@ -366,7 +394,10 @@ def make_handler(bridge):
                 except (TypeError, ValueError):
                     send_json(self, {"ok": False, "error": "bad goal"}, 400)
                     return
-                send_json(self, bridge.set_goal(gx, gy))
+                result = bridge.set_goal(gx, gy)
+                if result.get("ok"):
+                    update_preview_goal(result.get("goal"))
+                send_json(self, result)
                 return
             self.send_error(404)
 

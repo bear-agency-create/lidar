@@ -257,6 +257,93 @@ def load_remembered_with_meta(path: Path | None = None) -> tuple[list[list[bool]
     return _clean_walls(walls), meta
 
 
+def _project_solid_to_display(
+    solid: set[tuple[int, int]],
+    src_w: int,
+    src_h: int,
+    *,
+    origin_x: float,
+    origin_y: float,
+    res: float,
+    pad: int = 8,
+) -> tuple[list[list[bool]], dict[str, float]] | None:
+    if src_w < 8 or src_h < 8 or not solid:
+        return None
+    xs = [p[0] for p in solid]
+    ys = [p[1] for p in solid]
+    min_x, max_x = max(0, min(xs) - pad), min(src_w - 1, max(xs) + pad)
+    min_y, max_y = max(0, min(ys) - pad), min(src_h - 1, max(ys) + pad)
+    bw = max(1, max_x - min_x + 1)
+    bh = max(1, max_y - min_y + 1)
+
+    out_w, out_h = GRID_W, GRID_H
+    walls = _empty(out_w, out_h)
+    src_w_span = max(1, bw - 1)
+    src_h_span = max(1, bh - 1)
+    scale = min((out_w - 1) / src_w_span, (out_h - 1) / src_h_span)
+    used_w = src_w_span * scale
+    used_h = src_h_span * scale
+    x_off = (out_w - 1 - used_w) * 0.5
+    y_off = (out_h - 1 - used_h) * 0.5
+    for sx, sy in solid:
+        dx = int(round((sx - min_x) * scale + x_off))
+        dy = int(round((sy - min_y) * scale + y_off))
+        if 0 <= dx < out_w and 0 <= dy < out_h:
+            ox, oy = _orient_display(dx, dy, out_w, out_h)
+            walls[oy][ox] = True
+    meta = {
+        "min_x": float(min_x),
+        "min_y": float(min_y),
+        "scale": float(scale),
+        "x_off": float(x_off),
+        "y_off": float(y_off),
+        "origin_x": origin_x,
+        "origin_y": origin_y,
+        "res": res,
+        "src_w": float(src_w),
+        "src_h": float(src_h),
+    }
+    return _clean_walls(walls), meta
+
+
+def build_live_map_with_meta(live_map: dict[str, Any] | None) -> tuple[list[list[bool]], dict[str, float]] | None:
+    if not isinstance(live_map, dict):
+        return None
+    try:
+        src_w = int(live_map.get("w") or 0)
+        src_h = int(live_map.get("h") or 0)
+        res = float(live_map.get("resolution") or 0.05)
+        origin = live_map.get("origin") or [0.0, 0.0]
+        origin_x = float(origin[0])
+        origin_y = float(origin[1])
+    except (TypeError, ValueError, IndexError):
+        return None
+    cells = live_map.get("cells")
+    if not isinstance(cells, list):
+        return None
+    solid: set[tuple[int, int]] = set()
+    for item in cells:
+        if not isinstance(item, (list, tuple)) or len(item) < 3:
+            continue
+        try:
+            ix = int(item[0])
+            iy = int(item[1])
+            val = int(item[2])
+        except (TypeError, ValueError):
+            continue
+        if 0 <= ix < src_w and 0 <= iy < src_h and val >= 90:
+            solid.add((ix, iy))
+    return _project_solid_to_display(
+        solid,
+        src_w,
+        src_h,
+        origin_x=origin_x,
+        origin_y=origin_y,
+        res=res,
+        pad=2,
+    )
+
+
 def _clean_walls(walls: list[list[bool]]) -> list[list[bool]]:
     """Light morphological close: fill tiny holes so walls look solid."""
     h = len(walls)
@@ -421,7 +508,11 @@ def simplify_path(path: list[tuple[int, int]], blocked: set[tuple[int, int]]) ->
     return out
 
 
-def get_display_walls() -> tuple[list[list[bool]], str, dict[str, float] | None]:
+def get_display_walls(live_map: dict[str, Any] | None = None) -> tuple[list[list[bool]], str, dict[str, float] | None]:
+    live = build_live_map_with_meta(live_map)
+    if live is not None:
+        walls, meta = live
+        return walls, "live", meta
     remembered = load_remembered_with_meta()
     if remembered is not None:
         walls, meta = remembered
@@ -480,7 +571,7 @@ def _goal_to_display(
 
 
 def _inflate_radius_cells(source: str, meta: dict[str, float] | None, robot_radius_m: float) -> int:
-    if source != "remembered" or not meta:
+    if source not in {"remembered", "live"} or not meta:
         return 1
     scale = float(meta.get("scale") or 1.0)
     res = float(meta.get("res") or 0.05)
@@ -520,8 +611,9 @@ def build_route_preview(
     robot_pose: dict[str, Any] | None = None,
     goal_xy: list[float] | tuple[float, float] | None = None,
     robot_radius_m: float = 0.48,
+    live_map: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
-    walls, source, meta = get_display_walls()
+    walls, source, meta = get_display_walls(live_map=live_map)
     h = len(walls)
     w = len(walls[0]) if h else 0
     blocked = inflate(walls, radius=_inflate_radius_cells(source, meta, robot_radius_m))

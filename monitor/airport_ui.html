@@ -653,7 +653,7 @@
           </div>
           <div class="action-row">
             <button class="secondary" id="mapBack" data-i18n="back">Back</button>
-            <button class="primary" id="mapRefresh" data-i18n="routeRebuild">New route</button>
+            <button class="primary" id="mapGo" data-i18n="routeGo">Поехали</button>
           </div>
         </div>
         <div id="placesPanel" class="panel hidden">
@@ -765,7 +765,7 @@
         arrived:"Мы прибыли",arrivedLead:"Вы на месте. Хорошего путешествия!",routeStopped:"Маршрут остановлен",routeStoppedLead:"Движение было прервано. Выберите место ещё раз или обратитесь к сотруднику.",noDescription:"Точное расположение уточните на стойке информации.",
         placesEyebrow:"Места",placesTitle:"Места в аэропорту",placesLead:"Рестораны, сувениры, туалет и другие точки — выберите нужное.",
         routeMapEyebrow:"Маршрут",routeMapTitle:"Регистрация",routeMapLead:"Точка A — старт. Точка B — регистрация. Синяя линия — оптимальный путь.",
-        routePointA:"A — вы здесь",routePointB:"B — регистрация",routePath:"Оптимальный маршрут",routeRebuild:"Новый маршрут",
+        routePointA:"A — вы здесь",routePointB:"B — регистрация",routePath:"Оптимальный маршрут",routeGo:"Поехали",
         routeMapLoading:"Строим маршрут…",routeMapError:"Не удалось построить маршрут",routeMapReady:"Маршрут готов",
         routeMapFromMemory:"по сохранённой карте",routeMapDemo:"демо-план (нет remembered map)",
         kinds:{"check-in":"Регистрация","gates":"Выходы на посадку","baggage":"Выдача багажа","places":"Места","information":"Стойка информации","exit":"Выход"},
@@ -789,7 +789,7 @@
         arrived:"We have arrived",arrivedLead:"You are at your destination. Have a good journey!",routeStopped:"Route stopped",routeStoppedLead:"The journey was interrupted. Choose the destination again or ask an airport employee.",noDescription:"Please ask at the information desk for the exact location.",
         placesEyebrow:"Places",placesTitle:"Places in the airport",placesLead:"Restaurants, souvenirs, restrooms and more — pick what you need.",
         routeMapEyebrow:"Route",routeMapTitle:"Check-in",routeMapLead:"Point A is your start. Point B is check-in. The blue line is the best path.",
-        routePointA:"A — you are here",routePointB:"B — check-in",routePath:"Optimal route",routeRebuild:"New route",
+        routePointA:"A — you are here",routePointB:"B — check-in",routePath:"Optimal route",routeGo:"Let's go",
         routeMapLoading:"Building route…",routeMapError:"Could not build a route",routeMapReady:"Route ready",
         routeMapFromMemory:"from saved map",routeMapDemo:"demo floor (no remembered map)",
         kinds:{"check-in":"Check-in","gates":"Boarding gates","baggage":"Baggage claim","places":"Places","information":"Information desk","exit":"Exit"},
@@ -813,7 +813,7 @@
         arrived:"我们到了",arrivedLead:"您已到达目的地，祝您旅途愉快！",routeStopped:"路线已停止",routeStoppedLead:"行程已中断。请重新选择目的地或咨询机场工作人员。",noDescription:"确切位置请咨询问讯处。",
         placesEyebrow:"场所",placesTitle:"机场内场所",placesLead:"餐厅、纪念品、洗手间等 — 请选择您需要的。",
         routeMapEyebrow:"路线",routeMapTitle:"值机",routeMapLead:"A 为起点，B 为值机柜台，蓝线为最优路径。",
-        routePointA:"A — 您在这里",routePointB:"B — 值机",routePath:"最优路线",routeRebuild:"新路线",
+        routePointA:"A — 您在这里",routePointB:"B — 值机",routePath:"最优路线",routeGo:"出发",
         routeMapLoading:"正在规划路线…",routeMapError:"无法规划路线",routeMapReady:"路线已就绪",
         routeMapFromMemory:"来自已保存地图",routeMapDemo:"演示平面图（无 remembered map）",
         kinds:{"check-in":"值机","gates":"登机口","baggage":"行李提取","places":"场所","information":"问讯处","exit":"出口"},
@@ -837,7 +837,7 @@
         arrived:"Без килеп җиттек",arrivedLead:"Сез кирәкле урында. Хәерле юл!",routeStopped:"Маршрут туктатылды",routeStoppedLead:"Хәрәкәт өзелде. Урынны яңадан сайлагыз яки хезмәткәргә мөрәҗәгать итегез.",noDescription:"Төгәл урынны мәгълүмат өстәлендә сорагыз.",
         placesEyebrow:"Урыннар",placesTitle:"Аэропорттагы урыннар",placesLead:"Рестораннар, сувенирлар, бәдрәф һәм башкалар — кирәклесен сайлагыз.",
         routeMapEyebrow:"Маршрут",routeMapTitle:"Теркәлү",routeMapLead:"A — башлангыч. B — теркәлү. Зәңгәр сызык — иң яхшы юл.",
-        routePointA:"A — сез монда",routePointB:"B — теркәлү",routePath:"Оптималь маршрут",routeRebuild:"Яңа маршрут",
+        routePointA:"A — сез монда",routePointB:"B — теркәлү",routePath:"Оптималь маршрут",routeGo:"Киттек",
         routeMapLoading:"Маршрут төзелә…",routeMapError:"Маршрут төзеп булмады",routeMapReady:"Маршрут әзер",
         routeMapFromMemory:"сакланган картадан",routeMapDemo:"демо-план (remembered map юк)",
         kinds:{"check-in":"Теркәлү","gates":"Утыру чыгу юллары","baggage":"Багаж алу","places":"Урыннар","information":"Мәгълүмат өстәле","exit":"Чыгу"},
@@ -1527,7 +1527,10 @@
     $("detailsBack").addEventListener("click", detailsBack);
     $("placesBack").addEventListener("click", goHome);
     $("mapBack").addEventListener("click", goHome);
-    $("mapRefresh").addEventListener("click", () => loadAndDrawRouteMap(Date.now() % 100000));
+    $("mapGo").addEventListener("click", () => {
+      // Placeholder button per product request.
+      resetIdle();
+    });
     $("ticketBack").addEventListener("click", goHome);
     $("escortButton").addEventListener("click", () => startEscort(selectedDestination?.id));
     $("ticketEscort").addEventListener("click", () => startEscort(ticket?.destinationId));
