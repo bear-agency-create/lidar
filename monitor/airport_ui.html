@@ -19,6 +19,9 @@
       --green: #1c9b68;
       --danger: #c23b3b;
       --shadow: 0 16px 44px rgba(6, 35, 65, .13);
+      --stage-w: 1280;
+      --stage-h: 800;
+      --stage-scale: 1;
     }
     * { box-sizing: border-box; }
     html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; }
@@ -34,12 +37,14 @@
     /* Принудительный кадр 10.1″ киоска: 1280×800 (как на роботе) */
     .kiosk-stage {
       position: relative;
-      width: 1280px;
-      height: 800px;
+      width: calc(var(--stage-w) * 1px);
+      height: calc(var(--stage-h) * 1px);
       overflow: hidden;
       background: #edf5fb;
       box-shadow: 0 28px 80px rgba(0, 0, 0, .35);
       flex-shrink: 0;
+      transform: scale(var(--stage-scale));
+      transform-origin: center center;
     }
     .kiosk-badge {
       position: absolute; z-index: 200; top: 8px; right: 10px;
@@ -544,6 +549,22 @@
       *, *::before, *::after { animation: none !important; transition-duration: .001ms !important; }
       .plane-mover, .attract-plane { display: none !important; }
     }
+    .low-power .destination,
+    .low-power .destination::before,
+    .low-power .destination::after,
+    .low-power .destination-shine::before,
+    .low-power .destination-icon,
+    .low-power .destination-icon::after,
+    .low-power .destination-arrow,
+    .low-power .route-line,
+    .low-power .plane,
+    .low-power .plane-mover {
+      animation: none !important;
+    }
+    .low-power .attract-start,
+    .low-power .modal {
+      backdrop-filter: none !important;
+    }
   </style>
 </head>
 <body>
@@ -843,11 +864,31 @@
     let barcodeDetector = null;
     let scanLoopToken = 0;
     let ticketLookupInFlight = false;
+    let lastRoutePreview = null;
 
     const $ = id => document.getElementById(id);
     const t = key => COPY[lang][key] || COPY.en[key] || key;
     const localized = (object, fallback = "") => object?.[lang] || object?.en || object?.ru || fallback;
     const showPanel = id => panels.forEach(name => $(name).classList.toggle("hidden", name !== id));
+
+    function fitStageToViewport() {
+      const stage = $("kioskStage");
+      if (!stage) return;
+      const baseW = 1280;
+      const baseH = 800;
+      const vw = Math.max(320, window.innerWidth || baseW);
+      const vh = Math.max(240, window.innerHeight || baseH);
+      const scale = Math.min(vw / baseW, vh / baseH, 1);
+      const rounded = Math.max(0.5, Math.round(scale * 1000) / 1000);
+      document.documentElement.style.setProperty("--stage-scale", String(rounded));
+    }
+
+    function applyPerformanceProfile() {
+      const prefersReduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+      const cores = Number(navigator.hardwareConcurrency || 4);
+      const lowPower = prefersReduced || cores <= 4;
+      document.body.classList.toggle("low-power", lowPower);
+    }
 
     function applyLanguage(next) {
       lang = COPY[next] ? next : "ru";
@@ -978,6 +1019,7 @@
           status.textContent = t("routeMapError");
           return;
         }
+        lastRoutePreview = data;
         drawRouteMap(data);
         const sourceNote = data.source === "remembered"
           ? ` — ${t("routeMapFromMemory")}`
@@ -1026,6 +1068,18 @@
 
       const path = data.path || [];
       if (path.length > 1) {
+        ctx.strokeStyle = "rgba(8,120,230,.18)";
+        ctx.lineWidth = Math.max(7, scale * 3.2);
+        ctx.lineJoin = "round";
+        ctx.lineCap = "round";
+        ctx.beginPath();
+        path.forEach((point, index) => {
+          const x = ox + (point[0] + 0.5) * scale;
+          const y = oy + (point[1] + 0.5) * scale;
+          if (index === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        });
+        ctx.stroke();
         ctx.strokeStyle = "#0878e6";
         ctx.lineWidth = Math.max(3, scale * 1.6);
         ctx.lineJoin = "round";
@@ -1483,8 +1537,16 @@
       resetIdle();
       if (event.key === "Escape" && $("scanModal").classList.contains("open")) closeScan();
     });
+    window.addEventListener("resize", () => {
+      fitStageToViewport();
+      if (lastRoutePreview && !$("mapPanel").classList.contains("hidden")) {
+        drawRouteMap(lastRoutePreview);
+      }
+    });
 
     async function initialize() {
+      applyPerformanceProfile();
+      fitStageToViewport();
       applyLanguage(lang);
       await loadDestinations();
       await restoreEscort();

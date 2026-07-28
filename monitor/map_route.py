@@ -286,6 +286,45 @@ def sparsen_path(path: list[tuple[int, int]], step: int = 2) -> list[list[int]]:
     return out
 
 
+def _line_clear(a: tuple[int, int], b: tuple[int, int], blocked: set[tuple[int, int]]) -> bool:
+    """Bresenham line-of-sight check against blocked cells."""
+    x0, y0 = a
+    x1, y1 = b
+    dx = abs(x1 - x0)
+    dy = -abs(y1 - y0)
+    sx = 1 if x0 < x1 else -1
+    sy = 1 if y0 < y1 else -1
+    err = dx + dy
+    x, y = x0, y0
+    while True:
+        if (x, y) in blocked:
+            return False
+        if x == x1 and y == y1:
+            return True
+        e2 = 2 * err
+        if e2 >= dy:
+            err += dy
+            x += sx
+        if e2 <= dx:
+            err += dx
+            y += sy
+
+
+def simplify_path(path: list[tuple[int, int]], blocked: set[tuple[int, int]]) -> list[tuple[int, int]]:
+    """Keep only turning points while preserving collision-free route."""
+    if len(path) <= 2:
+        return path
+    out = [path[0]]
+    i = 0
+    while i < len(path) - 1:
+        j = len(path) - 1
+        while j > i + 1 and not _line_clear(path[i], path[j], blocked):
+            j -= 1
+        out.append(path[j])
+        i = j
+    return out
+
+
 def get_display_walls() -> tuple[list[list[bool]], str]:
     remembered = load_remembered_as_display_grid()
     if remembered is not None:
@@ -323,6 +362,7 @@ def build_route_preview(seed: int | None = None) -> dict[str, Any]:
         return {"ok": False, "error": "path_not_found", "source": source}
 
     wall_cells = [[x, y] for y in range(h) for x in range(w) if walls[y][x]]
+    smooth_path = simplify_path(path, blocked)
     return {
         "ok": True,
         "source": source,
@@ -331,7 +371,7 @@ def build_route_preview(seed: int | None = None) -> dict[str, Any]:
         "walls": wall_cells,
         "pointA": {"x": point_a[0], "y": point_a[1], "label": "A"},
         "pointB": {"x": point_b[0], "y": point_b[1], "label": "B"},
-        "path": sparsen_path(path, step=2),
+        "path": sparsen_path(smooth_path, step=2),
         "pathLength": len(path),
     }
 
