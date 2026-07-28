@@ -141,7 +141,9 @@ def load_remembered_as_display_grid(path: Path | None = None) -> list[list[bool]
     if not solid:
         return None
 
-    # Crop to occupied bbox with padding, then scale into display grid
+    # Crop to occupied bbox with padding, then scale into display grid.
+    # Keep aspect ratio (no axis stretch), otherwise kiosk map shape diverges
+    # from operator lidar map.
     xs = [p[0] for p in solid]
     ys = [p[1] for p in solid]
     pad = 8
@@ -152,9 +154,16 @@ def load_remembered_as_display_grid(path: Path | None = None) -> list[list[bool]
 
     out_w, out_h = GRID_W, GRID_H
     walls = _empty(out_w, out_h)
+    src_w_span = max(1, bw - 1)
+    src_h_span = max(1, bh - 1)
+    scale = min((out_w - 1) / src_w_span, (out_h - 1) / src_h_span)
+    used_w = src_w_span * scale
+    used_h = src_h_span * scale
+    x_off = (out_w - 1 - used_w) * 0.5
+    y_off = (out_h - 1 - used_h) * 0.5
     for sx, sy in solid:
-        dx = int((sx - min_x) * (out_w - 1) / max(1, bw - 1))
-        dy = int((sy - min_y) * (out_h - 1) / max(1, bh - 1))
+        dx = int(round((sx - min_x) * scale + x_off))
+        dy = int(round((sy - min_y) * scale + y_off))
         if 0 <= dx < out_w and 0 <= dy < out_h:
             walls[dy][dx] = True
 
