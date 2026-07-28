@@ -261,7 +261,14 @@ def make_handler(bridge):
                 try:
                     snapshot = bridge.snapshot()
                     pose = stabilized_preview_pose(snapshot.get("pose"))
-                    result = _build_route_preview(seed=seed, robot_pose=pose)
+                    robot = snapshot.get("robot") if isinstance(snapshot.get("robot"), dict) else {}
+                    robot_radius = float(robot.get("radius", 0.48) or 0.48)
+                    result = _build_route_preview(
+                        seed=seed,
+                        robot_pose=pose,
+                        goal_xy=snapshot.get("goal"),
+                        robot_radius_m=robot_radius,
+                    )
                 except Exception:  # noqa: BLE001
                     log.exception("map preview failed")
                     send_json(self, {"ok": False, "error": "map_preview_failed"}, 500)

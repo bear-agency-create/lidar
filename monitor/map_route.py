@@ -20,6 +20,14 @@ DEMO_MAP = ROOT / "data" / "demo_floor.json"
 GRID_W = 160
 GRID_H = 100
 OCC_SOLID = 1.0
+# Kiosk orientation fix: remembered map was displayed upside down.
+ROTATE_180 = True
+
+
+def _orient_display(x: int, y: int, w: int, h: int) -> tuple[int, int]:
+    if not ROTATE_180:
+        return x, y
+    return (w - 1 - x), (h - 1 - y)
 
 
 def _empty(w: int, h: int) -> list[list[bool]]:
@@ -165,7 +173,8 @@ def load_remembered_as_display_grid(path: Path | None = None) -> list[list[bool]
         dx = int(round((sx - min_x) * scale + x_off))
         dy = int(round((sy - min_y) * scale + y_off))
         if 0 <= dx < out_w and 0 <= dy < out_h:
-            walls[dy][dx] = True
+            ox, oy = _orient_display(dx, dy, out_w, out_h)
+            walls[oy][ox] = True
 
     return _clean_walls(walls)
 
@@ -230,7 +239,8 @@ def load_remembered_with_meta(path: Path | None = None) -> tuple[list[list[bool]
         dx = int(round((sx - min_x) * scale + x_off))
         dy = int(round((sy - min_y) * scale + y_off))
         if 0 <= dx < out_w and 0 <= dy < out_h:
-            walls[dy][dx] = True
+            ox, oy = _orient_display(dx, dy, out_w, out_h)
+            walls[oy][ox] = True
 
     meta = {
         "min_x": float(min_x),
@@ -441,7 +451,42 @@ def _robot_to_display(
     sy = (ry - float(meta["origin_y"])) / res
     dx = int(round((sx - float(meta["min_x"])) * float(meta["scale"]) + float(meta["x_off"])))
     dy = int(round((sy - float(meta["min_y"])) * float(meta["scale"]) + float(meta["y_off"])))
-    return dx, dy
+    if not (0 <= dx < GRID_W and 0 <= dy < GRID_H):
+        return None
+    return _orient_display(dx, dy, GRID_W, GRID_H)
+
+
+def _goal_to_display(
+    goal_xy: list[float] | tuple[float, float] | None,
+    meta: dict[str, float] | None,
+) -> tuple[int, int] | None:
+    if not goal_xy or not meta or len(goal_xy) < 2:
+        return None
+    try:
+        gx = float(goal_xy[0])
+        gy = float(goal_xy[1])
+    except (TypeError, ValueError):
+        return None
+    res = float(meta["res"])
+    if res <= 0.0:
+        return None
+    sx = (gx - float(meta["origin_x"])) / res
+    sy = (gy - float(meta["origin_y"])) / res
+    dx = int(round((sx - float(meta["min_x"])) * float(meta["scale"]) + float(meta["x_off"])))
+    dy = int(round((sy - float(meta["min_y"])) * float(meta["scale"]) + float(meta["y_off"])))
+    if not (0 <= dx < GRID_W and 0 <= dy < GRID_H):
+        return None
+    return _orient_display(dx, dy, GRID_W, GRID_H)
+
+
+def _inflate_radius_cells(source: str, meta: dict[str, float] | None, robot_radius_m: float) -> int:
+    if source != "remembered" or not meta:
+        return 1
+    scale = float(meta.get("scale") or 1.0)
+    res = float(meta.get("res") or 0.05)
+    meter_per_cell = res / max(scale, 1e-6)
+    radius_cells = int(round(robot_radius_m / max(meter_per_cell, 1e-4)))
+    return max(1, min(radius_cells, 14))
 
 
 def _nearest_free(
@@ -470,16 +515,24 @@ def _nearest_free(
     return None
 
 
-def build_route_preview(seed: int | None = None, robot_pose: dict[str, Any] | None = None) -> dict[str, Any]:
+def build_route_preview(
+    seed: int | None = None,
+    robot_pose: dict[str, Any] | None = None,
+    goal_xy: list[float] | tuple[float, float] | None = None,
+    robot_radius_m: float = 0.48,
+) -> dict[str, Any]:
     walls, source, meta = get_display_walls()
     h = len(walls)
     w = len(walls[0]) if h else 0
-    blocked = inflate(walls, radius=1)
+    blocked = inflate(walls, radius=_inflate_radius_cells(source, meta, robot_radius_m))
     free = free_cells(blocked, w, h)
     rng = random.Random(seed)
     robot_anchor = _nearest_free(_robot_to_display(robot_pose, meta), blocked, w, h)
+    goal_anchor = _nearest_free(_goal_to_display(goal_xy, meta), blocked, w, h)
     pair = None
-    if robot_anchor is not None and free:
+    if robot_anchor is not None and goal_anchor is not None and robot_anchor != goal_anchor:
+        pair = (robot_anchor, goal_anchor)
+    elif robot_anchor is not None and free:
         far = [p for p in free if abs(p[0] - robot_anchor[0]) + abs(p[1] - robot_anchor[1]) >= 30]
         if far:
             pair = (robot_anchor, rng.choice(far))
@@ -514,6 +567,7 @@ def build_route_preview(seed: int | None = None, robot_pose: dict[str, Any] | No
         "pointB": {"x": point_b[0], "y": point_b[1], "label": "B"},
         "path": sparsen_path(smooth_path, step=2),
         "pathLength": len(path),
+        "inflationRadiusCells": _inflate_radius_cells(source, meta, robot_radius_m),
     }
 
 
