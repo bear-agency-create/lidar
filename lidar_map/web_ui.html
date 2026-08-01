@@ -441,13 +441,13 @@ function draw() {
 
   const [rx, ry] = worldToScreen(pose.x, pose.y, cx, cy, viewX, viewY);
   const yaw = pose.yaw || 0;
-  const bot = data.robot || {length: 0.85, width: 0.58, radius: 0.48};
+  const bot = data.robot || {length: 0.82, width: 0.56, radius: 0.50};
   // Motor chassis frame: body + 4 mecanum wheels + axle marks
   ctx.save();
   ctx.translate(rx, ry);
   ctx.rotate(-yaw);
-  const fl = (bot.length || 0.85) * scale;
-  const fw = (bot.width || 0.58) * scale;
+  const fl = (bot.length || 0.82) * scale;
+  const fw = (bot.width || 0.56) * scale;
   const fr = (bot.radius || 0.48) * scale;
   const okCol = pose.ok ? '#0f0' : '#fa0';
   // clearance
