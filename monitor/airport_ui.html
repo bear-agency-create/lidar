@@ -324,6 +324,83 @@
     .danger { border: 2px solid #f0c1c1; color: var(--danger); background: #fff9f9; }
     .action-row button { flex: 1; }
     .button-icon { width: 24px; height: 24px; }
+    .mode-choices {
+      flex: 1; min-height: 0; margin: 10px 0 8px; display: grid; grid-template-columns: 1fr 1fr; gap: 18px; align-content: stretch;
+    }
+    .mode-option {
+      display: flex; flex-direction: column; gap: 10px; min-height: 0;
+    }
+    .mode-card {
+      flex: 1; min-height: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 14px;
+      padding: 22px 22px 20px; border: 2px solid #d5e6f3; border-radius: 26px;
+      background:
+        linear-gradient(165deg, #ffffff 0%, #f4f9fd 72%, #eaf4fb 100%);
+      box-shadow: 0 10px 28px rgba(7,28,51,.07);
+      text-align: left; cursor: pointer;
+      transition: border-color .16s ease, transform .14s ease, box-shadow .16s ease;
+    }
+    .mode-card:hover {
+      border-color: #7eb6df;
+      box-shadow: 0 16px 34px rgba(7,28,51,.12);
+      transform: translateY(-2px);
+    }
+    .mode-card:active { transform: scale(.985); }
+    .mode-card[data-mode="escort"] { border-color: #b7e0e4; background: linear-gradient(165deg, #ffffff 0%, #eefafb 100%); }
+    .mode-card[data-mode="escort"]:hover { border-color: #2aa3b0; }
+    .mode-card[data-mode="auto"] { border-color: #c5d8ef; background: linear-gradient(165deg, #ffffff 0%, #eef4fb 100%); }
+    .mode-card[data-mode="auto"]:hover { border-color: #0878e6; }
+    .mode-card-top {
+      width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    }
+    .mode-card-icon {
+      width: 58px; height: 58px; display: grid; place-items: center;
+      border-radius: 18px; color: white;
+    }
+    .mode-card[data-mode="escort"] .mode-card-icon { background: #0a8f9e; }
+    .mode-card[data-mode="auto"] .mode-card-icon { background: #0878e6; }
+    .mode-card-icon svg { width: 30px; height: 30px; }
+    .mode-card-index {
+      min-width: 34px; height: 34px; padding: 0 10px; display: grid; place-items: center;
+      border-radius: 999px; font-size: 14px; font-weight: 850;
+      color: var(--navy); background: rgba(255,255,255,.88); border: 1px solid rgba(7,28,51,.08);
+    }
+    .mode-card-title {
+      margin: 0; color: var(--navy); font-size: 26px; font-weight: 850; line-height: 1.12; letter-spacing: -.02em;
+    }
+    .mode-card-lead {
+      margin: 0; flex: 1; color: #4d6780; font-size: 15px; line-height: 1.4; font-weight: 650;
+    }
+    .mode-card-btn {
+      width: 100%; min-height: 54px; border: 0; border-radius: 15px; color: white;
+      font-size: 16px; font-weight: 850; pointer-events: none;
+    }
+    .mode-card[data-mode="escort"] .mode-card-btn { background: #0a8f9e; }
+    .mode-card[data-mode="auto"] .mode-card-btn { background: #0878e6; }
+    .mode-card-note {
+      margin: 0; padding: 0 6px; color: var(--muted); font-size: 13px; line-height: 1.35; font-weight: 650;
+    }
+    .mode-hint {
+      margin: 2px 0 0; color: var(--muted); font-size: 14px; line-height: 1.35; font-weight: 650;
+    }
+    .escort-run-status, .auto-run-status {
+      margin: 0 0 8px; padding: 10px 14px; display: inline-flex; align-items: center; gap: 9px;
+      border-radius: 99px; color: #07589f; background: #e9f5ff; font-weight: 800; font-size: 14px;
+    }
+    .escort-run-status.is-waiting {
+      color: #8a5a00; background: #fff4d8;
+    }
+    .wait-btn {
+      border: 2px solid #e2c27a; color: #7a5200; background: #fff8e8;
+      min-height: 64px; padding: 0 25px; display: inline-flex; align-items: center; justify-content: center;
+      border-radius: 17px; font-size: 18px; font-weight: 850;
+    }
+    .wait-btn.is-active {
+      border-color: #0a8f9e; color: white; background: #0a8f9e;
+    }
+    .auto-run-banner {
+      margin: 0 0 10px; color: var(--muted); font-size: 16px; line-height: 1.35; font-weight: 650;
+    }
+    #escortMapCanvas { display: block; width: 100%; height: 100%; }
     .details-card {
       flex: 1; min-height: 210px; margin: 18px 0; padding: 26px;
       display: grid; grid-template-columns: 84px 1fr; align-content: center; gap: 22px;
@@ -684,7 +761,87 @@
           <div id="ticketNotice" class="notice hidden" data-i18n="ticketRouteUnavailable">Flight data is available, but the escort route is not configured.</div>
           <div class="action-row">
             <button class="secondary" id="ticketBack" data-i18n="done">Done</button>
-            <button class="primary" id="ticketEscort" data-i18n="escortToCheckIn">Escort to check-in</button>
+            <button class="primary" id="ticketGo" data-i18n="routeGo">Поехали</button>
+          </div>
+        </div>
+        <div id="modePanel" class="panel hidden">
+          <span class="eyebrow" data-i18n="modeEyebrow">Режим поездки</span>
+          <h1 data-i18n="modeTitle">Как продолжим?</h1>
+          <p class="lead" data-i18n="modeLead">Выберите, как робот довезёт вас до регистрации.</p>
+          <div class="mode-choices">
+            <div class="mode-option">
+              <button type="button" class="mode-card" id="modeEscort" data-mode="escort">
+                <span class="mode-card-top">
+                  <span class="mode-card-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="8" cy="6" r="2.4"/><path d="M4.8 20v-5.2l1.6-3.2h3.2L11.2 15V20"/><circle cx="17" cy="7" r="2"/><path d="M14.2 20v-4.4c0-.9.7-1.6 1.6-1.6H18c1.2 0 2.2 1 2.2 2.2V20"/></svg>
+                  </span>
+                  <span class="mode-card-index">1</span>
+                </span>
+                <strong class="mode-card-title" data-i18n="modeEscortTitle">Сопровождение</strong>
+                <span class="mode-card-lead" data-i18n="modeEscortLead">Робот едет медленно рядом с вами и сопровождает до места.</span>
+                <span class="mode-card-btn" data-i18n="modeEscortBtn">Выбрать сопровождение</span>
+              </button>
+              <p class="mode-card-note" data-i18n="modeEscortNote">На экране останутся сервисы, карта маршрута и кнопка «Ждать», если нужно остановиться рядом с вами.</p>
+            </div>
+            <div class="mode-option">
+              <button type="button" class="mode-card" id="modeAuto" data-mode="auto">
+                <span class="mode-card-top">
+                  <span class="mode-card-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="8" width="14" height="9" rx="2"/><circle cx="8.5" cy="17.5" r="1.5"/><circle cx="15.5" cy="17.5" r="1.5"/><path d="M9 8V6.5A3 3 0 0 1 12 3.5 3 3 0 0 1 15 6.5V8"/></svg>
+                  </span>
+                  <span class="mode-card-index">2</span>
+                </span>
+                <strong class="mode-card-title" data-i18n="modeAutoTitle">Самостоятельная работа</strong>
+                <span class="mode-card-lead" data-i18n="modeAutoLead">Робот сам выполняет задачу без участия человека.</span>
+                <span class="mode-card-btn" data-i18n="modeAutoBtn">Выбрать самостоятельный режим</span>
+              </button>
+              <p class="mode-card-note" data-i18n="modeAutoNote">Вы можете отойти: на экране останется информация о пассажире, пока робот едет сам.</p>
+            </div>
+          </div>
+          <div class="action-row">
+            <button class="secondary" id="modeBack" data-i18n="back">Back</button>
+          </div>
+        </div>
+        <div id="escortRunPanel" class="panel hidden">
+          <span class="eyebrow" data-i18n="modeEscortTitle">Сопровождение</span>
+          <h1 data-i18n="escortRunTitle">Идём вместе</h1>
+          <div id="escortRunStatus" class="escort-run-status"><span class="pulse"></span><span id="escortRunStatusText" data-i18n="escortMoving">Сопровождение · медленный ход</span></div>
+          <div class="route-map-wrap">
+            <div class="route-map-legend">
+              <span><i class="lg-a"></i><span data-i18n="routePointA">A — you are here</span></span>
+              <span><i class="lg-b"></i><span data-i18n="routePointB">B — check-in</span></span>
+              <span><i class="lg-path"></i><span data-i18n="routePath">Optimal route</span></span>
+            </div>
+            <div class="route-map-canvas-box">
+              <canvas id="escortMapCanvas" width="640" height="400" aria-label="Escort route map"></canvas>
+            </div>
+            <div id="escortMapStatus" class="route-map-status"></div>
+          </div>
+          <div class="action-row">
+            <button class="wait-btn" id="escortWait" data-i18n="escortWait">Ждать</button>
+            <button class="danger" id="escortStop" data-i18n="stopEscort">Stop escort</button>
+          </div>
+        </div>
+        <div id="autoRunPanel" class="panel hidden">
+          <span class="eyebrow" data-i18n="modeAutoTitle">Самостоятельная работа</span>
+          <h1 data-i18n="autoRunTitle">Робот выполняет задачу</h1>
+          <p class="auto-run-banner" data-i18n="autoRunLead">Участие человека не требуется. На экране — данные пассажира.</p>
+          <div class="auto-run-status"><span class="pulse"></span><span data-i18n="autoRunStatus">Автономное движение активно</span></div>
+          <div class="ticket-card">
+            <div class="ticket-main">
+              <div class="passenger"><span data-i18n="passenger">Passenger</span><strong id="autoPassengerName">—</strong></div>
+              <div class="flight-line">
+                <div class="flight-number"><span class="ticket-label" data-i18n="flight">Flight</span><strong id="autoFlightNumber">—</strong></div>
+                <div><span class="ticket-label" data-i18n="departure">Departure</span><span class="ticket-value" id="autoDepartureTime">—</span></div>
+              </div>
+            </div>
+            <div class="ticket-side">
+              <div class="ticket-stat"><span class="ticket-label" data-i18n="checkIn">Check-in</span><span class="ticket-value" id="autoCheckInValue">—</span></div>
+              <div class="ticket-stat"><span class="ticket-label" data-i18n="gate">Gate</span><span class="ticket-value" id="autoGateValue">—</span></div>
+            </div>
+          </div>
+          <div class="action-row">
+            <button class="danger" id="autoStop" data-i18n="stopEscort">Stop escort</button>
           </div>
         </div>
         <div id="journeyPanel" class="panel hidden">
@@ -769,6 +926,14 @@
         routeGoStarted:"Робот начал движение к точке B",routeGoFailed:"Не удалось начать движение",routeGoNoGoal:"Сначала поставьте точку B на карте лидара",
         routeMapLoading:"Строим маршрут…",routeMapError:"Не удалось построить маршрут",routeMapReady:"Маршрут готов",
         routeMapLive:"из карты лидара",routeMapFromMemory:"по сохранённой карте",routeMapDemo:"демо-план (нет remembered map)",routeMapNoGoal:"поставьте точку B на карте лидара",
+        modeEyebrow:"Режим поездки",modeTitle:"Как продолжим?",modeLead:"Выберите, как робот довезёт вас до регистрации.",
+        modeEscortTitle:"Сопровождение",modeEscortLead:"Робот едет медленно рядом с вами и сопровождает до места.",modeEscortBtn:"Выбрать сопровождение",
+        modeEscortNote:"На экране останутся сервисы, карта маршрута и кнопка «Ждать», если нужно остановиться рядом с вами.",
+        modeAutoTitle:"Самостоятельная работа",modeAutoLead:"Робот сам выполняет задачу без участия человека.",modeAutoBtn:"Выбрать самостоятельный режим",
+        modeAutoNote:"Вы можете отойти: на экране останется информация о пассажире, пока робот едет сам.",
+        escortRunTitle:"Идём вместе",escortMoving:"Сопровождение · медленный ход",escortWaiting:"Ожидание человека",
+        escortWait:"Ждать",escortContinue:"Продолжить",
+        autoRunTitle:"Робот выполняет задачу",autoRunLead:"Участие человека не требуется. На экране — данные пассажира.",autoRunStatus:"Автономное движение активно",
         kinds:{"check-in":"Регистрация","gates":"Выходы на посадку","baggage":"Выдача багажа","places":"Места","information":"Стойка информации","exit":"Выход"},
         kindHints:{"check-in":"Стойки и оформление","gates":"Зоны вылета","baggage":"Зал прилёта","places":"Рестораны, сувениры, туалет…","information":"Помощь пассажирам","exit":"К транспорту"},
         placeNames:{"restaurants":"Рестораны","souvenirs":"Сувениры","toilet":"Туалет","cafe":"Кафе","pharmacy":"Аптека"},
@@ -794,6 +959,14 @@
         routeGoStarted:"Robot started moving to point B",routeGoFailed:"Could not start movement",routeGoNoGoal:"Set point B on the lidar map first",
         routeMapLoading:"Building route…",routeMapError:"Could not build a route",routeMapReady:"Route ready",
         routeMapLive:"from live lidar map",routeMapFromMemory:"from saved map",routeMapDemo:"demo floor (no remembered map)",routeMapNoGoal:"set point B on the lidar map",
+        modeEyebrow:"Trip mode",modeTitle:"How should we continue?",modeLead:"Choose how the robot will take you to check-in.",
+        modeEscortTitle:"Escort",modeEscortLead:"The robot moves slowly beside you and accompanies you to the destination.",modeEscortBtn:"Choose escort",
+        modeEscortNote:"You’ll see services, the route map, and a Wait button if the robot should stop beside you.",
+        modeAutoTitle:"Autonomous",modeAutoLead:"The robot completes the task without a person walking along.",modeAutoBtn:"Choose autonomous",
+        modeAutoNote:"You can step away — passenger details stay on screen while the robot drives alone.",
+        escortRunTitle:"Walking together",escortMoving:"Escort · slow speed",escortWaiting:"Waiting for passenger",
+        escortWait:"Wait",escortContinue:"Continue",
+        autoRunTitle:"Robot is on the task",autoRunLead:"No passenger walk-along needed. Your details stay on screen.",autoRunStatus:"Autonomous motion active",
         kinds:{"check-in":"Check-in","gates":"Boarding gates","baggage":"Baggage claim","places":"Places","information":"Information desk","exit":"Exit"},
         kindHints:{"check-in":"Desks and assistance","gates":"Departure zones","baggage":"Arrivals hall","places":"Restaurants, shops, restrooms…","information":"Passenger help","exit":"Ground transport"},
         placeNames:{"restaurants":"Restaurants","souvenirs":"Souvenirs","toilet":"Restrooms","cafe":"Café","pharmacy":"Pharmacy"},
@@ -819,6 +992,14 @@
         routeGoStarted:"机器人已开始前往 B 点",routeGoFailed:"无法开始移动",routeGoNoGoal:"请先在激光雷达地图上设置 B 点",
         routeMapLoading:"正在规划路线…",routeMapError:"无法规划路线",routeMapReady:"路线已就绪",
         routeMapLive:"来自实时激光雷达地图",routeMapFromMemory:"来自已保存地图",routeMapDemo:"演示平面图（无 remembered map）",routeMapNoGoal:"请在激光雷达地图上设置 B 点",
+        modeEyebrow:"出行模式",modeTitle:"您希望如何继续？",modeLead:"请选择机器人如何带您前往值机。",
+        modeEscortTitle:"陪同",modeEscortLead:"机器人缓慢行驶，陪同您到达目的地。",modeEscortBtn:"选择陪同",
+        modeEscortNote:"屏幕将显示服务、路线地图，以及需要停在您身边时的「等待」按钮。",
+        modeAutoTitle:"自主执行",modeAutoLead:"机器人独立完成任务，无需人员跟随。",modeAutoBtn:"选择自主模式",
+        modeAutoNote:"您可以离开——机器人行驶时屏幕会保留旅客信息。",
+        escortRunTitle:"一起前行",escortMoving:"陪同 · 慢速行驶",escortWaiting:"等待旅客",
+        escortWait:"等待",escortContinue:"继续",
+        autoRunTitle:"机器人正在执行任务",autoRunLead:"无需人员跟随。屏幕显示旅客信息。",autoRunStatus:"自主行驶中",
         kinds:{"check-in":"值机","gates":"登机口","baggage":"行李提取","places":"场所","information":"问讯处","exit":"出口"},
         kindHints:{"check-in":"柜台和服务","gates":"出发区域","baggage":"到达大厅","places":"餐厅、商店、洗手间…","information":"旅客帮助","exit":"地面交通"},
         placeNames:{"restaurants":"餐厅","souvenirs":"纪念品","toilet":"洗手间","cafe":"咖啡厅","pharmacy":"药店"},
@@ -844,6 +1025,14 @@
         routeGoStarted:"Робот B ноктасына таба хәрәкәт башлады",routeGoFailed:"Хәрәкәтне башлап булмады",routeGoNoGoal:"Башта лидар картасында B ноктасын куегыз",
         routeMapLoading:"Маршрут төзелә…",routeMapError:"Маршрут төзеп булмады",routeMapReady:"Маршрут әзер",
         routeMapLive:"лидар картасыннан",routeMapFromMemory:"сакланган картадан",routeMapDemo:"демо-план (remembered map юк)",routeMapNoGoal:"лидар картасында B ноктасын куегыз",
+        modeEyebrow:"Сәяхәт режимы",modeTitle:"Ничек дәвам итәбез?",modeLead:"Робот сезне теркәлүгә ничек алып барырга икәнен сайлагыз.",
+        modeEscortTitle:"Озату",modeEscortLead:"Робот әкрен бара һәм сезне кирәкле урынга озата.",modeEscortBtn:"Озатуны сайлау",
+        modeEscortNote:"Экрада хезмәтләр, маршрут картасы һәм яныңызда туктау өчен «Көтү» төймәсе кала.",
+        modeAutoTitle:"Үзлектән эшләү",modeAutoLead:"Робот бурычны кеше катнашыннан башка үти.",modeAutoBtn:"Үзлектән режимны сайлау",
+        modeAutoNote:"Сез китә аласыз — робот барганда экрада юлчы мәгълүматы кала.",
+        escortRunTitle:"Бергә барабыз",escortMoving:"Озату · әкрен хәрәкәт",escortWaiting:"Кешене көтү",
+        escortWait:"Көтү",escortContinue:"Дәвам итү",
+        autoRunTitle:"Робот бурычны үти",autoRunLead:"Кеше катнашы кирәкми. Экрада юлчы мәгълүматы.",autoRunStatus:"Автоном хәрәкәт актив",
         kinds:{"check-in":"Теркәлү","gates":"Утыру чыгу юллары","baggage":"Багаж алу","places":"Урыннар","information":"Мәгълүмат өстәле","exit":"Чыгу"},
         kindHints:{"check-in":"Өстәлләр һәм ярдәм","gates":"Очып китү зоналары","baggage":"Килү залы","places":"Рестораннар, кибетләр, бәдрәф…","information":"Юлчыларга ярдәм","exit":"Транспортка"},
         placeNames:{"restaurants":"Рестораннар","souvenirs":"Сувенирлар","toilet":"Бәдрәф","cafe":"Кафе","pharmacy":"Аптека"},
@@ -851,13 +1040,16 @@
       }
     };
 
-    const panels = ["welcomePanel", "detailsPanel", "placesPanel", "mapPanel", "ticketPanel", "journeyPanel"];
+    const panels = ["welcomePanel", "detailsPanel", "placesPanel", "mapPanel", "ticketPanel", "modePanel", "escortRunPanel", "autoRunPanel", "journeyPanel"];
     let lang = localStorage.getItem("airport-language") || "ru";
     let destinations = [];
     let selectedDestination = null;
     let placesContext = false;
     let ticket = null;
     let activeDestinationId = null;
+    let tripMode = null;
+    let escortPaused = false;
+    let activeMapCanvasId = "routeMapCanvas";
     let navigationSeen = false;
     let cancellationPending = false;
     let journeyState = "moving";
@@ -917,6 +1109,7 @@
       if (selectedDestination) renderDetails(selectedDestination);
       if (ticket) renderTicket(ticket);
       renderJourneyText();
+      updateEscortWaitUi();
       if ($("scanModal").classList.contains("open") && $("scanCameraStatus")) {
         if ($("scanCamera").classList.contains("is-unavailable")) $("scanCameraStatus").textContent = t("cameraUnavailable");
         else if (barcodeDetector) $("scanCameraStatus").textContent = t("cameraScanning");
@@ -1005,13 +1198,16 @@
     async function openRouteMapPanel(destination) {
       const label = localized(destination?.labels, t("kinds")[destination?.kind] || t("routeMapTitle"));
       $("mapTitle").textContent = label;
+      activeMapCanvasId = "routeMapCanvas";
       showPanel("mapPanel");
       resetIdle();
       await loadAndDrawRouteMap();
     }
 
     async function loadAndDrawRouteMap(seed) {
-      const status = $("routeMapStatus");
+      const statusId = activeMapCanvasId === "escortMapCanvas" ? "escortMapStatus" : "routeMapStatus";
+      const status = $(statusId);
+      if (!status) return;
       status.classList.remove("error");
       status.textContent = t("routeMapLoading");
       try {
@@ -1039,12 +1235,16 @@
       }
     }
 
+    function mapCanvas() {
+      return $(activeMapCanvasId) || $("routeMapCanvas");
+    }
+
     function drawRouteMap(data) {
       if (data.coordinateSpace === "world" && data.map) {
         drawWorldRouteMap(data);
         return;
       }
-      const canvas = $("routeMapCanvas");
+      const canvas = mapCanvas();
       const box = canvas.parentElement;
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
       const cssW = Math.max(320, box.clientWidth || 640);
@@ -1127,7 +1327,7 @@
     }
 
     function drawWorldRouteMap(data) {
-      const canvas = $("routeMapCanvas");
+      const canvas = mapCanvas();
       const box = canvas.parentElement;
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
       const cssW = Math.max(320, box.clientWidth || 640);
@@ -1437,16 +1637,36 @@
       $("departureTime").textContent = data.departureTime || "—";
       $("checkInValue").textContent = data.checkIn || "—";
       $("gateValue").textContent = data.gate || "—";
-      $("ticketEscort").classList.toggle("hidden", !data.canEscort);
-      $("ticketNotice").classList.toggle("hidden", data.canEscort);
+      $("ticketGo").classList.remove("hidden");
+      $("ticketNotice").classList.toggle("hidden", !!data.canEscort);
     }
 
-    async function startEscort(destinationId) {
-      if (!destinationId) return;
+    function renderAutoPassenger(data) {
+      $("autoPassengerName").textContent = data?.passengerName || "—";
+      $("autoFlightNumber").textContent = data?.flight || "—";
+      $("autoDepartureTime").textContent = data?.departureTime || "—";
+      $("autoCheckInValue").textContent = data?.checkIn || "—";
+      $("autoGateValue").textContent = data?.gate || "—";
+    }
+
+    function openModePanel() {
+      if (!ticket) return;
+      showPanel("modePanel");
+      resetIdle();
+    }
+
+    async function startEscort(destinationId, mode = "escort", options = {}) {
+      if (!destinationId) {
+        alert(t("startFailed"));
+        return;
+      }
+      const resume = !!options.resume;
+      tripMode = mode === "auto" ? "auto" : "escort";
+      escortPaused = false;
       try {
         const response = await fetch("/api/escort", {
           method: "POST", headers: {"Content-Type": "application/json"},
-          body: JSON.stringify({destinationId}), cache: "no-store"
+          body: JSON.stringify({destinationId, mode: tripMode}), cache: "no-store"
         });
         const result = await response.json();
         if (!result.ok) {
@@ -1459,12 +1679,62 @@
         journeyState = "moving";
         $("journeyError").classList.add("hidden");
         $("journeyError").textContent = "";
-        renderJourneyText();
-        showPanel("journeyPanel");
-        resetIdle(false);
+        if (tripMode === "escort") {
+          activeMapCanvasId = "escortMapCanvas";
+          showPanel("escortRunPanel");
+          updateEscortWaitUi();
+          resetIdle(false);
+          if (!resume) await loadAndDrawRouteMap();
+        } else {
+          renderAutoPassenger(ticket);
+          showPanel("autoRunPanel");
+          resetIdle(false);
+        }
       } catch (_) {
-        alert(t("startFailed"));
+        // Preview / offline: still show the selected mode UI
+        activeDestinationId = destinationId;
+        navigationSeen = false;
+        cancellationPending = false;
+        journeyState = "moving";
+        if (tripMode === "escort") {
+          activeMapCanvasId = "escortMapCanvas";
+          showPanel("escortRunPanel");
+          updateEscortWaitUi();
+          resetIdle(false);
+          if (!resume) await loadAndDrawRouteMap();
+        } else {
+          renderAutoPassenger(ticket);
+          showPanel("autoRunPanel");
+          resetIdle(false);
+        }
       }
+    }
+
+    function updateEscortWaitUi() {
+      const status = $("escortRunStatus");
+      const statusText = $("escortRunStatusText");
+      const waitBtn = $("escortWait");
+      if (!status || !statusText || !waitBtn) return;
+      status.classList.toggle("is-waiting", escortPaused);
+      statusText.textContent = escortPaused ? t("escortWaiting") : t("escortMoving");
+      waitBtn.textContent = escortPaused ? t("escortContinue") : t("escortWait");
+      waitBtn.classList.toggle("is-active", escortPaused);
+    }
+
+    async function toggleEscortWait() {
+      if (!activeDestinationId || tripMode !== "escort") return;
+      if (escortPaused) {
+        await startEscort(activeDestinationId, "escort", {resume: true});
+        return;
+      }
+      escortPaused = true;
+      navigationSeen = false;
+      updateEscortWaitUi();
+      try {
+        await fetch("/api/cmd/stop", {method: "POST", cache: "no-store"});
+      } catch (_) {}
+      if ($("escortMapStatus")) $("escortMapStatus").textContent = t("escortWaiting");
+      resetIdle(false);
     }
 
     async function cancelEscort() {
@@ -1473,11 +1743,13 @@
         return;
       }
       cancellationPending = true;
+      escortPaused = false;
       try {
         const response = await fetch("/api/escort/cancel", {method: "POST", cache: "no-store"});
         const result = await response.json();
         if (!response.ok || !result.ok) throw new Error("stop rejected");
         activeDestinationId = null;
+        tripMode = null;
         navigationSeen = false;
         cancellationPending = false;
         goHome();
@@ -1519,6 +1791,9 @@
     function goHome() {
       selectedDestination = null;
       placesContext = false;
+      tripMode = null;
+      escortPaused = false;
+      activeMapCanvasId = "routeMapCanvas";
       clearTicketData();
       activeDestinationId = null;
       cancellationPending = false;
@@ -1584,14 +1859,34 @@
         if (activeDestinationId) {
           if (data.goal) navigationSeen = true;
           if (navigationSeen && !data.goal) {
-            activeDestinationId = null;
-            navigationSeen = false;
-            journeyState = cancellationPending
-              ? "cancel-error"
-              : data.nav_status === "arrived" ? "arrived" : "interrupted";
-            cancellationPending = false;
-            renderJourneyText();
-            resetIdle();
+            if (escortPaused) {
+              // Soft-stopped while waiting for passenger — keep escort UI.
+            } else {
+              activeDestinationId = null;
+              navigationSeen = false;
+              journeyState = cancellationPending
+                ? "cancel-error"
+                : data.nav_status === "arrived" ? "arrived" : "interrupted";
+              cancellationPending = false;
+              if (tripMode === "escort" || tripMode === "auto") {
+                if (journeyState === "arrived") {
+                  if (tripMode === "escort" && $("escortMapStatus")) {
+                    $("escortMapStatus").textContent = t("arrived");
+                  }
+                  if (tripMode === "auto") {
+                    const status = document.querySelector("#autoRunPanel .auto-run-status span:last-child");
+                    if (status) status.textContent = t("arrived");
+                  }
+                } else {
+                  renderJourneyText();
+                  showPanel("journeyPanel");
+                }
+              } else {
+                renderJourneyText();
+                showPanel("journeyPanel");
+              }
+              resetIdle();
+            }
           }
         }
       } catch (_) {
@@ -1680,8 +1975,21 @@
       }
     });
     $("ticketBack").addEventListener("click", goHome);
-    $("escortButton").addEventListener("click", () => startEscort(selectedDestination?.id));
-    $("ticketEscort").addEventListener("click", () => startEscort(ticket?.destinationId));
+    $("modeBack").addEventListener("click", () => {
+      if (ticket) {
+        showPanel("ticketPanel");
+        resetIdle();
+        return;
+      }
+      goHome();
+    });
+    $("ticketGo").addEventListener("click", openModePanel);
+    $("modeEscort").addEventListener("click", () => startEscort(ticket?.destinationId, "escort"));
+    $("modeAuto").addEventListener("click", () => startEscort(ticket?.destinationId, "auto"));
+    $("escortButton").addEventListener("click", () => startEscort(selectedDestination?.id, "escort"));
+    $("escortWait").addEventListener("click", toggleEscortWait);
+    $("escortStop").addEventListener("click", cancelEscort);
+    $("autoStop").addEventListener("click", cancelEscort);
     $("cancelEscort").addEventListener("click", cancelEscort);
     document.addEventListener("pointerdown", () => resetIdle(), {passive: true});
     document.addEventListener("keydown", event => {
@@ -1690,7 +1998,10 @@
     });
     window.addEventListener("resize", () => {
       fitStageToViewport();
-      if (lastRoutePreview && !$("mapPanel").classList.contains("hidden")) {
+      if (lastRoutePreview && (
+        !$("mapPanel").classList.contains("hidden") ||
+        !$("escortRunPanel").classList.contains("hidden")
+      )) {
         drawRouteMap(lastRoutePreview);
       }
     });

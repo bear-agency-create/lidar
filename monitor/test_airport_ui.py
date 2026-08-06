@@ -70,12 +70,21 @@ class AirportUiAssetTest(unittest.TestCase):
         self.assertIn("KZzKQhLbySCrKtkfNh9xSD2Q", self.html)
         self.assertIn("lookupDemoTicket", self.html)
 
-    def test_check_in_opens_route_map_panel(self) -> None:
-        self.assertIn('id="mapPanel"', self.html)
-        self.assertIn('id="routeMapCanvas"', self.html)
-        self.assertIn("openRouteMapPanel", self.html)
-        self.assertIn("/api/map/preview", self.html)
-        self.assertIn('kind === "check-in"', self.html)
+    def test_ticket_go_opens_mode_choice(self) -> None:
+        self.assertIn('id="ticketGo"', self.html)
+        self.assertIn('id="modePanel"', self.html)
+        self.assertIn('id="modeEscort"', self.html)
+        self.assertIn('id="modeAuto"', self.html)
+        self.assertIn('id="escortRunPanel"', self.html)
+        self.assertIn('id="autoRunPanel"', self.html)
+        self.assertIn('id="escortMapCanvas"', self.html)
+        self.assertIn('data-i18n="modeEscortTitle"', self.html)
+        self.assertIn('data-i18n="modeAutoTitle"', self.html)
+        self.assertIn('id="escortWait"', self.html)
+        self.assertIn('data-i18n="escortWait"', self.html)
+        self.assertIn('data-i18n="modeEscortNote"', self.html)
+        self.assertIn('data-i18n="modeAutoNote"', self.html)
+        self.assertIn('mode: tripMode', self.html)
 
 
 if __name__ == "__main__":

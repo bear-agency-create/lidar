@@ -30,3 +30,24 @@ bash ~/lidar/lidar_map/start_kiosk_stack.sh
 - пассажирский киоск: `http://<robot>:8765/kiosk`
 
 Кнопки настраиваются в `monitor/primary_buttons.json`.
+
+## Полностью локальная работа (без интернета)
+
+Если роутер без выхода в сеть, работай так:
+
+1. Ноутбук и Pi в одной LAN.
+2. Деплой текущего кода прямо с ноута на Pi:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\local-deploy-pi.ps1 -PiHost 10.255.210.201
+```
+
+Скрипт:
+- пакует `lidar_map/`, `monitor/` (и `camera/`, если есть),
+- копирует архив на Pi по SSH,
+- распаковывает в `~/robot_nav/`,
+- перезапускает стек.
+
+Локальные адреса управления:
+- оператор/лидар: `http://<pi-ip>:8765/`
+- монитор/киоск: `http://<pi-ip>:8765/kiosk`

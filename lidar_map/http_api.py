@@ -17,6 +17,8 @@ from config import (
     AIRPORT_KIOSK_ALLOWED_CLIENTS,
     AIRPORT_TICKETS_DB_PATH,
     AIRPORT_UI_PATH,
+    NAV_AUTO_SPEED_SCALE,
+    NAV_ESCORT_SPEED_SCALE,
     PRIMARY_BUTTONS_PATH,
     WEB_UI_PATH,
 )
@@ -396,9 +398,26 @@ def make_handler(bridge):
                         404,
                     )
                     return
-                result = bridge.set_goal(destination.x, destination.y)
+                mode = str(data.get("mode", "auto") or "auto").strip().lower()
+                if mode not in {"escort", "auto"}:
+                    mode = "auto"
+                try:
+                    speed_scale = float(
+                        data.get(
+                            "speedScale",
+                            NAV_ESCORT_SPEED_SCALE if mode == "escort" else NAV_AUTO_SPEED_SCALE,
+                        )
+                    )
+                except (TypeError, ValueError):
+                    speed_scale = (
+                        NAV_ESCORT_SPEED_SCALE if mode == "escort" else NAV_AUTO_SPEED_SCALE
+                    )
+                result = bridge.set_goal(
+                    destination.x, destination.y, speed_scale=speed_scale
+                )
                 if result.get("ok"):
                     result["destinationId"] = destination.id
+                    result["mode"] = mode
                     update_preview_goal(result.get("goal"))
                     kiosk_navigation.start(destination.id)
                 send_json(self, result, 200 if result.get("ok") else 409)

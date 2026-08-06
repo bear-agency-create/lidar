@@ -133,8 +133,8 @@ def pursuit_cmd(
     look = path[min(i + 1, len(path) - 1)]
     lx, ly = look[0], look[1]
     speed = NAV_V
-    if dist < 0.70:
-        speed *= max(0.35, dist / 0.70)
+    if dist < 0.45:
+        speed *= max(0.55, dist / 0.45)
     ux = (lx - x) / max(1e-3, math.hypot(lx - x, ly - y))
     uy = (ly - y) / max(1e-3, math.hypot(lx - x, ly - y))
     if i > 0:
@@ -159,7 +159,7 @@ def pursuit_cmd(
     want = math.atan2(uy, ux)
     err = wrap_angle(want - yaw)
     w = 0.0 if abs(err) < NAV_YAW_DEAD else clamp(NAV_YAW_KP * err, -NAV_W_MAX, NAV_W_MAX)
-    if abs(err) > 0.9:
-        vx *= 0.65
-        vy *= 0.85
+    if abs(err) > 1.2:
+        vx *= 0.80
+        vy *= 0.90
     return vx, vy, w, i, False

@@ -1,15 +1,15 @@
 {
   "cal_tps": [510, 734, 2103, 1389],
-  "pidv_kp_x1000": 400,
-  "pidv_ki_x1000": 2000,
-  "frb_pct": 105,
-  "yaw_kp": 2.0,
-  "yaw_deadband_deg": 2.0,
+  "pidv_kp_x1000": 120,
+  "pidv_ki_x1000": 400,
+  "frb_pct": 112,
+  "yaw_kp": 1.4,
+  "yaw_deadband_deg": 3.0,
   "trim_w": {
-    "fwd": 0.55,
-    "back": 0.55,
-    "strl": -0.25,
-    "strr": 0.35
+    "fwd": 0.35,
+    "back": 0.35,
+    "strl": -0.15,
+    "strr": 0.20
   },
-  "notes": "Recalibrated 2026-07-26 for new floor; FR encoder weak; trims boosted after residual yaw on verify."
+  "notes": "Demo thrust boost 2026-07-28: milder PI so feedforward PWM stays high; lighter yaw trims."
 }

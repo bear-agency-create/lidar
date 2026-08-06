@@ -194,7 +194,7 @@ class PreviewHandler(SimpleHTTPRequestHandler):
             result = lookup_ticket(data.get("code"))
             status = 200 if result.get("ok") else 404
             return self._send_json(result, status=status)
-        if path in {"/api/escort", "/api/escort/cancel", "/api/escort/heartbeat"}:
+        if path in {"/api/escort", "/api/escort/cancel", "/api/escort/heartbeat", "/api/cmd/stop"}:
             return self._send_json({"ok": True, "preview": True, "message": "preview_only"})
         self.send_error(404, "Not found")
 

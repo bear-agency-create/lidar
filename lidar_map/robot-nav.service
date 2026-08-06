@@ -1,0 +1,18 @@
+[Unit]
+Description=Robot lidar map stack (lidar + encoders + web :8765)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+User=pi
+Group=pi
+Environment=HOME=/home/pi
+WorkingDirectory=/home/pi/robot_nav/lidar_map
+ExecStart=/bin/bash /home/pi/robot_nav/lidar_map/start_drive_map.sh
+ExecStop=/bin/bash -c "pkill -9 -f 'lidar_map/main.py' || true; pkill -9 -f drive_encoders || true; pkill -9 -f cspc_lidar || true; fuser -k 8765/tcp || true"
+TimeoutStartSec=90
+
+[Install]
+WantedBy=multi-user.target

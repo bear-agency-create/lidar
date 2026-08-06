@@ -48,8 +48,8 @@ static const uint8_t ENC_RR_A = 46, ENC_RR_B = 47;
 static const int SIGN_FL = -1, SIGN_FR = +1, SIGN_RL = -1, SIGN_RR = +1;
 static const int ENC_SIGN_FL = -1, ENC_SIGN_FR = +1, ENC_SIGN_RL = -1, ENC_SIGN_RR = -1;
 
-static const int BASE_PWM = 200;
-static const int MIN_PWM = 80;
+static const int BASE_PWM = 255;
+static const int MIN_PWM = 140;
 static const int MAX_PWM = 255;
 
 static const float WHEEL_DIAMETER_MM = 65.0f;
@@ -75,7 +75,7 @@ static float velKp = 0.350f;
 static float velKi = 1.800f;
 static const float VEL_INT_MAX = 0.35f;
 static const float EMA_ALPHA = 0.30f;
-static const float RAMP_STEP = 0.09f;      // max mix change per control tick
+static const float RAMP_STEP = 0.14f;      // max mix change per control tick
 
 static int cmd_vx = 0, cmd_vy = 0, cmd_w_mrad = 0;
 static unsigned long lastCmdMs = 0;

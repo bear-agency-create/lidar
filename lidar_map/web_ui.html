@@ -86,7 +86,7 @@ let drag = null;
 let mapFrozen = false;
 const VIEW_MARGIN_CELLS = 3;
 
-const VX = 0.45, VY = 0.35, W = 1.2;
+const VX = 0.75, VY = 0.60, W = 1.4;
 const CMDS = {
   fwd:  {vx: VX,  vy: 0,   w: 0},
   back: {vx:-VX,  vy: 0,   w: 0},
@@ -127,7 +127,7 @@ function mergedCmd() {
     vx += c.vx; vy += c.vy; w += c.w;
   }
   const clamp = (v, m) => Math.max(-m, Math.min(m, v));
-  return {vx: clamp(vx, 0.35), vy: clamp(vy, 0.35), w: clamp(w, 1.2)};
+  return {vx: clamp(vx, 0.80), vy: clamp(vy, 0.65), w: clamp(w, 1.5)};
 }
 
 function refreshDriveLoop() {
@@ -281,10 +281,10 @@ canvas.addEventListener('pointerdown', (e) => {
     fetch('/api/goal', {
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({x: wx, y: wy, start: false}),
+      body: JSON.stringify({x: wx, y: wy, start: true}),
     }).then(r => r.json()).then(j => {
       document.getElementById('info').textContent = j.ok
-        ? ('точка B выбрана | путь ' + (j.path_len||0) + ' | (' + wx.toFixed(1) + ',' + wy.toFixed(1) + ')')
+        ? ('еду к точке B | путь ' + (j.path_len||0) + ' | (' + wx.toFixed(1) + ',' + wy.toFixed(1) + ')')
         : ('нет пути A→B: ' + (j.error || ''));
     }).catch(() => {});
     return;

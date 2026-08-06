@@ -1,0 +1,10 @@
+[Unit]
+Description=Watchdog for robot-nav web stack on :8765
+After=network-online.target robot-nav.service
+
+[Service]
+Type=oneshot
+User=pi
+Group=pi
+Environment=HOME=/home/pi
+ExecStart=/bin/bash /home/pi/robot_nav/lidar_map/robot-nav-watchdog.sh

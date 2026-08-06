@@ -67,6 +67,7 @@ class ScanBridge(Node):
         self._selected_goal: tuple[float, float] | None = None
         self._nav_i = 0
         self._nav_status = "idle"
+        self._nav_speed_scale = 1.0
         self._last_scan_t = 0.0
         self._map_bootstrap_scans = 120
         self._scan_count = 0
@@ -124,6 +125,7 @@ class ScanBridge(Node):
             self._nav_path = []
             self._nav_goal = None
             self._nav_i = 0
+            self._nav_speed_scale = 1.0
         return self.drive.stop()
 
     def _on_odom(self, msg: Odometry) -> None:
@@ -310,10 +312,16 @@ class ScanBridge(Node):
             log.info("freeze OFF — wall writing enabled")
         return {"ok": True, "frozen": was, "hits": self.omap.to_dict().get("hits", 0)}
 
-    def set_goal(self, gx: float, gy: float) -> dict[str, Any]:
+    def set_nav_speed_scale(self, scale: float) -> None:
+        with self._lock:
+            self._nav_speed_scale = float(max(0.15, min(1.0, scale)))
+
+    def set_goal(self, gx: float, gy: float, *, speed_scale: float | None = None) -> dict[str, Any]:
         result = self._plan_goal(gx, gy)
         if not result.get("ok"):
             return result
+        if speed_scale is not None:
+            self.set_nav_speed_scale(speed_scale)
         with self._lock:
             self._nav_path = list(result["path"])
             self._nav_goal = (float(gx), float(gy))
@@ -321,12 +329,14 @@ class ScanBridge(Node):
             self._selected_goal = (float(gx), float(gy))
             self._nav_i = 0
             self._nav_status = "navigating"
+            scale = float(self._nav_speed_scale)
         return {
             "ok": True,
             "path_len": result["path_len"],
             "goal": result["goal"],
             "start": result["start"],
             "started": True,
+            "speed_scale": scale,
         }
 
     def set_selected_goal(self, gx: float, gy: float) -> dict[str, Any]:
@@ -371,9 +381,8 @@ class ScanBridge(Node):
             x = float(self._pose["x"])
             y = float(self._pose["y"])
             yaw = float(self._pose["yaw"])
-            frozen = self._map_frozen
             temp = dict(self._temp)
-        if not frozen or not path or goal is None:
+        if not path or goal is None:
             return
         blocked = build_blocked(self.omap, temp, time.time())
         while i < len(path):
@@ -387,13 +396,15 @@ class ScanBridge(Node):
             return
         vx, vy, w, i, arrived = pursuit_cmd(path, goal, i, x, y, yaw)
         with self._lock:
+            scale = float(self._nav_speed_scale)
             self._nav_i = i
             if arrived:
                 self._nav_path = []
                 self._nav_goal = None
                 self._nav_i = 0
                 self._nav_status = "arrived"
-        self.drive.set(vx, vy, w, from_teleop=False)
+                self._nav_speed_scale = 1.0
+        self.drive.set(vx * scale, vy * scale, w * scale, from_teleop=False)
 
     def snapshot(self) -> dict[str, Any]:
         temp_cells = self._temp_cells_for_ui()

@@ -327,9 +327,10 @@ def main() -> None:
                 if holding:
                     # Floor feedforward trim + lidar fine correction (not replace user w).
                     w = direction_trim_w(vx, vy, trim_w) + hold.correction()
-                vx_mm = int(max(-700, min(700, vx * 1000.0 * 1.8)))
-                vy_mm = int(max(-700, min(700, vy * 1000.0 * 1.8)))
-                w_mrad = int(max(-2500, min(2500, w * 1000.0)))
+                # Stronger FF gain for carpet/demo floors (Arduino full mix ~500).
+                vx_mm = int(max(-900, min(900, vx * 1000.0 * 2.6)))
+                vy_mm = int(max(-900, min(900, vy * 1000.0 * 2.6)))
+                w_mrad = int(max(-2800, min(2800, w * 1000.0 * 1.15)))
                 ser.write(f"SET_ROBOT_VELOCITY {vx_mm} {vy_mm} {w_mrad}\n".encode())
                 last_stop = False
                 cmd_ticks += 1
