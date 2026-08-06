@@ -148,11 +148,23 @@ def read_json_body(handler: BaseHTTPRequestHandler) -> dict[str, Any]:
     return data if isinstance(data, dict) else {}
 
 
+def _add_cors(handler: BaseHTTPRequestHandler) -> None:
+    origin = handler.headers.get("Origin") or "*"
+    # Edge/Chrome --app and some proxies send Origin: null
+    if origin.lower() == "null":
+        origin = "*"
+    handler.send_header("Access-Control-Allow-Origin", origin)
+    handler.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+    handler.send_header("Access-Control-Allow-Headers", "Content-Type")
+    handler.send_header("Vary", "Origin")
+
+
 def send_json(handler: BaseHTTPRequestHandler, payload: dict[str, Any], code: int = 200) -> None:
     body = json.dumps(payload).encode("utf-8")
     handler.send_response(code)
     handler.send_header("Content-Type", "application/json")
     handler.send_header("Cache-Control", "no-store")
+    _add_cors(handler)
     handler.send_header("Content-Length", str(len(body)))
     handler.end_headers()
     handler.wfile.write(body)
@@ -229,32 +241,66 @@ def make_handler(bridge):
             # Access log → file only (avoid flooding stdout)
             log.debug("http " + fmt, *args)
 
-        def _allow_kiosk_control(self) -> bool:
+        def _client_ip_ok(self) -> bool:
             client_ip = str(self.client_address[0])
-            origin = self.headers.get("Origin")
-            host = self.headers.get("Host", "")
-            origin_allowed = not origin or urlsplit(origin).netloc == host
+            # IPv4-mapped IPv6 (::ffff:10.x.x.x)
+            if client_ip.startswith("::ffff:"):
+                client_ip = client_ip.split("::ffff:", 1)[1]
             allowed = AIRPORT_KIOSK_ALLOWED_CLIENTS
             # "*" = open LAN access for operator map / teleop from PC
-            ip_ok = (
+            return (
                 "*" in allowed
                 or client_ip in allowed
-                or client_ip.startswith("172.21.")
+                or client_ip.startswith("172.16.")
+                or client_ip.startswith("172.17.")
+                or client_ip.startswith("172.18.")
+                or client_ip.startswith("172.19.")
+                or client_ip.startswith("172.2")
+                or client_ip.startswith("172.3")
                 or client_ip.startswith("10.")
                 or client_ip.startswith("192.168.")
                 or client_ip.startswith("127.")
                 or client_ip in {"::1", "0:0:0:0:0:0:0:1"}
             )
-            if ip_ok and origin_allowed:
+
+        def _origin_ok(self) -> bool:
+            origin = (self.headers.get("Origin") or "").strip()
+            if not origin or origin.lower() == "null":
+                # Normal browser same-origin omits Origin on some GETs;
+                # Edge/Chrome --app and file:// send Origin: null.
+                return True
+            host = (self.headers.get("Host") or "").strip()
+            parts = urlsplit(origin)
+            netloc = parts.netloc
+            if netloc == host:
+                return True
+            hostname = (parts.hostname or "").lower()
+            # Local admin proxy / laptop tools
+            if hostname in {"127.0.0.1", "localhost"} or hostname.endswith(".local"):
+                return True
+            if hostname.startswith(("10.", "192.168.", "172.")):
+                return True
+            return False
+
+        def _allow_kiosk_control(self) -> bool:
+            client_ip = str(self.client_address[0])
+            origin = self.headers.get("Origin")
+            if self._client_ip_ok() and self._origin_ok():
                 return True
             send_json(self, {"ok": False, "error": "kiosk_access_denied"}, 403)
             log.warning("blocked control request from %s origin=%s", client_ip, origin or "-")
             return False
 
+        def do_OPTIONS(self) -> None:  # noqa: N802
+            self.send_response(204)
+            _add_cors(self)
+            self.send_header("Content-Length", "0")
+            self.end_headers()
+
         def do_GET(self) -> None:  # noqa: N802
             path = self.path.split("?", 1)[0]
             # Drive map / teleop is the default console again.
-            if path in ("/", "/index.html", "/operator", "/operator.html"):
+            if path in ("/", "/index.html", "/operator", "/operator.html", "/map"):
                 body = load_html(WEB_UI_PATH)
                 self.send_response(200)
                 self.send_header("Content-Type", "text/html; charset=utf-8")
