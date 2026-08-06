@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Робот · управление</title>
+<style>
+  :root {
+    --bg: #0c121a;
+    --card: #152033;
+    --line: #2a3d55;
+    --text: #e8f1fa;
+    --muted: #8fa3b8;
+    --accent: #4ea3ff;
+    --ok: #2fce86;
+    --warn: #e0b14a;
+    --bad: #e25b5b;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text);
+    font: 14px/1.4 "Segoe UI", system-ui, sans-serif; }
+  #app { height: 100%; display: grid; grid-template-rows: 56px 1fr; }
+  header {
+    display: flex; align-items: center; gap: 10px; padding: 0 14px;
+    border-bottom: 1px solid var(--line); background: #090e15;
+  }
+  header h1 { margin: 0; font-size: 16px; color: var(--accent); }
+  .grow { flex: 1; }
+  .mode { display: flex; gap: 6px; }
+  .mode button {
+    border: 1px solid var(--line); background: #1a2738; color: var(--text);
+    border-radius: 999px; padding: 7px 14px; cursor: pointer; font: inherit;
+  }
+  .mode button.on { background: #245987; border-color: var(--accent); }
+  button.danger {
+    background: #3a1c1c; border: 1px solid #8a3a3a; color: #ffb4b4;
+    border-radius: 10px; padding: 8px 14px; cursor: pointer; font: inherit; font-weight: 700;
+  }
+  main { min-height: 0; overflow: hidden; }
+  .view { display: none; height: 100%; }
+  .view.on { display: grid; }
+  #simple { grid-template-rows: auto auto 1fr; gap: 12px; padding: 14px; overflow: auto; }
+  #full { grid-template-rows: 44px 1fr; }
+  .status-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; }
+  .chip {
+    background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 12px;
+  }
+  .chip .l { color: var(--muted); font-size: 12px; }
+  .chip .v { font-size: 20px; font-weight: 700; margin-top: 4px; }
+  .chip.ok .v { color: var(--ok); }
+  .chip.warn .v { color: var(--warn); }
+  .chip.bad .v { color: var(--bad); }
+  .actions { display: flex; flex-wrap: wrap; gap: 8px; }
+  .actions button, .actions a {
+    background: #1e3148; color: var(--text); border: 1px solid #3a5370;
+    border-radius: 10px; padding: 10px 14px; cursor: pointer; font: inherit; text-decoration: none;
+  }
+  .actions button.primary { background: #1f6f4a; border-color: #2f9a68; }
+  .panel {
+    background: var(--card); border: 1px solid var(--line); border-radius: 14px;
+    padding: 14px; min-height: 0; display: flex; flex-direction: column; gap: 10px;
+  }
+  .panel h2 { margin: 0; font-size: 14px; color: var(--accent); }
+  pre {
+    margin: 0; flex: 1; overflow: auto; background: #0a1018; border-radius: 10px;
+    padding: 12px; font: 12px/1.45 Consolas, monospace; white-space: pre-wrap; color: #cfe0f0;
+    min-height: 160px;
+  }
+  .hint { color: var(--muted); font-size: 12px; }
+  .auto-ok { color: var(--ok); }
+  .auto-bad { color: var(--bad); }
+  .tabs { display: flex; gap: 6px; padding: 6px 10px; border-bottom: 1px solid var(--line); background: #0b1119; flex-wrap: wrap; }
+  .tabs button {
+    background: #1a2738; border: 1px solid var(--line); color: var(--text);
+    border-radius: 8px; padding: 6px 10px; cursor: pointer; font: inherit;
+  }
+  .tabs button.on { background: #245987; border-color: var(--accent); }
+  .full-page { display: none; height: 100%; min-height: 0; overflow: auto; padding: 12px; gap: 10px; }
+  .full-page.on { display: grid; }
+  .grid2 { grid-template-columns: 1fr 1fr; }
+  iframe { width: 100%; height: 100%; border: 0; background: #000; }
+  .map-wrap { padding: 0; grid-template-rows: 1fr; overflow: hidden; }
+  input, select, textarea {
+    background: #0a1018; color: var(--text); border: 1px solid #3a5370;
+    border-radius: 8px; padding: 8px 10px; font: inherit;
+  }
+  textarea { width: 100%; min-height: 100px; font-family: Consolas, monospace; }
+  .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .pad { display: grid; grid-template-columns: repeat(3, 60px); gap: 6px; }
+  .pad button { width: 60px; height: 42px; font-weight: 700; }
+  @media (max-width: 900px) { .grid2 { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <h1>Робот</h1>
+    <span id="banner" class="hint">проверка…</span>
+    <div class="grow"></div>
+    <div class="mode">
+      <button id="btnSimple" class="on">Простой</button>
+      <button id="btnFull">Полный</button>
+    </div>
+    <button class="danger" id="btnStop">СТОП</button>
+  </header>
+
+  <main>
+    <!-- SIMPLE AUTO VIEW -->
+    <section id="simple" class="view on">
+      <div class="status-row" id="chips"></div>
+      <div class="actions">
+        <button class="primary" id="btnAutoFix">Автопочинка</button>
+        <button id="btnRefresh">Обновить</button>
+        <button id="btnSave">Сохранить карту</button>
+        <button id="btnFreeze">Заморозить стены</button>
+        <button id="btnUnfreeze">Разморозить</button>
+        <a href="/kiosk" target="_blank" rel="noopener">Киоск</a>
+        <a href="/" target="_blank" rel="noopener">Карта</a>
+      </div>
+      <div class="panel">
+        <h2>Автодиагностика</h2>
+        <div class="hint">Всё проверяется само каждые 2 сек. Кнопка «Автопочинка» — стоп + health + analyze.</div>
+        <pre id="autoLog">—</pre>
+      </div>
+    </section>
+
+    <!-- FULL CONSOLE -->
+    <section id="full" class="view">
+      <nav class="tabs" id="fullTabs">
+        <button class="on" data-p="drive">Езда</button>
+        <button data-p="mission">Миссия</button>
+        <button data-p="airport">Аэропорт</button>
+        <button data-p="map">Карта</button>
+        <button data-p="kiosk">Киоск</button>
+        <button data-p="logs">Логи</button>
+        <button data-p="api">API</button>
+      </nav>
+      <div id="fp-drive" class="full-page on grid2">
+        <div class="panel">
+          <h2>Телеоп</h2>
+          <div class="pad">
+            <span></span><button data-c="0,1,0">↑</button><span></span>
+            <button data-c="-1,0,0">←</button><button data-c="0,0,0">■</button><button data-c="1,0,0">→</button>
+            <span></span><button data-c="0,-1,0">↓</button><span></span>
+          </div>
+          <div class="row">
+            <label>скорость <input id="spd" type="number" step="0.05" value="0.25" style="width:80px"/></label>
+            <button data-c="0,0,1">⟲</button><button data-c="0,0,-1">⟳</button>
+          </div>
+          <pre id="driveOut">—</pre>
+        </div>
+        <div class="panel">
+          <h2>Цель</h2>
+          <div class="row">
+            <input id="gx" type="number" step="0.1" value="0" style="width:90px"/>
+            <input id="gy" type="number" step="0.1" value="0" style="width:90px"/>
+            <button id="goalSel">Выбрать</button>
+            <button id="goalGo">Старт</button>
+          </div>
+          <pre id="goalOut">—</pre>
+        </div>
+      </div>
+      <div id="fp-mission" class="full-page grid2">
+        <div class="panel">
+          <h2>Waypoints JSON</h2>
+          <textarea id="missionJson">[{"x":0.5,"y":0,"label":"1"},{"x":1,"y":0.5,"label":"2"}]</textarea>
+          <div class="row">
+            <button id="mPlan">План</button>
+            <button id="mStart">Старт</button>
+            <button id="mStop">Стоп</button>
+          </div>
+        </div>
+        <div class="panel"><h2>Ответ</h2><pre id="missionOut">—</pre></div>
+      </div>
+      <div id="fp-airport" class="full-page grid2">
+        <div class="panel">
+          <h2>Назначения</h2>
+          <div class="row">
+            <select id="escortMode"><option value="escort">escort</option><option value="auto">auto</option></select>
+            <button id="destReload">Обновить</button>
+            <button id="escortCancel">Отмена escort</button>
+          </div>
+          <div id="destList"></div>
+        </div>
+        <div class="panel">
+          <h2>Билет</h2>
+          <div class="row">
+            <input id="ticket" placeholder="код"/>
+            <button id="ticketGo">Lookup</button>
+          </div>
+          <pre id="airportOut">—</pre>
+        </div>
+      </div>
+      <div id="fp-map" class="full-page map-wrap"><iframe id="mapFrame" src="/"></iframe></div>
+      <div id="fp-kiosk" class="full-page map-wrap"><iframe id="kioskFrame" src="/kiosk"></iframe></div>
+      <div id="fp-logs" class="full-page" style="grid-template-rows:auto 1fr">
+        <div class="row"><button id="logsGo">Обновить логи</button><span class="hint">/api/logs</span></div>
+        <div class="panel"><pre id="logsOut">—</pre></div>
+      </div>
+      <div id="fp-api" class="full-page grid2">
+        <div class="panel">
+          <h2>Запрос</h2>
+          <div class="row">
+            <select id="apiMethod"><option>GET</option><option>POST</option></select>
+            <input id="apiPath" value="/api/scan" style="flex:1;min-width:180px"/>
+          </div>
+          <textarea id="apiBody">{}</textarea>
+          <button id="apiSend">Отправить</button>
+        </div>
+        <div class="panel"><h2>Ответ</h2><pre id="apiOut">—</pre></div>
+      </div>
+    </section>
+  </main>
+</div>
+<script>
+const $ = (id) => document.getElementById(id);
+const state = { last: null, health: null, analyze: null };
+
+async function api(method, path, body) {
+  const opts = { method, cache: "no-store", headers: {} };
+  if (body !== undefined) {
+    opts.headers["Content-Type"] = "application/json";
+    opts.body = JSON.stringify(body);
+  }
+  const r = await fetch(path, opts);
+  const text = await r.text();
+  let data;
+  try { data = JSON.parse(text); } catch { data = { raw: text }; }
+  if (!r.ok) throw new Error(data.error || data.detail || text || r.statusText);
+  return data;
+}
+
+function setMode(simple) {
+  $("btnSimple").classList.toggle("on", simple);
+  $("btnFull").classList.toggle("on", !simple);
+  $("simple").classList.toggle("on", simple);
+  $("full").classList.toggle("on", !simple);
+  localStorage.setItem("robot_ui_mode", simple ? "simple" : "full");
+}
+
+function showFullPage(name) {
+  document.querySelectorAll("#fullTabs button").forEach(b => b.classList.toggle("on", b.dataset.p === name));
+  document.querySelectorAll(".full-page").forEach(p => p.classList.remove("on"));
+  $("fp-" + name).classList.add("on");
+  if (name === "map") $("mapFrame").src = "/?" + Date.now();
+  if (name === "kiosk") $("kioskFrame").src = "/kiosk?" + Date.now();
+  if (name === "airport") loadDests();
+  if (name === "logs") loadLogs();
+}
+
+function chip(label, value, kind) {
+  return `<div class="chip ${kind}"><div class="l">${label}</div><div class="v">${value}</div></div>`;
+}
+
+function yn(v) { return v ? "OK" : "НЕТ"; }
+
+async function refreshAll() {
+  const lines = [];
+  const push = (ok, msg) => lines.push(`${ok ? "✓" : "✗"} ${msg}`);
+  try {
+    const [scan, health, mission, airport] = await Promise.all([
+      api("GET", "/api/scan"),
+      api("GET", "/api/health").catch(e => ({ ok: false, error: e.message })),
+      api("GET", "/api/mission").catch(() => ({})),
+      api("GET", "/api/airport/status").catch(() => ({})),
+    ]);
+    state.last = scan;
+    state.health = health;
+    if (!scan.mission && mission) scan.mission = mission;
+
+    const lidarOk = !!scan.ok;
+    const odomOk = !!scan.odom_ok;
+    const procs = (health && health.processes) || {};
+    const allProc = !!(procs.main && procs.drive_encoders && procs.lidar);
+    const nav = scan.nav_status || "—";
+    const score = Number(scan.score || 0);
+
+    $("chips").innerHTML = [
+      chip("Связь", "онлайн", "ok"),
+      chip("Лидар", yn(lidarOk), lidarOk ? "ok" : "bad"),
+      chip("Одометрия", yn(odomOk), odomOk ? "ok" : "warn"),
+      chip("Процессы", allProc ? "все" : "проблема", allProc ? "ok" : "bad"),
+      chip("Навигация", nav, nav === "idle" || !scan.goal ? "ok" : "warn"),
+      chip("Карта score", score.toFixed(2), score >= 0.5 ? "ok" : "warn"),
+    ].join("");
+
+    push(true, "API отвечает");
+    push(lidarOk, `Лидар points=${(scan.points || []).length}`);
+    push(odomOk, "Одометрия");
+    push(!!procs.main, "main.py");
+    push(!!procs.drive_encoders, "drive_encoders");
+    push(!!procs.lidar, "cspc_lidar");
+    if (health.hints) health.hints.forEach(h => lines.push("• " + h));
+    if (scan.error) lines.push("! scan.error: " + scan.error);
+    if (mission && mission.status) lines.push(`миссия: ${mission.status} ${mission.index || 0}/${mission.total || 0}`);
+    if (airport && (airport.active || airport.destinationId)) lines.push(`escort: ${JSON.stringify(airport)}`);
+
+    $("banner").textContent = `онлайн · lidar=${yn(lidarOk)} · odom=${yn(odomOk)} · nav=${nav}`;
+    $("autoLog").innerHTML = lines.map(l =>
+      l.startsWith("✓") ? `<span class="auto-ok">${l}</span>` :
+      l.startsWith("✗") ? `<span class="auto-bad">${l}</span>` : l
+    ).join("\n");
+  } catch (e) {
+    $("chips").innerHTML = chip("Связь", "офлайн", "bad") + chip("Ошибка", e.message, "bad");
+    $("banner").textContent = "нет связи";
+    $("autoLog").textContent = "Нет связи с роботом: " + e.message;
+  }
+}
+
+async function autoFix() {
+  $("autoLog").textContent = "Автопочинка…";
+  try {
+    await api("POST", "/api/cmd/stop", {});
+    await api("POST", "/api/mission/stop", {}).catch(() => {});
+    await api("POST", "/api/escort/cancel", {}).catch(() => {});
+    const health = await api("GET", "/api/health");
+    let analyze = null;
+    try { analyze = await api("GET", "/api/analyze"); } catch {}
+    state.health = health;
+    state.analyze = analyze;
+    await refreshAll();
+    const extra = [];
+    extra.push("--- автопочинка ---");
+    extra.push("СТОП отправлен");
+    (health.hints || []).forEach(h => extra.push("• " + h));
+    if (analyze && analyze.recommendations) analyze.recommendations.forEach(r => extra.push("→ " + r));
+    $("autoLog").textContent = ($("autoLog").textContent || "") + "\n" + extra.join("\n");
+  } catch (e) {
+    $("autoLog").textContent = "Автопочинка не удалась: " + e.message;
+  }
+}
+
+async function stopAll() {
+  try {
+    await api("POST", "/api/cmd/stop", {});
+    await api("POST", "/api/mission/stop", {}).catch(() => {});
+    await api("POST", "/api/escort/cancel", {}).catch(() => {});
+  } catch (e) { alert(e.message); }
+}
+
+async function sendCmd(sx, sy, sw) {
+  const s = Number($("spd").value) || 0.25;
+  const body = { vx: sx * s, vy: sy * s, w: sw ? sw * 0.4 : 0 };
+  try { $("driveOut").textContent = JSON.stringify(await api("POST", "/api/cmd", body), null, 2); }
+  catch (e) { $("driveOut").textContent = e.message; }
+}
+
+async function loadDests() {
+  try {
+    const d = await api("GET", "/api/airport/destinations");
+    const list = Array.isArray(d) ? d : (d.destinations || []);
+    $("destList").innerHTML = list.map(item => {
+      const id = item.id;
+      return `<div class="row" style="justify-content:space-between;margin:6px 0;padding:8px;border:1px solid var(--line);border-radius:8px">
+        <div><b>${item.title || id}</b><div class="hint">${id}</div></div>
+        <button data-escort="${id}">Ехать</button></div>`;
+    }).join("") || "<div class='hint'>пусто</div>";
+    $("destList").querySelectorAll("[data-escort]").forEach(b => b.addEventListener("click", async () => {
+      try {
+        $("airportOut").textContent = JSON.stringify(await api("POST", "/api/escort", {
+          destinationId: b.dataset.escort, mode: $("escortMode").value
+        }), null, 2);
+      } catch (e) { $("airportOut").textContent = e.message; }
+    }));
+    $("airportOut").textContent = JSON.stringify(d, null, 2);
+  } catch (e) { $("airportOut").textContent = e.message; }
+}
+
+async function loadLogs() {
+  try {
+    const d = await api("GET", "/api/logs?n=200");
+    $("logsOut").textContent = (d.lines || []).join("\n");
+  } catch (e) { $("logsOut").textContent = e.message; }
+}
+
+$("btnSimple").onclick = () => setMode(true);
+$("btnFull").onclick = () => setMode(false);
+$("btnStop").onclick = stopAll;
+$("btnRefresh").onclick = refreshAll;
+$("btnAutoFix").onclick = autoFix;
+$("btnSave").onclick = async () => {
+  try { await api("POST", "/api/save", {}); await refreshAll(); } catch (e) { alert(e.message); }
+};
+$("btnFreeze").onclick = async () => { try { await api("POST", "/api/freeze", {frozen:true}); await refreshAll(); } catch(e){alert(e.message);} };
+$("btnUnfreeze").onclick = async () => { try { await api("POST", "/api/freeze", {frozen:false}); await refreshAll(); } catch(e){alert(e.message);} };
+
+document.querySelectorAll("#fullTabs button").forEach(b => b.onclick = () => showFullPage(b.dataset.p));
+document.querySelectorAll("[data-c]").forEach(b => b.onclick = () => {
+  const [x,y,w] = b.dataset.c.split(",").map(Number);
+  sendCmd(x, y, w);
+});
+$("goalSel").onclick = async () => {
+  try { $("goalOut").textContent = JSON.stringify(await api("POST", "/api/goal", {x:+$("gx").value,y:+$("gy").value,start:false}), null, 2); }
+  catch(e){ $("goalOut").textContent = e.message; }
+};
+$("goalGo").onclick = async () => {
+  try { $("goalOut").textContent = JSON.stringify(await api("POST", "/api/goal", {x:+$("gx").value,y:+$("gy").value,start:true}), null, 2); }
+  catch(e){ $("goalOut").textContent = e.message; }
+};
+$("mPlan").onclick = async () => {
+  try { $("missionOut").textContent = JSON.stringify(await api("POST", "/api/mission/plan", {waypoints: JSON.parse($("missionJson").value)}), null, 2); }
+  catch(e){ $("missionOut").textContent = e.message; }
+};
+$("mStart").onclick = async () => {
+  try { $("missionOut").textContent = JSON.stringify(await api("POST", "/api/mission", {waypoints: JSON.parse($("missionJson").value), start:true}), null, 2); }
+  catch(e){ $("missionOut").textContent = e.message; }
+};
+$("mStop").onclick = async () => {
+  try { $("missionOut").textContent = JSON.stringify(await api("POST", "/api/mission/stop", {}), null, 2); }
+  catch(e){ $("missionOut").textContent = e.message; }
+};
+$("destReload").onclick = loadDests;
+$("escortCancel").onclick = async () => {
+  try { $("airportOut").textContent = JSON.stringify(await api("POST", "/api/escort/cancel", {}), null, 2); }
+  catch(e){ $("airportOut").textContent = e.message; }
+};
+$("ticketGo").onclick = async () => {
+  try { $("airportOut").textContent = JSON.stringify(await api("POST", "/api/ticket/lookup", {code: $("ticket").value}), null, 2); }
+  catch(e){ $("airportOut").textContent = e.message; }
+};
+$("logsGo").onclick = loadLogs;
+$("apiSend").onclick = async () => {
+  try {
+    const m = $("apiMethod").value;
+    const body = m === "POST" ? JSON.parse($("apiBody").value || "{}") : undefined;
+    $("apiOut").textContent = JSON.stringify(await api(m, $("apiPath").value.trim(), body), null, 2);
+  } catch(e){ $("apiOut").textContent = e.message; }
+};
+
+setMode(localStorage.getItem("robot_ui_mode") !== "full");
+refreshAll();
+setInterval(refreshAll, 2000);
+</script>
+</body>
+</html>

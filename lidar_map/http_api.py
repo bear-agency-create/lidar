@@ -17,8 +17,10 @@ from config import (
     AIRPORT_KIOSK_ALLOWED_CLIENTS,
     AIRPORT_TICKETS_DB_PATH,
     AIRPORT_UI_PATH,
+    LOG_PATH,
     NAV_AUTO_SPEED_SCALE,
     NAV_ESCORT_SPEED_SCALE,
+    OPERATOR_PANEL_PATH,
     PRIMARY_BUTTONS_PATH,
     WEB_UI_PATH,
 )
@@ -35,7 +37,7 @@ except ImportError:  # pragma: no cover - missing monitor package
     _build_route_preview = None
     log.warning("map_route unavailable — /api/map/preview disabled")
 
-_HTML_CACHE: dict[str, bytes] = {}
+_HTML_CACHE: dict[str, tuple[float, bytes]] = {}
 _ASSET_CACHE: dict[str, bytes] = {}
 _AIRPORT_ASSETS = {
     "/assets/kazan-sky-attract.png": AIRPORT_UI_PATH.parent / "assets" / "kazan-sky-attract.png",
@@ -112,10 +114,17 @@ class KioskNavigationSession:
 
 def load_html(path) -> bytes:
     key = str(path)
-    if key not in _HTML_CACHE:
-        _HTML_CACHE[key] = path.read_text(encoding="utf-8").encode("utf-8")
-        log.info("web UI loaded (%s bytes) from %s", len(_HTML_CACHE[key]), path)
-    return _HTML_CACHE[key]
+    try:
+        mtime = float(path.stat().st_mtime)
+    except OSError:
+        mtime = 0.0
+    cached = _HTML_CACHE.get(key)
+    if cached is None or cached[0] != mtime:
+        body = path.read_text(encoding="utf-8").encode("utf-8")
+        _HTML_CACHE[key] = (mtime, body)
+        log.info("web UI loaded (%s bytes) from %s", len(body), path)
+        return body
+    return cached[1]
 
 
 def load_asset(path) -> bytes:
@@ -249,6 +258,16 @@ def make_handler(bridge):
                 body = load_html(WEB_UI_PATH)
                 self.send_response(200)
                 self.send_header("Content-Type", "text/html; charset=utf-8")
+                self.send_header("Cache-Control", "no-store")
+                self.send_header("Content-Length", str(len(body)))
+                self.end_headers()
+                self.wfile.write(body)
+                return
+            if path in ("/operator-panel", "/panel", "/admin", "/admin-panel"):
+                body = load_html(OPERATOR_PANEL_PATH)
+                self.send_response(200)
+                self.send_header("Content-Type", "text/html; charset=utf-8")
+                self.send_header("Cache-Control", "no-store")
                 self.send_header("Content-Length", str(len(body)))
                 self.end_headers()
                 self.wfile.write(body)
@@ -257,6 +276,8 @@ def make_handler(bridge):
                 body = load_html(AIRPORT_UI_PATH)
                 self.send_response(200)
                 self.send_header("Content-Type", "text/html; charset=utf-8")
+                self.send_header("Cache-Control", "no-store")
+                self.send_header("Permissions-Policy", "camera=(self), microphone=()")
                 self.send_header("Content-Length", str(len(body)))
                 self.end_headers()
                 self.wfile.write(body)
@@ -343,6 +364,52 @@ def make_handler(bridge):
                 if kiosk_navigation.status()["active"] and not snapshot.get("goal"):
                     kiosk_navigation.finish()
                 send_json(self, snapshot)
+                return
+            if path == "/api/mission":
+                if not self._allow_kiosk_control():
+                    return
+                send_json(self, bridge.mission_status())
+                return
+            if path == "/api/logs":
+                if not self._allow_kiosk_control():
+                    return
+                query = parse_qs(urlsplit(self.path).query)
+                try:
+                    n = int((query.get("n") or ["80"])[0])
+                except ValueError:
+                    n = 80
+                n = max(1, min(500, n))
+                try:
+                    if LOG_PATH.is_file():
+                        lines = LOG_PATH.read_text(encoding="utf-8", errors="ignore").splitlines()[-n:]
+                    else:
+                        lines = [f"missing log file: {LOG_PATH}"]
+                    send_json(self, {"ok": True, "path": str(LOG_PATH), "lines": lines})
+                except OSError as exc:
+                    send_json(self, {"ok": False, "error": str(exc), "lines": []}, 500)
+                return
+            if path == "/api/health":
+                if not self._allow_kiosk_control():
+                    return
+                try:
+                    from analyze import system_health
+
+                    send_json(self, system_health())
+                except Exception as exc:  # noqa: BLE001
+                    log.exception("health failed")
+                    send_json(self, {"ok": False, "error": str(exc)}, 500)
+                return
+            if path == "/api/analyze":
+                if not self._allow_kiosk_control():
+                    return
+                try:
+                    from analyze import analyze_snapshot
+
+                    snap = bridge.snapshot()
+                    send_json(self, analyze_snapshot(snap))
+                except Exception as exc:  # noqa: BLE001
+                    log.exception("analyze failed")
+                    send_json(self, {"ok": False, "error": str(exc)}, 500)
                 return
             self.send_error(404)
 
@@ -453,6 +520,37 @@ def make_handler(bridge):
                 if result.get("ok"):
                     update_preview_goal(result.get("goal"))
                 send_json(self, result)
+                return
+            if path == "/api/mission/plan":
+                data = read_json_body(self)
+                result = bridge.plan_mission(data.get("waypoints"))
+                if result.get("ok"):
+                    update_preview_goal(
+                        (result["waypoints"][-1]["x"], result["waypoints"][-1]["y"])
+                        if result.get("waypoints")
+                        else None
+                    )
+                send_json(self, result, 200 if result.get("ok") else 409)
+                return
+            if path == "/api/mission":
+                data = read_json_body(self)
+                start_now = bool(data.get("start", True))
+                speed_scale = data.get("speedScale")
+                try:
+                    scale = float(speed_scale) if speed_scale is not None else None
+                except (TypeError, ValueError):
+                    scale = None
+                result = bridge.set_mission(
+                    data.get("waypoints"),
+                    start=start_now,
+                    speed_scale=scale,
+                )
+                if result.get("ok") and result.get("goal"):
+                    update_preview_goal(result.get("goal"))
+                send_json(self, result, 200 if result.get("ok") else 409)
+                return
+            if path == "/api/mission/stop":
+                send_json(self, bridge.stop_cmd())
                 return
             self.send_error(404)
 

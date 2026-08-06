@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=Start Kiosk Monitor
+Name[ru]=Киоск на мониторе робота
+Comment=Passenger kiosk on robot monitor only
+Comment[ru]=Киоск на мониторе робота (не на ноутбуке)
+Exec=bash -lc '%h/robot_nav/monitor/start_kiosk_on_robot.sh'
+Icon=utilities-terminal
+Terminal=true
+Categories=Utility;
+Path=/home/pi/robot_nav/monitor

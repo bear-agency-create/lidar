@@ -3,27 +3,26 @@
 
   Motions: forward / back (vx), strafe left / right (vy), rotate (w).
 
-  Alignment: encoders have very different resolutions per wheel
-  (calibrated 2026-07-24: straight rolling gives FL~572, FR~336,
-  RL~1960, RR~1423 ticks/s at mix 1.0). FL/RL/RR encoders are
-  mutually consistent; the FR encoder intermittently drops 15-25% of
-  ticks, so closing a loop on it overdrives that wheel and twists the
-  chassis. Therefore: FL, RL and RR run per-wheel PI velocity loops
-  (tick rate normalized by the wheel's own full-scale rate), FR runs
-  feedforward-only, and odometry is solved from the three reliable
-  wheels (3 wheels fully determine the 3-DOF mecanum chassis motion).
+  Alignment: encoders have very different resolutions per wheel.
+  FR drops ticks intermittently; FL encoder is dead (always 0 as of
+  2026-08-06). Therefore RL/RR run per-wheel PI velocity loops
+  (tick rate normalized by the wheel's own full-scale rate); FL and FR
+  run feedforward-only. Odometry is solved from FR/RL/RR (3 wheels
+  fully determine the 3-DOF mecanum chassis motion).
 
   Serial protocol (115200, \n terminated):
     SET_ROBOT_VELOCITY vx vy w   vx/vy ~500 = full, w ~1500 = full
     w/s/a/d                      fwd / back / strafe L / strafe R
     q/e (z/c)                    rotate CCW / CW
-    x or space or STOP           stop
+    STOP                         smooth coast-down (shared ramp)
+    HARD_STOP / BRAKE / x / spc  immediate brake (all wheels)
     PING                         -> PONG
     RESET_ODOM                   zero encoders + pose -> ODOM_OK
     SET_POSE x_mm y_mm th        override pose -> POSE_OK
     ENC?                         raw per-wheel encoder counts
-    SET_PIDV kp ki               velocity-loop gains x1000 (default 350 1800)
+    SET_PIDV kp ki               velocity-loop gains x1000 (0 0 = open-loop equal)
     SET_CAL fl fr rl rr          full-scale ticks/s per wheel
+    SET_WSCALE fl fr rl rr       per-wheel FF scale percent (100 = nominal)
     SET_FRB pct                  FR reverse-direction scale in percent
     SET_FRF pct                  FR forward-direction scale in percent
 
@@ -49,7 +48,7 @@ static const int SIGN_FL = -1, SIGN_FR = +1, SIGN_RL = -1, SIGN_RR = +1;
 static const int ENC_SIGN_FL = -1, ENC_SIGN_FR = +1, ENC_SIGN_RL = -1, ENC_SIGN_RR = -1;
 
 static const int BASE_PWM = 255;
-static const int MIN_PWM = 140;
+static const int MIN_PWM = 70;     // low floor; rises with command (smooth start)
 static const int MAX_PWM = 255;
 
 static const float WHEEL_DIAMETER_MM = 65.0f;
@@ -64,18 +63,23 @@ static const unsigned long CTRL_PERIOD_MS = 25;
 static float calTps[4] = {510.0f, 734.0f, 2103.0f, 1389.0f};   // FL FR RL RR
 
 // Wheels with trustworthy encoders (index: 0=FL 1=FR 2=RL 3=RR)
-static const bool encTrusted[4] = {true, false, true, true};
+// FL encoder dead; FR lossy. Default: all FF so ramps stay identical.
+static const bool encTrusted[4] = {false, false, false, false};
 
-// FR runs feedforward-only; both directions need scale fixes on changing floors.
-static float frRevScale = 1.05f;
-static float frFwdScale = 1.12f;   // FR lags on new floor; boost forward FF
+// FR extra direction scales (on top of wheelScale[1]).
+static float frRevScale = 1.00f;
+static float frFwdScale = 1.00f;
 
-// Per-wheel velocity PI (normalized units) — milder defaults for new surfaces
-static float velKp = 0.350f;
-static float velKi = 1.800f;
+// Open-loop balance (2026-08-06 FWD open-loop TPS FR/RL/RR ≈ 1073/905/717).
+static float wheelScale[4] = {1.00f, 0.85f, 1.00f, 1.22f};
+
+// Per-wheel velocity PI (normalized units). Default off for equal motion.
+static float velKp = 0.0f;
+static float velKi = 0.0f;
 static const float VEL_INT_MAX = 0.35f;
 static const float EMA_ALPHA = 0.30f;
-static const float RAMP_STEP = 0.14f;      // max mix change per control tick
+static const float RAMP_UP = 0.045f;     // ~0.55 s 0→1 at 40 Hz
+static const float RAMP_DOWN = 0.038f;   // slightly slower coast-down
 
 static int cmd_vx = 0, cmd_vy = 0, cmd_w_mrad = 0;
 static unsigned long lastCmdMs = 0;
@@ -92,6 +96,8 @@ static float rampX = 0.0f, rampY = 0.0f, rampW = 0.0f;
 static float emaTps[4] = {0, 0, 0, 0};
 static float velInt[4] = {0, 0, 0, 0};
 static float lastCorr = 0.0f;   // max |PI correction| for telemetry
+static bool hardBrake = false;
+static unsigned long brakeUntilMs = 0;
 
 static float mmPerTick() {
   return (PI * WHEEL_DIAMETER_MM) / (float)TICKS_PER_REV;
@@ -116,13 +122,13 @@ static float calMean() {
   return 0.25f * (calTps[0] + calTps[1] + calTps[2] + calTps[3]);
 }
 static float normFL() { return (float)encFL * calMean() / calTps[0]; }
+static float normFR() { return (float)encFR * calMean() / calTps[1]; }
 static float normRL() { return (float)encRL * calMean() / calTps[2]; }
 static float normRR() { return (float)encRR * calMean() / calTps[3]; }
 
 static int clampPwm(int v) {
   if (v < 0) v = 0;
   if (v > MAX_PWM) v = MAX_PWM;
-  if (v > 0 && v < MIN_PWM) v = MIN_PWM;
   return v;
 }
 
@@ -143,48 +149,102 @@ static void motor(uint8_t pwm, uint8_t in1, uint8_t in2, int dir, int sign, int 
   }
 }
 
+static void motorBrake(uint8_t pwm, uint8_t in1, uint8_t in2) {
+  // Active short-brake on typical dual-H bridges (IN1=IN2=HIGH).
+  digitalWrite(in1, HIGH); digitalWrite(in2, HIGH); analogWrite(pwm, 255);
+}
+
 static void driveOne(uint8_t pwm, uint8_t in1, uint8_t in2, int sign, float v) {
   int dir = 0;
-  if (v > 0.04f) dir = +1;
-  else if (v < -0.04f) dir = -1;
-  int spd = (dir == 0) ? 0 : clampPwm((int)(fabsf(v) * (float)BASE_PWM + 0.5f));
-  motor(pwm, in1, in2, dir, sign, spd);
+  if (v > 0.03f) dir = +1;
+  else if (v < -0.03f) dir = -1;
+  if (dir == 0) {
+    motor(pwm, in1, in2, 0, sign, 0);
+    return;
+  }
+  float mag = fabsf(v);
+  int spd = (int)(mag * (float)BASE_PWM + 0.5f);
+  // Soft floor: rise from 0 toward MIN_PWM over first 25% of command.
+  int floorPwm = (mag < 0.25f)
+      ? (int)((float)MIN_PWM * (mag / 0.25f) + 0.5f)
+      : MIN_PWM;
+  if (spd < floorPwm) spd = floorPwm;
+  motor(pwm, in1, in2, dir, sign, clampPwm(spd));
 }
 
 static void resetControl() {
   rampX = rampY = rampW = 0.0f;
   for (int i = 0; i < 4; i++) { velInt[i] = 0.0f; emaTps[i] = 0.0f; }
   lastCorr = 0.0f;
+  hardBrake = false;
+  brakeUntilMs = 0;
 }
 
-static void stopMotors() {
+static void stopHard() {
+  motorBrake(FL_PWM, FL_IN1, FL_IN2);
+  motorBrake(FR_PWM, FR_IN1, FR_IN2);
+  motorBrake(RL_PWM, RL_IN1, RL_IN2);
+  motorBrake(RR_PWM, RR_IN1, RR_IN2);
+  cmd_vx = cmd_vy = cmd_w_mrad = 0;
+  rampX = rampY = rampW = 0.0f;
+  for (int i = 0; i < 4; i++) { velInt[i] = 0.0f; emaTps[i] = 0.0f; }
+  lastCorr = 0.0f;
+  hardBrake = true;
+  brakeUntilMs = millis() + 80;
+}
+
+static void stopSoft() {
+  // Clear command; shared ramps coast down in applyMotors.
+  cmd_vx = cmd_vy = cmd_w_mrad = 0;
+  lastCmdMs = millis();
+  for (int i = 0; i < 4; i++) velInt[i] = 0.0f;
+}
+
+static void coastMotors() {
   motor(FL_PWM, FL_IN1, FL_IN2, 0, SIGN_FL, 0);
   motor(FR_PWM, FR_IN1, FR_IN2, 0, SIGN_FR, 0);
   motor(RL_PWM, RL_IN1, RL_IN2, 0, SIGN_RL, 0);
   motor(RR_PWM, RR_IN1, RR_IN2, 0, SIGN_RR, 0);
-  cmd_vx = cmd_vy = cmd_w_mrad = 0;
-  resetControl();
 }
 
-static float slew(float current, float target) {
+static float slewToward(float current, float target) {
   float d = target - current;
-  if (d > RAMP_STEP) d = RAMP_STEP;
-  if (d < -RAMP_STEP) d = -RAMP_STEP;
+  bool accel = fabsf(target) > fabsf(current) + 1e-4f;
+  float step = accel ? RAMP_UP : RAMP_DOWN;
+  if (d > step) d = step;
+  if (d < -step) d = -step;
   return current + d;
 }
 
+static bool rampsActive() {
+  return fabsf(rampX) > 0.015f || fabsf(rampY) > 0.015f || fabsf(rampW) > 0.015f;
+}
+
 static void applyMotors(float dt, const long dTicks[4]) {
-  const int ax = abs(cmd_vx);
-  const int ay = abs(cmd_vy);
-  const int aw = abs(cmd_w_mrad);
-  if (ax < 30 && ay < 30 && aw < 80) {
-    stopMotors();
+  if (hardBrake) {
+    if ((long)(millis() - brakeUntilMs) < 0) {
+      motorBrake(FL_PWM, FL_IN1, FL_IN2);
+      motorBrake(FR_PWM, FR_IN1, FR_IN2);
+      motorBrake(RL_PWM, RL_IN1, RL_IN2);
+      motorBrake(RR_PWM, RR_IN1, RR_IN2);
+      return;
+    }
+    hardBrake = false;
+    brakeUntilMs = 0;
+    coastMotors();
     return;
   }
 
-  rampX = slew(rampX, clampf((float)cmd_vx / 500.0f, -1.0f, 1.0f));
-  rampY = slew(rampY, clampf((float)cmd_vy / 500.0f, -1.0f, 1.0f));
-  rampW = slew(rampW, clampf((float)cmd_w_mrad / 1500.0f, -1.0f, 1.0f));
+  rampX = slewToward(rampX, clampf((float)cmd_vx / 500.0f, -1.0f, 1.0f));
+  rampY = slewToward(rampY, clampf((float)cmd_vy / 500.0f, -1.0f, 1.0f));
+  rampW = slewToward(rampW, clampf((float)cmd_w_mrad / 1500.0f, -1.0f, 1.0f));
+
+  if (!rampsActive() && abs(cmd_vx) < 30 && abs(cmd_vy) < 30 && abs(cmd_w_mrad) < 80) {
+    coastMotors();
+    for (int i = 0; i < 4; i++) { velInt[i] = 0.0f; emaTps[i] = 0.0f; }
+    lastCorr = 0.0f;
+    return;
+  }
 
   float target[4];
   target[0] = rampX - rampY - rampW;   // FL
@@ -206,17 +266,20 @@ static void applyMotors(float dt, const long dTicks[4]) {
     emaTps[i] += EMA_ALPHA * (tps - emaTps[i]);
     float meas = emaTps[i] / calTps[i];          // normalized wheel speed
 
-    if (fabsf(target[i]) < 0.04f) {
+    if (fabsf(target[i]) < 0.03f) {
       out[i] = 0.0f;
       velInt[i] = 0.0f;
       continue;
     }
-    if (!encTrusted[i]) {
-      out[i] = target[i];   // feedforward only
-      if (i == 1) {
-        if (out[i] < 0.0f) out[i] *= frRevScale;
-        else if (out[i] > 0.0f) out[i] *= frFwdScale;
-      }
+
+    float ff = target[i] * wheelScale[i];
+    if (i == 1) {
+      if (ff < 0.0f) ff *= frRevScale;
+      else if (ff > 0.0f) ff *= frFwdScale;
+    }
+
+    if (!encTrusted[i] || (velKp <= 0.0f && velKi <= 0.0f)) {
+      out[i] = ff;
       continue;
     }
     // Reset integrator on direction reversal to avoid windup kick.
@@ -228,7 +291,7 @@ static void applyMotors(float dt, const long dTicks[4]) {
     velInt[i] = clampf(velInt[i] + err * dt * velKi, -VEL_INT_MAX, VEL_INT_MAX);
     float corr = clampf(velKp * err + velInt[i], -0.45f, 0.45f);
     if (fabsf(corr) > lastCorr) lastCorr = fabsf(corr);
-    out[i] = clampf(target[i] + corr, -1.27f, 1.27f);
+    out[i] = clampf(ff + corr, -1.27f, 1.27f);
   }
 
   driveOne(FL_PWM, FL_IN1, FL_IN2, SIGN_FL, out[0]);
@@ -238,18 +301,18 @@ static void applyMotors(float dt, const long dTicks[4]) {
 }
 
 static void integrateOdom(const long dTicks[4]) {
-  // FR encoder drops ticks; FL/RL/RR alone determine the 3-DOF motion:
-  //   fl = x - y - w,  rl = x + y - w,  rr = x - y + w
-  //   => x = (rl + rr) / 2,  y = (rl - fl) / 2,  w = (rr - fl) / 2
+  // FL encoder dead; FR/RL/RR determine the 3-DOF motion:
+  //   fr = x + y + w,  rl = x + y - w,  rr = x - y + w
+  //   => x = (rl + rr) / 2,  y = (fr - rr) / 2,  w = (fr - rl) / 2
   const float k = mmPerTick();
   const float mean = calMean();
-  const float nFL = (float)dTicks[0] * mean / calTps[0];
+  const float nFR = (float)dTicks[1] * mean / calTps[1];
   const float nRL = (float)dTicks[2] * mean / calTps[2];
   const float nRR = (float)dTicks[3] * mean / calTps[3];
 
   const float dx = 0.5f * (nRL + nRR) * k;                        // body forward
-  const float dy = 0.5f * (nRL - nFL) * k;                        // body left
-  const float dth = (nRR - nFL) * k / TRACK_WIDTH_MM;
+  const float dy = 0.5f * (nFR - nRR) * k;                        // body left
+  const float dth = (nFR - nRL) * k / TRACK_WIDTH_MM;
   th += dth;
   while (th > PI) th -= 2.0f * PI;
   while (th < -PI) th += 2.0f * PI;
@@ -262,12 +325,14 @@ static void publishPose() {
   Serial.print(F("POS X=")); Serial.print(x_mm, 2);
   Serial.print(F(" Y=")); Serial.print(y_mm, 2);
   Serial.print(F(" Th=")); Serial.print(th, 2);
-  Serial.print(F(" L=")); Serial.print((long)(normFL() + normRL()));
+  Serial.print(F(" L=")); Serial.print((long)(normFR() + normRL()));
   Serial.print(F(" R=")); Serial.print((long)(2.0f * normRR()));
   Serial.print(F(" C=")); Serial.println(lastCorr, 2);
 }
 
 static void setCmd(int vx, int vy, int w_mrad) {
+  hardBrake = false;
+  brakeUntilMs = 0;
   cmd_vx = vx; cmd_vy = vy; cmd_w_mrad = w_mrad;
   lastCmdMs = millis();
 }
@@ -291,9 +356,14 @@ static void handleLine(char *line) {
     if (c=='d'||c=='D') { setCmd(0, -500, 0); return; }
     if (c=='q'||c=='Q'||c=='z'||c=='Z') { setCmd(0, 0,  1500); return; }
     if (c=='e'||c=='E'||c=='c'||c=='C') { setCmd(0, 0, -1500); return; }
-    if (c=='x'||c=='X'||c==' ') { stopMotors(); return; }
+    if (c=='x'||c=='X'||c==' ') { stopHard(); return; }
   }
-  if (!strncmp(line, "STOP", 4)) { stopMotors(); return; }
+  if (!strncmp(line, "HARD_STOP", 9) || !strncmp(line, "BRAKE", 5)) {
+    stopHard();
+    Serial.println(F("HARD_STOP_OK"));
+    return;
+  }
+  if (!strncmp(line, "STOP", 4)) { stopSoft(); return; }
   if (!strncmp(line, "PING", 4)) { Serial.println(F("PONG")); return; }
   if (!strncmp(line, "RESET_ODOM", 10)) {
     noInterrupts();
@@ -373,6 +443,23 @@ static void handleLine(char *line) {
     }
     return;
   }
+  if (!strncmp(line, "SET_WSCALE", 10)) {
+    char *p = line + 10;
+    int a = nextInt(&p), b = nextInt(&p), c = nextInt(&p), d = nextInt(&p);
+    if (a >= 40 && b >= 40 && c >= 40 && d >= 40 &&
+        a <= 200 && b <= 200 && c <= 200 && d <= 200) {
+      wheelScale[0] = (float)a / 100.0f;
+      wheelScale[1] = (float)b / 100.0f;
+      wheelScale[2] = (float)c / 100.0f;
+      wheelScale[3] = (float)d / 100.0f;
+      Serial.print(F("WSCALE_OK ")); Serial.print(a); Serial.print(' ');
+      Serial.print(b); Serial.print(' '); Serial.print(c); Serial.print(' ');
+      Serial.println(d);
+    } else {
+      Serial.println(F("WSCALE_ERR"));
+    }
+    return;
+  }
   if (!strncmp(line, "SET_ROBOT_VELOCITY", 18)) {
     char *p = line + 18;
     int a = nextInt(&p), b = 0, c = 0, n = 1;
@@ -419,7 +506,10 @@ void setup() {
   pinMode(FR_IN1, OUTPUT); pinMode(FR_IN2, OUTPUT); pinMode(FR_PWM, OUTPUT);
   pinMode(RL_IN1, OUTPUT); pinMode(RL_IN2, OUTPUT); pinMode(RL_PWM, OUTPUT);
   pinMode(RR_IN1, OUTPUT); pinMode(RR_IN2, OUTPUT); pinMode(RR_PWM, OUTPUT);
-  stopMotors();
+  stopHard();
+  coastMotors();
+  hardBrake = false;
+  brakeUntilMs = 0;
   lastCmdMs = millis();
   Serial.println(F("READY mecanum-velpid"));
 }
@@ -434,7 +524,7 @@ void loop() {
 
   unsigned long now = millis();
   if ((cmd_vx || cmd_vy || cmd_w_mrad) && (now - lastCmdMs > CMD_TIMEOUT_MS))
-    stopMotors();
+    stopHard();
 
   if (now - lastCtrl >= CTRL_PERIOD_MS) {
     float dt = (now - lastCtrl) * 0.001f;
@@ -449,7 +539,8 @@ void loop() {
     }
 
     integrateOdom(dTicks);
-    if (cmd_vx || cmd_vy || cmd_w_mrad) {
+    // Keep applying while ramping/coasting/braking so soft stop works.
+    if (cmd_vx || cmd_vy || cmd_w_mrad || rampsActive() || hardBrake) {
       applyMotors(dt, dTicks);
     }
   }

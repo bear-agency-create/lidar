@@ -4,7 +4,8 @@ export PATH="$HOME/bin:$PATH"
 pkill -9 -f drive_encoders || true
 sleep 1
 arduino-cli compile --fqbn arduino:avr:mega /home/pi/robot_nav/arduino/MecanumTeleopBridge
-arduino-cli upload -p /dev/ttyUSB0 --fqbn arduino:avr:mega /home/pi/robot_nav/arduino/MecanumTeleopBridge
+MEGA="$(readlink -f /dev/ttyMEGA 2>/dev/null || echo /dev/ttyUSB1)"
+arduino-cli upload -p "$MEGA" --fqbn arduino:avr:mega /home/pi/robot_nav/arduino/MecanumTeleopBridge
 echo FLASH_OK
 bash /home/pi/robot_nav/lidar_map/start_drive_map.sh
 sleep 5

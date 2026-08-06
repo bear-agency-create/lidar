@@ -43,6 +43,8 @@
   <button id="bSave" class="save">сохранить</button>
   <button id="bFreeze" class="save">заморозить комнату</button>
   <button id="bAgain" class="again">заново</button>
+  <button id="bGoMission" class="save">поехать по точкам</button>
+  <button id="bClearPts" class="again">сброс точек</button>
   <span id="info">—</span>
 </div>
 <div id="stage">
@@ -66,13 +68,16 @@
     <div>W/↑ вперёд · S/↓ назад · ←→ боком (пока не настраиваем) · Z/C поворот · Space стоп</div>
     <div>Кликни по странице, потом держи клавиши. Отпустил — стоп.</div>
     <div><b>заново</b> — сброс. <b>заморозить комнату</b> — стены навечно; люди = оранжевые временно.</div>
-    <div>Клик по карте = <b>точка B</b>. <b>A</b> = где робот сейчас → едет меканумом к B.</div>
+    <div>Клик по карте = <b>добавить точку маршрута</b> (1-я = главный приоритет, дальше по порядку).</div>
+    <div><b>поехать по точкам</b> — старт миссии · <b>сброс точек</b> — очистить список.</div>
+    <div>Shift+клик + тяни = сдвиг карты (если выключено «следить»).</div>
+    <div><b>заново</b> — сброс. <b>заморозить комнату</b> — стены навечно; люди = оранжевые временно.</div>
     <div>6 стоек рамы (углы + середины боков) лидар <b>не видит</b> — в карту не пишутся.</div>
     <div><span class="sw" style="background:#f44"></span><b>красные</b> — лидар сейчас</div>
     <div><span class="sw" style="background:#eee;border:1px solid #777"></span><b>белое + контур</b> — стены / мебель</div>
     <div><span class="sw" style="background:#fa0"></span><b>оранж</b> — человек / временно</div>
     <div><span class="sw" style="background:#777"></span><b>серое</b> — пустое</div>
-    <div><span class="sw" style="background:#0f0"></span><b>A / рама</b> — робот · <span class="sw" style="background:#ff0"></span><b>B</b> — цель · <span class="sw" style="background:#0ff"></span>путь</div>
+    <div><span class="sw" style="background:#0f0"></span><b>робот</b> · <span class="sw" style="background:#ff0"></span><b>1,2,3…</b> точки · <span class="sw" style="background:#0ff"></span>путь</div>
   </div>
 </div>
 <script>
@@ -84,6 +89,7 @@ let data = null;
 let panX = 0, panY = 0;
 let drag = null;
 let mapFrozen = false;
+let missionPts = []; // [{x,y,label}] in visit order — first = highest priority
 const VIEW_MARGIN_CELLS = 3;
 
 const VX = 0.75, VY = 0.60, W = 1.4;
@@ -255,8 +261,43 @@ document.getElementById('bFreeze').onclick = async () => {
   bf.classList.toggle('save', !mapFrozen);
   bf.classList.toggle('again', mapFrozen);
   document.getElementById('info').textContent = mapFrozen
-    ? 'комната заморожена — клик = точка B (A→B); люди оранжевые'
-    : 'запись стен снова включена';
+    ? 'комната заморожена — клик = точка маршрута; люди оранжевые'
+    : 'запись стен снова включена · клик = точка маршрута';
+};
+
+function ptsInfo() {
+  if (!missionPts.length) return 'точек нет — кликни по карте';
+  return 'точки: ' + missionPts.length + ' (1-я главная) · «поехать по точкам» чтобы старт';
+}
+
+document.getElementById('bClearPts').onclick = () => {
+  missionPts = [];
+  document.getElementById('info').textContent = ptsInfo();
+  draw();
+};
+
+document.getElementById('bGoMission').onclick = async () => {
+  if (!missionPts.length) {
+    document.getElementById('info').textContent = 'сначала поставь точки кликом';
+    return;
+  }
+  const waypoints = missionPts.map((p, i) => ({
+    x: p.x, y: p.y, label: String(i + 1),
+  }));
+  try {
+    const r = await fetch('/api/mission', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ waypoints, start: true }),
+      cache: 'no-store',
+    });
+    const j = await r.json();
+    document.getElementById('info').textContent = j.ok
+      ? ('миссия: еду 1→' + waypoints.length + ' | путь ' + (j.path_len || 0))
+      : ('миссия не вышла: ' + (j.error || ''));
+  } catch (_) {
+    document.getElementById('info').textContent = 'ошибка связи с /api/mission';
+  }
 };
 
 canvas.addEventListener('wheel', (e) => {
@@ -267,7 +308,7 @@ canvas.addEventListener('wheel', (e) => {
 
 canvas.addEventListener('pointerdown', (e) => {
   if (!e.shiftKey) {
-    // Click = navigate to world point (works in both normal and frozen mode).
+    // Click = add mission waypoint (first = highest priority, then in order).
     const r = canvas.parentElement.getBoundingClientRect();
     const cx = r.width/2, cy = r.height/2;
     const pose = (data && data.pose) || {x:0,y:0};
@@ -275,18 +316,12 @@ canvas.addEventListener('pointerdown', (e) => {
     const viewY = follow ? pose.y : panY;
     const sx = e.clientX - r.left;
     const sy = e.clientY - r.top;
-    // inverse of worldToScreen: [cx - (wy-oy)*s, cy - (wx-ox)*s]
     const wx = viewX - (sy - cy) / scale;
     const wy = viewY - (sx - cx) / scale;
-    fetch('/api/goal', {
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({x: wx, y: wy, start: true}),
-    }).then(r => r.json()).then(j => {
-      document.getElementById('info').textContent = j.ok
-        ? ('еду к точке B | путь ' + (j.path_len||0) + ' | (' + wx.toFixed(1) + ',' + wy.toFixed(1) + ')')
-        : ('нет пути A→B: ' + (j.error || ''));
-    }).catch(() => {});
+    missionPts.push({ x: wx, y: wy, label: String(missionPts.length + 1) });
+    document.getElementById('info').textContent =
+      'точка ' + missionPts.length + ' @ (' + wx.toFixed(1) + ',' + wy.toFixed(1) + ') · ' + ptsInfo();
+    draw();
     return;
   }
   if (follow) return;
@@ -415,20 +450,35 @@ function draw() {
   }
   if (data.goal) {
     const [gx, gy] = worldToScreen(data.goal[0], data.goal[1], cx, cy, viewX, viewY);
-    ctx.fillStyle = 'rgba(255,220,0,0.25)';
+    ctx.fillStyle = 'rgba(255,80,80,0.25)';
     ctx.beginPath();
     ctx.arc(gx, gy, 14, 0, Math.PI*2);
+    ctx.fill();
+    ctx.strokeStyle = '#f66';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(gx, gy, 10, 0, Math.PI*2);
+    ctx.stroke();
+  }
+
+  // Planned mission points (local): 1 = главный приоритет
+  for (let i = 0; i < missionPts.length; i++) {
+    const p = missionPts[i];
+    const [px, py] = worldToScreen(p.x, p.y, cx, cy, viewX, viewY);
+    ctx.fillStyle = i === 0 ? 'rgba(255,220,0,0.35)' : 'rgba(255,180,0,0.22)';
+    ctx.beginPath();
+    ctx.arc(px, py, 16, 0, Math.PI * 2);
     ctx.fill();
     ctx.strokeStyle = '#ff0';
     ctx.lineWidth = 2;
     ctx.beginPath();
-    ctx.arc(gx, gy, 10, 0, Math.PI*2);
+    ctx.arc(px, py, 11, 0, Math.PI * 2);
     ctx.stroke();
     ctx.fillStyle = '#ff0';
     ctx.font = 'bold 14px monospace';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText('B', gx, gy);
+    ctx.fillText(String(i + 1), px, py);
   }
 
   if (showScan && data.points) {

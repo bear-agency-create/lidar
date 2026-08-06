@@ -2,8 +2,9 @@
 <html lang="ru">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
   <meta name="theme-color" content="#071c33">
+  <meta http-equiv="Permissions-Policy" content="camera=(self), microphone=()">
   <title>Airport guide</title>
   <style>
     :root {
@@ -19,53 +20,38 @@
       --green: #1c9b68;
       --danger: #c23b3b;
       --shadow: 0 16px 44px rgba(6, 35, 65, .13);
-      --stage-w: 1280;
-      --stage-h: 800;
-      --stage-scale: 1;
     }
     * { box-sizing: border-box; }
-    html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; }
+    html, body {
+      width: 100%; height: 100%; margin: 0; overflow: hidden;
+      background: #edf5fb;
+    }
     body {
-      display: grid;
-      place-items: center;
-      background: #1a222c;
       color: var(--ink);
       font-family: "Arial Nova", Arial, "Noto Sans", sans-serif;
       -webkit-font-smoothing: antialiased;
       user-select: none;
     }
-    /* Принудительный кадр 10.1″ киоска: 1280×800 (как на роботе) */
+    /* На весь экран устройства — без letterbox / чёрных полей */
     .kiosk-stage {
       position: relative;
-      width: calc(var(--stage-w) * 1px);
-      height: calc(var(--stage-h) * 1px);
+      width: 100vw;
+      height: 100vh;
+      width: 100dvw;
+      height: 100dvh;
       overflow: hidden;
       background: #edf5fb;
-      box-shadow: 0 28px 80px rgba(0, 0, 0, .35);
-      flex-shrink: 0;
-      transform: scale(var(--stage-scale));
-      transform-origin: center center;
     }
-    .kiosk-badge {
-      position: absolute; z-index: 200; top: 8px; right: 10px;
-      padding: 4px 9px; border-radius: 999px;
-      color: #d7e4ef; background: rgba(7, 28, 51, .72);
-      font-size: 11px; font-weight: 800; letter-spacing: .04em;
-      pointer-events: none;
-      display: none;
-    }
-    @media (min-width: 1281px), (min-height: 801px) {
-      .kiosk-badge { display: block; }
-    }
+    .kiosk-badge { display: none !important; }
     .attract {
       position: absolute; z-index: 100; inset: 0; overflow: hidden;
       color: white; background: #087fbe; cursor: pointer; isolation: isolate;
       touch-action: manipulation;
     }
     .attract-bg {
-      position: absolute; z-index: -4; inset: -3%;
-      width: 106%; height: 106%; object-fit: cover;
-      animation: skyBreath 12s ease-in-out infinite alternate;
+      position: absolute; z-index: -4; inset: -8%;
+      width: 116%; height: 116%; object-fit: cover;
+      /* без бесконечного scale — на Pi это главный источник лагов */
     }
     .attract-shade {
       position: absolute; z-index: -3; inset: 0;
@@ -74,7 +60,7 @@
         linear-gradient(0deg, rgba(0,75,121,.26), transparent 42%);
     }
     .attract-cloud {
-      position: absolute; z-index: -1; inset: -3%; width: 106%; height: 106%;
+      position: absolute; z-index: -1; inset: -8%; width: 116%; height: 116%;
       object-fit: cover; opacity: 1;
       transition: transform 1.25s cubic-bezier(.6,0,.25,1), opacity 1s ease;
     }
@@ -90,17 +76,18 @@
     .attract-start {
       display: inline-flex; align-items: center; gap: 13px; padding: 13px 22px;
       border: 1px solid rgba(255,255,255,.58); border-radius: 999px;
-      background: rgba(5,66,109,.28); backdrop-filter: blur(10px);
+      background: rgba(5,66,109,.42);
       font-size: 20px; font-weight: 850; letter-spacing: .01em;
       box-shadow: 0 12px 32px rgba(0,54,95,.16);
     }
     .attract-start::before {
       content: ""; width: 10px; height: 10px; border-radius: 50%; background: white;
-      box-shadow: 0 0 0 0 rgba(255,255,255,.6); animation: tapPulse 1.8s ease-out infinite;
     }
     .attract-plane {
-      position: absolute; z-index: 3; left: calc(50% - 55px); bottom: -135px;
+      position: absolute; z-index: 3; left: 50%; bottom: -110px;
       width: 110px; height: 125px; object-fit: contain;
+      transform: translateX(-50%);
+      transform-origin: center bottom;
       filter: drop-shadow(0 9px 10px rgba(0,47,84,.26)); opacity: 0;
     }
     .attract-wipe {
@@ -127,8 +114,8 @@
       background: var(--navy);
       box-shadow: 0 4px 22px rgba(3, 20, 38, .24);
     }
-    .brand { display: flex; align-items: center; min-width: 320px; }
-    .brand img { width: 280px; height: 78px; object-fit: contain; object-position: left center; }
+    .brand { display: flex; align-items: center; min-width: 0; flex: 1; }
+    .brand img { width: min(280px, 32vw); height: 78px; object-fit: contain; object-position: left center; }
     .languages { display: flex; gap: 7px; }
     .language {
       min-width: 82px; height: 48px; padding: 0 13px;
@@ -136,7 +123,7 @@
       color: #dbeaff; background: rgba(255,255,255,.06); font-weight: 700;
     }
     .language.active { color: var(--navy); background: white; border-color: white; }
-    main { min-height: 0; display: grid; grid-template-columns: 540px 1fr; }
+    main { min-height: 0; display: grid; grid-template-columns: minmax(300px, 42vw) 1fr; }
     aside {
       min-height: 0; padding: 22px 20px 20px 24px;
       background: #f7fbfe; border-right: 1px solid var(--line);
@@ -158,7 +145,6 @@
       text-align: left;
       transition: transform .18s ease, border-color .18s ease, background .18s ease, box-shadow .22s ease;
       overflow: hidden;
-      animation: destCardBreath 4.8s ease-in-out infinite;
     }
     .destination[data-kind="check-in"] { --accent: #0878e6; --accent-soft: rgba(8,120,230,.16); --accent-deep: #0660b8; }
     .destination[data-kind="gates"] { --accent: #0a8f9e; --accent-soft: rgba(10,143,158,.16); --accent-deep: #087a86; }
@@ -177,23 +163,20 @@
       border-radius: 0 6px 6px 0;
       background: linear-gradient(180deg, var(--accent), var(--accent-deep));
       box-shadow: 0 0 12px var(--accent-soft);
-      animation: destRailGlow 3.6s ease-in-out infinite;
     }
     .destination::before {
       content: ""; position: absolute; width: 128px; height: 128px; right: -48px; top: -52px;
       border-radius: 50%;
       background: radial-gradient(circle at 35% 40%, var(--accent-soft), transparent 68%);
-      animation: destOrb 6.4s ease-in-out infinite;
       pointer-events: none;
     }
     .destination .destination-shine {
-      position: absolute; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; border-radius: inherit;
+      display: none;
     }
     .destination .destination-shine::before {
       content: ""; position: absolute; top: -20%; bottom: -20%; left: -40%; width: 42%;
       background: linear-gradient(105deg, transparent 0%, rgba(255,255,255,0) 35%, rgba(255,255,255,.55) 50%, rgba(255,255,255,0) 65%, transparent 100%);
       transform: translateX(-30%) skewX(-16deg);
-      animation: destShine 5.8s ease-in-out infinite;
     }
     .destination:nth-child(1) .destination-shine::before { animation-delay: 0s; }
     .destination:nth-child(2) .destination-shine::before { animation-delay: 1.4s; }
@@ -226,13 +209,11 @@
       box-shadow:
         0 4px 10px var(--accent-soft),
         inset 0 1px 0 rgba(255,255,255,.95);
-      animation: destIconFloat 3.4s ease-in-out infinite;
     }
     .destination-icon::after {
       content: ""; position: absolute; inset: -4px; border-radius: 16px;
       border: 1.5px solid var(--accent-soft);
       opacity: .9;
-      animation: destIconRing 3.4s ease-in-out infinite;
       pointer-events: none;
     }
     .destination.active .destination-icon {
@@ -265,7 +246,6 @@
     .destination-arrow {
       position: absolute; z-index: 1; right: 12px; bottom: 14px;
       color: var(--accent); font-size: 21px; font-weight: 500;
-      animation: destArrowNudge 2.2s ease-in-out infinite;
     }
     .destination.active .destination-meta, .destination.active .destination-arrow { color: rgba(255,255,255,.78); }
     .destination.active .destination-arrow { animation: none; }
@@ -545,9 +525,10 @@
     @keyframes skyBreath { to { transform: scale(1.035) translateY(-.7%); } }
     @keyframes tapPulse { 70% { box-shadow: 0 0 0 13px rgba(255,255,255,0); } 100% { box-shadow: 0 0 0 0 rgba(255,255,255,0); } }
     @keyframes planeForward {
-      0% { opacity: 0; transform: translateY(0) scale(.5); }
+      0% { opacity: 0; transform: translateX(-50%) translateY(0) scale(.55); }
       18% { opacity: 1; }
-      100% { opacity: 0; transform: translateY(-72vh) scale(4.2); }
+      /* scale умеренный — крылья не режутся overflow по бокам на 1024×600 */
+      100% { opacity: 0; transform: translateX(-50%) translateY(-68vh) scale(2.35); }
     }
     @keyframes whiteReveal { to { bottom: 0; } }
     @keyframes routeFlow { to { background-position: 60px 0; } }
@@ -623,30 +604,45 @@
       .content { min-height: 620px; }
     }
     @media (prefers-reduced-motion: reduce) {
-      *, *::before, *::after { animation: none !important; transition-duration: .001ms !important; }
-      .plane-mover, .attract-plane { display: none !important; }
+      /* Киоск: оставляем оба самолёта, остальное упрощаем */
+      *:not(.plane-mover):not(.plane):not(.attract-plane):not(.attract-wipe),
+      *:not(.plane-mover):not(.plane):not(.attract-plane):not(.attract-wipe)::before,
+      *:not(.plane-mover):not(.plane):not(.attract-plane):not(.attract-wipe)::after {
+        animation: none !important;
+        transition-duration: .001ms !important;
+      }
     }
-    .low-power .destination,
-    .low-power .destination::before,
-    .low-power .destination::after,
+    /* Pi / low-power: глушим лишние loop-анимации; оба самолёта остаются */
     .low-power .destination-shine::before,
-    .low-power .destination-icon,
-    .low-power .destination-icon::after,
-    .low-power .destination-arrow,
-    .low-power .route-line,
-    .low-power .plane,
-    .low-power .plane-mover {
+    .low-power .journey-ring,
+    .low-power .journey-ring svg,
+    .low-power .scan-line {
       animation: none !important;
     }
     .low-power .attract-start,
     .low-power .modal {
       backdrop-filter: none !important;
     }
+    /* Явно не гасим welcome-самолёт даже на Pi */
+    .low-power .plane-mover,
+    .low-power .plane,
+    body.low-power .plane-mover,
+    body.low-power .plane {
+      animation-play-state: running !important;
+      opacity: 1 !important;
+      display: block !important;
+    }
+    .low-power .plane-mover {
+      animation: routeFlight 5.6s cubic-bezier(.36,.05,.2,1) infinite !important;
+    }
+    .low-power .plane {
+      animation: planeFade 5.6s cubic-bezier(.36,.05,.2,1) infinite !important;
+    }
   </style>
 </head>
 <body>
   <div class="kiosk-stage" id="kioskStage">
-    <div class="kiosk-badge" aria-hidden="true">10.1″ · 1280×800</div>
+    <div class="kiosk-badge" id="kioskBadge" aria-hidden="true">sync</div>
   <div id="attractScreen" class="attract" role="button" tabindex="0" aria-label="Touch the screen to begin" data-i18n-aria="touchToStart">
     <img class="attract-bg" src="assets/kazan-sky-clear.png" alt="">
     <div class="attract-shade"></div>
@@ -1070,19 +1066,21 @@
     function fitStageToViewport() {
       const stage = $("kioskStage");
       if (!stage) return;
-      const baseW = 1280;
-      const baseH = 800;
-      const vw = Math.max(320, window.innerWidth || baseW);
-      const vh = Math.max(240, window.innerHeight || baseH);
-      const scale = Math.min(vw / baseW, vh / baseH, 1);
-      const rounded = Math.max(0.5, Math.round(scale * 1000) / 1000);
-      document.documentElement.style.setProperty("--stage-scale", String(rounded));
+      // Stage уже 100vw×100vh — только сбрасываем старые zoom/transform от прошлых версий
+      stage.style.zoom = "";
+      stage.style.transform = "";
+      stage.style.margin = "0";
+      stage.style.width = "";
+      stage.style.height = "";
+      document.documentElement.style.removeProperty("--stage-zoom");
     }
 
     function applyPerformanceProfile() {
+      // Не отключаем анимации самолётов: low-power только для спиннеров/shine
       const prefersReduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
-      const cores = Number(navigator.hardwareConcurrency || 4);
-      const lowPower = prefersReduced || cores <= 4;
+      const cores = navigator.hardwareConcurrency || 8;
+      const mem = navigator.deviceMemory || 8;
+      const lowPower = prefersReduced || cores <= 4 || mem <= 4;
       document.body.classList.toggle("low-power", lowPower);
     }
 
@@ -1454,6 +1452,37 @@
       return match ? match[0] : "";
     }
 
+    async function openCameraStream() {
+      if (!navigator.mediaDevices?.getUserMedia) {
+        throw new Error("no_media");
+      }
+      // Enumerate first so Chromium grants labels after permission prompts.
+      let deviceIds = [];
+      try {
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        deviceIds = devices.filter(d => d.kind === "videoinput").map(d => d.deviceId).filter(Boolean);
+      } catch (_) {}
+
+      const attempts = [];
+      for (const deviceId of deviceIds) {
+        attempts.push({ audio: false, video: { deviceId: { exact: deviceId }, width: { ideal: 640 }, height: { ideal: 480 } } });
+        attempts.push({ audio: false, video: { deviceId: { exact: deviceId } } });
+      }
+      // USB webcam on the robot is not a phone "environment" camera — avoid facingMode.
+      attempts.push({ audio: false, video: { width: { ideal: 640 }, height: { ideal: 480 } } });
+      attempts.push({ audio: false, video: true });
+
+      let lastError = null;
+      for (const constraints of attempts) {
+        try {
+          return await navigator.mediaDevices.getUserMedia(constraints);
+        } catch (err) {
+          lastError = err;
+        }
+      }
+      throw lastError || new Error("camera_open_failed");
+    }
+
     async function startCameraScan() {
       const camera = $("scanCamera");
       const video = $("scanVideo");
@@ -1462,16 +1491,10 @@
       status.textContent = t("cameraStarting");
       barcodeDetector = null;
       try {
-        if (!navigator.mediaDevices?.getUserMedia) throw new Error("no_media");
-        cameraStream = await navigator.mediaDevices.getUserMedia({
-          audio: false,
-          video: {
-            facingMode: { ideal: "environment" },
-            width: { ideal: 1280 },
-            height: { ideal: 720 }
-          }
-        });
+        cameraStream = await openCameraStream();
         video.srcObject = cameraStream;
+        video.setAttribute("playsinline", "");
+        video.muted = true;
         await video.play();
         if ("BarcodeDetector" in window) {
           let formats = ["qr_code", "pdf417", "code_128", "code_39", "ean_13", "ean_8", "upc_a", "upc_e", "aztec", "data_matrix"];
@@ -1489,7 +1512,8 @@
         } else {
           status.textContent = t("cameraNoDecoder");
         }
-      } catch (_) {
+      } catch (err) {
+        console.warn("camera unavailable", err);
         stopCameraTracks();
         camera.classList.add("is-unavailable");
         status.textContent = t("cameraUnavailable");
@@ -1929,6 +1953,9 @@
 
     document.querySelectorAll(".language").forEach(button => button.addEventListener("click", () => applyLanguage(button.dataset.lang)));
     $("attractScreen").addEventListener("click", beginExperience);
+    $("attractScreen").addEventListener("pointerup", event => {
+      if (event.pointerType === "touch" || event.pointerType === "pen") beginExperience();
+    });
     $("attractScreen").addEventListener("keydown", event => {
       if (event.key === "Enter" || event.key === " ") {
         event.preventDefault();
@@ -2005,6 +2032,10 @@
         drawRouteMap(lastRoutePreview);
       }
     });
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener("resize", fitStageToViewport);
+      window.visualViewport.addEventListener("scroll", fitStageToViewport);
+    }
 
     async function initialize() {
       applyPerformanceProfile();

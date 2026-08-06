@@ -12,9 +12,14 @@ if [ ! -d "$STACK_DIR" ]; then
   STACK_DIR="$HOME"
 fi
 
-if [ -e /dev/ttyUSB0 ] && [ -e /dev/ttyUSB1 ]; then
-  LIDAR_DEV="${LIDAR_DEV:-/dev/ttyUSB1}"
-  MEGA_DEV="${MEGA_DEV:-/dev/ttyUSB0}"
+# Prefer stable udev symlinks (port 1=LiDAR, port 2=Mega on this robot)
+if [ -e /dev/ttyLIDAR ] && [ -e /dev/ttyMEGA ]; then
+  LIDAR_DEV="${LIDAR_DEV:-/dev/ttyLIDAR}"
+  MEGA_DEV="${MEGA_DEV:-/dev/ttyMEGA}"
+elif [ -e /dev/ttyUSB0 ] && [ -e /dev/ttyUSB1 ]; then
+  # Fallback if symlinks missing: USB0=LiDAR, USB1=Mega (verified)
+  LIDAR_DEV="${LIDAR_DEV:-/dev/ttyUSB0}"
+  MEGA_DEV="${MEGA_DEV:-/dev/ttyUSB1}"
 else
   LIDAR_DEV="${LIDAR_DEV:-/dev/ttyLIDAR}"
   MEGA_DEV="${MEGA_DEV:-/dev/ttyMEGA}"

@@ -1,0 +1,192 @@
+#!/usr/bin/env bash
+# Быстрый старт пассажирского монитора (киоск).
+# Mega / моторы НЕ запускает.
+#
+# На Raspberry Pi:
+#   bash ~/robot_nav/monitor/start
+# или двойной клик по start.desktop на рабочем столе.
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "$0")" && pwd)"
+STACK="${STACK_DIR:-$HOME/robot_nav/lidar_map}"
+URL="http://127.0.0.1:8765/kiosk"
+LOG_DIR="${HOME}/robot_nav/logs"
+mkdir -p "$LOG_DIR"
+
+set +u
+if [ -f /opt/ros/jazzy/setup.bash ]; then
+  # shellcheck disable=SC1091
+  source /opt/ros/jazzy/setup.bash
+fi
+if [ -f "$HOME/ws_ros2/install/setup.bash" ]; then
+  # shellcheck disable=SC1091
+  source "$HOME/ws_ros2/install/setup.bash"
+fi
+set -u
+
+# Реальное разрешение экрана робота
+SCREEN_W=1024
+SCREEN_H=600
+if [ -r /sys/class/graphics/fb0/virtual_size ]; then
+  fb=$(cat /sys/class/graphics/fb0/virtual_size)
+  SCREEN_W=${fb%,*}
+  SCREEN_H=${fb#*,}
+elif command -v xrandr >/dev/null 2>&1; then
+  geom=$(DISPLAY=:0 xrandr 2>/dev/null | awk '/\*/{print $1; exit}')
+  if [[ "$geom" == *x* ]]; then
+    SCREEN_W=${geom%x*}
+    SCREEN_H=${geom#*x}
+  fi
+fi
+echo "[monitor] display ${SCREEN_W}x${SCREEN_H}"
+
+echo "[monitor] restart web UI (Mega skipped)"
+pkill -9 -f 'lidar_map/main.py' 2>/dev/null || true
+fuser -k 8765/tcp 2>/dev/null || true
+sleep 1
+
+if ! pgrep -f 'cspc_lidar' >/dev/null 2>&1; then
+  LIDAR_DEV=/dev/ttyLIDAR
+  if [ ! -e "$LIDAR_DEV" ]; then
+    if [ -e /dev/ttyUSB1 ]; then LIDAR_DEV=/dev/ttyUSB1
+    elif [ -e /dev/ttyUSB0 ]; then LIDAR_DEV=/dev/ttyUSB0
+    else LIDAR_DEV=""
+    fi
+  fi
+  if [ -n "$LIDAR_DEV" ] && command -v ros2 >/dev/null 2>&1; then
+    echo "[monitor] start lidar on $LIDAR_DEV"
+    nohup ros2 run cspc_lidar cspc_lidar --ros-args \
+      -r __node:=cspc_lidar \
+      -p port:="$LIDAR_DEV" \
+      -p frame_id:=laser_frame \
+      -p baudrate:=230400 \
+      -p frequency:=8.0 \
+      -p version:=4 \
+      -p reversion:=true \
+      -p auto_reconnect:=true \
+      >"$LOG_DIR/lidar.log" 2>&1 &
+    sleep 2
+  else
+    echo "[monitor] lidar skipped (no device / no ros2)"
+  fi
+fi
+
+if [ ! -f "$STACK/main.py" ]; then
+  echo "[monitor] ERROR: $STACK/main.py not found" >&2
+  exit 1
+fi
+
+nohup python3 "$STACK/main.py" >"$LOG_DIR/lidar_map.log" 2>&1 &
+echo "[monitor] waiting for :8765 …"
+for _ in 1 2 3 4 5 6 7 8 9 10; do
+  code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 1 "$URL" || true)
+  if [ "$code" = "200" ]; then
+    break
+  fi
+  sleep 1
+done
+echo "[monitor] kiosk HTTP=$code"
+echo "[monitor] open: $URL"
+
+# Открыть киоск на экране робота (GNOME/Wayland session)
+export XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"
+export WAYLAND_DISPLAY="${WAYLAND_DISPLAY:-wayland-0}"
+# Ubuntu/GNOME Xwayland cookie (на случай Chromium/X11)
+if [ -z "${XAUTHORITY:-}" ] || [ ! -f "${XAUTHORITY:-}" ]; then
+  for f in /run/user/"$(id -u)"/.mutter-Xwaylandauth.*; do
+    if [ -f "$f" ]; then
+      export XAUTHORITY="$f"
+      break
+    fi
+  done
+fi
+if [ -z "${XAUTHORITY:-}" ] && [ -f "$HOME/.Xauthority" ]; then
+  export XAUTHORITY="$HOME/.Xauthority"
+fi
+echo "[monitor] WAYLAND=$WAYLAND_DISPLAY DISPLAY=${DISPLAY:-none} auth=${XAUTHORITY:-none}"
+
+if [ "${OPEN_BROWSER:-1}" = "1" ]; then
+  BROWSER=""
+  # Chromium предпочтительнее Firefox snap (меньше CPU на киоске)
+  if [ -x /snap/bin/chromium ]; then BROWSER=/snap/bin/chromium
+  elif command -v chromium >/dev/null 2>&1; then BROWSER=chromium
+  elif command -v chromium-browser >/dev/null 2>&1; then BROWSER=chromium-browser
+  elif command -v google-chrome >/dev/null 2>&1; then BROWSER=google-chrome
+  elif command -v firefox >/dev/null 2>&1; then BROWSER=firefox
+  elif [ -x /snap/bin/firefox ]; then BROWSER=/snap/bin/firefox
+  fi
+  pkill -f 'firefox.*(8765/kiosk|--kiosk)' 2>/dev/null || true
+  pkill -f 'chromium.*(8765/kiosk|--app=http://127.0.0.1:8765/kiosk)' 2>/dev/null || true
+  pkill -f 'chromium-browser.*(8765/kiosk|--app=http://127.0.0.1:8765/kiosk)' 2>/dev/null || true
+  sleep 0.5
+  if [ -n "$BROWSER" ]; then
+    echo "[monitor] launching $BROWSER ${SCREEN_W}x${SCREEN_H}"
+    # Snap Chromium: профиль только внутри ~/snap/... (иначе Permission denied / SingletonLock)
+    if [[ "$BROWSER" == *chromium* ]]; then
+      PROFILE="$HOME/snap/chromium/common/kiosk-profile"
+    else
+      PROFILE="$HOME/.config/kiosk-browser"
+    fi
+    mkdir -p "$PROFILE"
+    if [[ "$BROWSER" == *firefox* ]]; then
+      # Snap Firefox на Ubuntu: только через user Wayland session
+      if command -v systemd-run >/dev/null 2>&1 && [ -S "$XDG_RUNTIME_DIR/bus" ]; then
+        systemd-run --user --collect \
+          --setenv=XDG_RUNTIME_DIR="$XDG_RUNTIME_DIR" \
+          --setenv=WAYLAND_DISPLAY="$WAYLAND_DISPLAY" \
+          --setenv=MOZ_ENABLE_WAYLAND=1 \
+          --setenv=GDK_BACKEND=wayland \
+          "$BROWSER" --kiosk "$URL" \
+          >"$LOG_DIR/kiosk_browser.log" 2>&1 || true
+      else
+        nohup env XDG_RUNTIME_DIR="$XDG_RUNTIME_DIR" \
+          WAYLAND_DISPLAY="$WAYLAND_DISPLAY" \
+          MOZ_ENABLE_WAYLAND=1 GDK_BACKEND=wayland \
+          "$BROWSER" --kiosk "$URL" \
+          >"$LOG_DIR/kiosk_browser.log" 2>&1 &
+      fi
+    else
+      export DISPLAY="${DISPLAY:-:0}"
+      CHROME_ARGS=(
+        --user-data-dir="$PROFILE"
+        --kiosk
+        --start-fullscreen
+        --window-position=0,0
+        --window-size="${SCREEN_W},${SCREEN_H}"
+        --force-device-scale-factor=1
+        --high-dpi-support=0
+        --disable-pinch
+        --overscroll-history-navigation=0
+        --noerrdialogs
+        --disable-infobars
+        --disable-translate
+        --disable-features=TranslateUI
+        --disable-session-crashed-bubble
+        --check-for-update-interval=31536000
+        --auto-accept-camera-and-microphone-capture
+        --unsafely-treat-insecure-origin-as-secure=http://127.0.0.1:8765,http://localhost:8765
+        --ozone-platform=wayland
+        --enable-features=UseOzonePlatform
+        --app="$URL"
+      )
+      if command -v systemd-run >/dev/null 2>&1 && [ -S "$XDG_RUNTIME_DIR/bus" ]; then
+        systemd-run --user --collect \
+          --setenv=XDG_RUNTIME_DIR="$XDG_RUNTIME_DIR" \
+          --setenv=WAYLAND_DISPLAY="$WAYLAND_DISPLAY" \
+          --setenv=DISPLAY="$DISPLAY" \
+          --setenv=XAUTHORITY="${XAUTHORITY:-}" \
+          "$BROWSER" "${CHROME_ARGS[@]}" \
+          >"$LOG_DIR/kiosk_browser.log" 2>&1 || true
+      else
+        nohup env DISPLAY="$DISPLAY" XAUTHORITY="${XAUTHORITY:-}" \
+          XDG_RUNTIME_DIR="$XDG_RUNTIME_DIR" WAYLAND_DISPLAY="$WAYLAND_DISPLAY" \
+          "$BROWSER" "${CHROME_ARGS[@]}" \
+          >"$LOG_DIR/kiosk_browser.log" 2>&1 &
+      fi
+    fi
+  else
+    echo "[monitor] no browser found — open $URL manually"
+  fi
+fi
+
+echo "[monitor] ready"

@@ -33,7 +33,7 @@ except ImportError:
 
 CMD_FILE = Path("/tmp/robot_cmd.json")
 CAL_FILE = Path(os.environ.get("DRIVE_CAL_FILE", str(Path(__file__).resolve().parent / "drive_cal.json")))
-PORT = os.environ.get("MEGA_DEV", "/dev/ttyUSB0")
+PORT = os.environ.get("MEGA_DEV", "/dev/ttyMEGA" if os.path.exists("/dev/ttyMEGA") else "/dev/ttyUSB1")
 BAUD = 115200
 STALE_SEC = 0.9   # tolerate WiFi/SSH hiccups from the web remote
 POS_RE = re.compile(r"POS X=([-\d.]+) Y=([-\d.]+) Th=([-\d.]+)")
@@ -47,9 +47,11 @@ SCAN_STALE_SEC = 0.6
 
 DEFAULT_CAL = {
     "cal_tps": [510, 734, 2103, 1389],
-    "pidv_kp_x1000": 400,
-    "pidv_ki_x1000": 2000,
-    "frb_pct": 105,
+    "pidv_kp_x1000": 0,
+    "pidv_ki_x1000": 0,
+    "frb_pct": 100,
+    "frf_pct": 100,
+    "wheel_scale_pct": [100, 85, 100, 122],
     "yaw_kp": 2.0,
     "yaw_deadband_deg": 2.0,
     "trim_w": {"fwd": 0.55, "back": 0.55, "strl": -0.25, "strr": 0.35},
@@ -81,16 +83,25 @@ def apply_mega_cal(ser: serial.Serial, cal: dict, log: logging.Logger) -> None:
         line = f"SET_CAL {int(tps[0])} {int(tps[1])} {int(tps[2])} {int(tps[3])}\n"
         ser.write(line.encode())
         time.sleep(0.08)
-    kp = int(cal.get("pidv_kp_x1000", 350))
-    ki = int(cal.get("pidv_ki_x1000", 1800))
+    kp = int(cal.get("pidv_kp_x1000", 0))
+    ki = int(cal.get("pidv_ki_x1000", 0))
     ser.write(f"SET_PIDV {kp} {ki}\n".encode())
     time.sleep(0.08)
-    frb = int(cal.get("frb_pct", 108))
+    frb = int(cal.get("frb_pct", 100))
     ser.write(f"SET_FRB {frb}\n".encode())
     time.sleep(0.08)
+    frf = int(cal.get("frf_pct", 100))
+    ser.write(f"SET_FRF {frf}\n".encode())
+    time.sleep(0.08)
+    ws = cal.get("wheel_scale_pct") or [100, 85, 100, 122]
+    if len(ws) == 4:
+        ser.write(
+            f"SET_WSCALE {int(ws[0])} {int(ws[1])} {int(ws[2])} {int(ws[3])}\n".encode()
+        )
+        time.sleep(0.08)
     log.info(
-        "mega cal applied SET_CAL=%s SET_PIDV=%s %s SET_FRB=%s",
-        tps, kp, ki, frb,
+        "mega cal applied SET_CAL=%s SET_PIDV=%s %s SET_FRB=%s SET_FRF=%s SET_WSCALE=%s",
+        tps, kp, ki, frb, frf, ws,
     )
 
 
@@ -257,7 +268,9 @@ def main() -> None:
                 line = raw.decode("ascii", errors="ignore").strip()
                 m = POS_RE.search(line)
                 if not m:
-                    if line.startswith(("ENC ", "READY", "CAL_OK", "PIDV_OK", "FRB_OK")):
+                    if line.startswith(
+                        ("ENC ", "READY", "CAL_OK", "PIDV_OK", "FRB_OK", "FRF_OK", "WSCALE_OK")
+                    ):
                         node.get_logger().info(line)
                         log.info(line)
                     continue
@@ -360,7 +373,15 @@ def main() -> None:
 
         time.sleep(0.02)
 
-    ser.close()
+    try:
+        ser.write(b"HARD_STOP\n")
+        time.sleep(0.05)
+    except Exception:
+        pass
+    try:
+        ser.close()
+    except Exception:
+        pass
     node.destroy_node()
     rclpy.shutdown()
 

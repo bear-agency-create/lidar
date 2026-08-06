@@ -37,6 +37,7 @@ from drive import DriveCommander
 from geometry import clamp, transform_local, wrap_angle, yaw_from_quat
 from lidar import hits_to_world, local_from_scan
 from logutil import get_logger
+from mission import mission_public, normalize_waypoints
 from nav import build_blocked, plan_path, pursuit_cmd
 from occupancy import OccupancyMap
 from scan_match import correlative_search
@@ -68,6 +69,9 @@ class ScanBridge(Node):
         self._nav_i = 0
         self._nav_status = "idle"
         self._nav_speed_scale = 1.0
+        self._mission: list[dict[str, Any]] = []
+        self._mission_index = 0
+        self._mission_status = "idle"
         self._last_scan_t = 0.0
         self._map_bootstrap_scans = 120
         self._scan_count = 0
@@ -111,21 +115,27 @@ class ScanBridge(Node):
         out = self.drive.set(vx, vy, w, from_teleop=True)
         if abs(vx) > 0.02 or abs(vy) > 0.02 or abs(w) > 0.05:
             with self._lock:
-                if self._nav_goal is not None:
+                if self._nav_goal is not None or self._mission:
                     self._nav_status = "interrupted"
+                    self._mission_status = "interrupted"
                 self._nav_path = []
                 self._nav_goal = None
                 self._nav_i = 0
+                self._mission = []
+                self._mission_index = 0
         return out
 
     def stop_cmd(self) -> dict[str, Any]:
         with self._lock:
-            if self._nav_goal is not None:
+            if self._nav_goal is not None or self._mission:
                 self._nav_status = "cancelled"
+                self._mission_status = "cancelled"
             self._nav_path = []
             self._nav_goal = None
             self._nav_i = 0
             self._nav_speed_scale = 1.0
+            self._mission = []
+            self._mission_index = 0
         return self.drive.stop()
 
     def _on_odom(self, msg: Odometry) -> None:
@@ -303,6 +313,9 @@ class ScanBridge(Node):
             self._nav_goal = None
             self._nav_i = 0
             self._nav_status = "cancelled"
+            self._mission = []
+            self._mission_index = 0
+            self._mission_status = "cancelled"
             was = self._map_frozen
         if was:
             info = self.omap.save(MAP_PATH)
@@ -323,6 +336,9 @@ class ScanBridge(Node):
         if speed_scale is not None:
             self.set_nav_speed_scale(speed_scale)
         with self._lock:
+            self._mission = []
+            self._mission_index = 0
+            self._mission_status = "idle"
             self._nav_path = list(result["path"])
             self._nav_goal = (float(gx), float(gy))
             self._selected_path = list(result["path"])
@@ -338,6 +354,174 @@ class ScanBridge(Node):
             "started": True,
             "speed_scale": scale,
         }
+
+    def set_mission(
+        self,
+        waypoints: Any,
+        *,
+        start: bool = True,
+        speed_scale: float | None = None,
+    ) -> dict[str, Any]:
+        """Queue waypoints sorted by priority (higher first), optionally start now."""
+        try:
+            ordered = normalize_waypoints(waypoints)
+        except ValueError as exc:
+            return {"ok": False, "error": str(exc)}
+        preview = self.plan_mission(ordered)
+        if not preview.get("ok"):
+            return preview
+        if speed_scale is not None:
+            self.set_nav_speed_scale(speed_scale)
+        with self._lock:
+            self._mission = [dict(w) for w in ordered]
+            self._mission_index = 0
+            self._mission_status = "ready" if not start else "running"
+            self._selected_path = list(preview.get("path") or [])
+            first = ordered[0]
+            self._selected_goal = (float(first["x"]), float(first["y"]))
+            if not start:
+                self._nav_path = []
+                self._nav_goal = None
+                self._nav_i = 0
+                self._nav_status = "selected"
+        if not start:
+            return {
+                "ok": True,
+                "started": False,
+                "mission": mission_public(ordered, 0, "ready"),
+                "path_len": preview.get("path_len", 0),
+                "path": preview.get("path"),
+            }
+        first = ordered[0]
+        go = self._activate_waypoint(first, clear_mission=False)
+        if not go.get("ok"):
+            with self._lock:
+                self._mission_status = "failed"
+            return go
+        with self._lock:
+            self._mission_status = "running"
+            scale = float(self._nav_speed_scale)
+        return {
+            "ok": True,
+            "started": True,
+            "mission": mission_public(ordered, 0, "running"),
+            "path_len": go.get("path_len", 0),
+            "goal": go.get("goal"),
+            "start": go.get("start"),
+            "speed_scale": scale,
+            "path": preview.get("path"),
+        }
+
+    def plan_mission(self, waypoints: Any) -> dict[str, Any]:
+        """Plan full stitched route through prioritized waypoints without starting."""
+        try:
+            ordered = (
+                waypoints
+                if isinstance(waypoints, list)
+                and waypoints
+                and isinstance(waypoints[0], dict)
+                and "order" in waypoints[0]
+                else normalize_waypoints(waypoints)
+            )
+        except ValueError as exc:
+            return {"ok": False, "error": str(exc)}
+        with self._lock:
+            x = float(self._pose["x"])
+            y = float(self._pose["y"])
+            temp = dict(self._temp)
+        blocked = build_blocked(self.omap, temp, time.time())
+        cursor = (x, y)
+        full: list[list[float]] = []
+        segments: list[dict[str, Any]] = []
+        for wp in ordered:
+            goal = (float(wp["x"]), float(wp["y"]))
+            seg = plan_path(self.omap, blocked, cursor, goal)
+            if not seg.get("ok"):
+                return {
+                    "ok": False,
+                    "error": seg.get("error", "plan_failed"),
+                    "failed_waypoint": dict(wp),
+                    "segments": segments,
+                }
+            path = [[float(p[0]), float(p[1])] for p in seg.get("path") or []]
+            if full and path:
+                path = path[1:]  # drop duplicate joint
+            full.extend(path)
+            segments.append(
+                {
+                    "id": wp.get("id"),
+                    "label": wp.get("label"),
+                    "priority": wp.get("priority"),
+                    "goal": list(goal),
+                    "path_len": seg.get("path_len", len(path)),
+                }
+            )
+            cursor = goal
+        return {
+            "ok": True,
+            "path": full,
+            "path_len": len(full),
+            "waypoints": [dict(w) for w in ordered],
+            "segments": segments,
+        }
+
+    def mission_status(self) -> dict[str, Any]:
+        with self._lock:
+            return mission_public(self._mission, self._mission_index, self._mission_status)
+
+    def _activate_waypoint(self, wp: dict[str, Any], *, clear_mission: bool) -> dict[str, Any]:
+        result = self._plan_goal(float(wp["x"]), float(wp["y"]))
+        if not result.get("ok"):
+            return result
+        with self._lock:
+            if clear_mission:
+                self._mission = []
+                self._mission_index = 0
+                self._mission_status = "idle"
+            self._nav_path = list(result["path"])
+            self._nav_goal = (float(wp["x"]), float(wp["y"]))
+            self._selected_path = list(result["path"])
+            self._selected_goal = (float(wp["x"]), float(wp["y"]))
+            self._nav_i = 0
+            self._nav_status = "navigating"
+        return {
+            "ok": True,
+            "path_len": result["path_len"],
+            "goal": result["goal"],
+            "start": result["start"],
+            "started": True,
+            "waypoint": dict(wp),
+        }
+
+    def _advance_mission_after_arrive(self) -> bool:
+        """If mission has a next waypoint, start it. Returns True if advanced."""
+        with self._lock:
+            if not self._mission or self._mission_status not in {"running", "ready"}:
+                return False
+            nxt = self._mission_index + 1
+            if nxt >= len(self._mission):
+                self._mission_index = len(self._mission)
+                self._mission_status = "done"
+                return False
+            self._mission_index = nxt
+            wp = dict(self._mission[nxt])
+        go = self._activate_waypoint(wp, clear_mission=False)
+        if not go.get("ok"):
+            with self._lock:
+                self._mission_status = "failed"
+                self._nav_status = "cancelled"
+            log.warning("mission advance failed: %s", go.get("error"))
+            return False
+        with self._lock:
+            self._mission_status = "running"
+        log.info(
+            "mission → %s/%s %s prio=%s",
+            self._mission_index + 1,
+            len(self._mission),
+            wp.get("label"),
+            wp.get("priority"),
+        )
+        return True
 
     def set_selected_goal(self, gx: float, gy: float) -> dict[str, Any]:
         result = self._plan_goal(gx, gy)
@@ -403,7 +587,16 @@ class ScanBridge(Node):
                 self._nav_goal = None
                 self._nav_i = 0
                 self._nav_status = "arrived"
+                has_mission = bool(self._mission) and self._mission_status == "running"
+                if not has_mission:
+                    self._nav_speed_scale = 1.0
+        if arrived:
+            if self._advance_mission_after_arrive():
+                return
+            with self._lock:
                 self._nav_speed_scale = 1.0
+            self.drive.set(0.0, 0.0, 0.0, from_teleop=False)
+            return
         self.drive.set(vx * scale, vy * scale, w * scale, from_teleop=False)
 
     def snapshot(self) -> dict[str, Any]:
@@ -418,6 +611,7 @@ class ScanBridge(Node):
             selected_path = [[p[0], p[1]] for p in self._selected_path]
             selected_goal = list(self._selected_goal) if self._selected_goal else None
             nav_status = self._nav_status
+            mission = mission_public(self._mission, self._mission_index, self._mission_status)
             robot = {
                 "length": ROBOT_LENGTH_M,
                 "width": ROBOT_WIDTH_M,
@@ -439,6 +633,7 @@ class ScanBridge(Node):
                     "selected_path": selected_path,
                     "selected_goal": selected_goal,
                     "nav_status": nav_status,
+                    "mission": mission,
                     "map_align": "",
                     "robot": robot,
                 }
@@ -463,6 +658,7 @@ class ScanBridge(Node):
                 "selected_path": selected_path,
                 "selected_goal": selected_goal,
                 "nav_status": nav_status,
+                "mission": mission,
                 "map_align": "",
                 "robot": robot,
                 "stale": age > 2.0,
@@ -493,6 +689,9 @@ class ScanBridge(Node):
             self._selected_goal = None
             self._nav_i = 0
             self._nav_status = "cancelled"
+            self._mission = []
+            self._mission_index = 0
+            self._mission_status = "cancelled"
             self._map_bootstrap_scans = 120
             self._last_scan_t = 0.0
         self.omap.recentre(x, y)
