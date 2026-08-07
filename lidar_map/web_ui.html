@@ -50,12 +50,12 @@
 <div id="stage">
   <canvas id="c"></canvas>
   <div id="pad" aria-label="пульт">
-    <button type="button" data-cmd="yaw_l" title="танк влево (Z)">Ｚ</button>
+    <button type="button" data-cmd="yaw_l" title="танковый поворот влево (Z)">Ｚ</button>
     <button type="button" data-cmd="fwd" title="вперёд (W)">▲</button>
-    <button type="button" data-cmd="yaw_r" title="танк вправо (C)">Ｃ</button>
-    <button type="button" data-cmd="yaw_l" title="танк влево (←)">◀</button>
+    <button type="button" data-cmd="yaw_r" title="танковый поворот вправо (C)">Ｃ</button>
+    <button type="button" data-cmd="left" title="краб влево (← / A)">◀</button>
     <button type="button" class="empty" tabindex="-1" aria-hidden="true"></button>
-    <button type="button" data-cmd="yaw_r" title="танк вправо (→)">▶</button>
+    <button type="button" data-cmd="right" title="краб вправо (→ / D)">▶</button>
     <span class="empty"></span>
     <button type="button" data-cmd="back" title="назад (S)">▼</button>
     <span class="empty"></span>
@@ -64,14 +64,13 @@
     <span class="empty"></span>
   </div>
   <div id="legend">
-    <div><b>Режим:</b> ▲▼ плавно · танк ◀▶ чуть едет вперёд + крутит (иначе корпус не разворачивается) · A D краб.</div>
-    <div>W/↑ вперёд · S/↓ назад · ←→ / Z C — танковый поворот · A D — краб боком · Space стоп</div>
+    <div><b>Режим:</b> пульт → Arduino. Везде плавный пуск (питание не проседает). ◀▶ = краб вбок (меканум).</div>
+    <div>W/↑ вперёд · S/↓ назад · ←→ / A D — краб вбок · Z C — танковый поворот · Space стоп</div>
     <div>Кликни по странице, потом держи клавиши. Отпустил — стоп.</div>
     <div><b>заново</b> — сброс. <b>заморозить комнату</b> — стены навечно; люди = оранжевые временно.</div>
     <div>Клик по карте = <b>добавить точку маршрута</b> (1-я = главный приоритет, дальше по порядку).</div>
     <div><b>поехать по точкам</b> — старт миссии · <b>сброс точек</b> — очистить список.</div>
     <div>Shift+клик + тяни = сдвиг карты (если выключено «следить»).</div>
-    <div><b>заново</b> — сброс. <b>заморозить комнату</b> — стены навечно; люди = оранжевые временно.</div>
     <div>6 стоек рамы (углы + середины боков) лидар <b>не видит</b> — в карту не пишутся.</div>
     <div><span class="sw" style="background:#f44"></span><b>красные</b> — лидар сейчас</div>
     <div><span class="sw" style="background:#eee;border:1px solid #777"></span><b>белое + контур</b> — стены / мебель</div>
@@ -92,16 +91,14 @@ let mapFrozen = false;
 let missionPts = []; // [{x,y,label}] in visit order — first = highest priority
 const VIEW_MARGIN_CELLS = 3;
 
-const VX = 1.0, VY = 0.85, W = 2.2;
-// Small forward creep with tank yaw — in-place scrub can't overcome chassis weight.
-const YAW_CREEP = 0.35;
+const VX = 1.0, VY = 1.0, W = 2.2;
 const CMDS = {
   fwd:  {vx: VX,  vy: 0,   w: 0},
   back: {vx:-VX,  vy: 0,   w: 0},
-  left: {vx: 0,   vy: VY,  w: 0},
-  right:{vx: 0,   vy:-VY,  w: 0},
-  yaw_l:{vx: YAW_CREEP, vy: 0, w: W},
-  yaw_r:{vx: YAW_CREEP, vy: 0, w:-W},
+  left: {vx: 0,   vy: VY,  w: 0},   // crab
+  right:{vx: 0,   vy:-VY,  w: 0},   // crab
+  yaw_l:{vx: 0,   vy: 0,   w: W},   // tank
+  yaw_r:{vx: 0,   vy: 0,   w:-W},   // tank
   stop: {vx: 0,   vy: 0,   w: 0},
 };
 
@@ -185,12 +182,9 @@ function holdStart(name, el) {
     return;
   }
   held.add(name);
-  // Highlight only the pressed control (Z and ◀ share yaw_l — don't light the twin).
-  if (el) {
-    el.classList.add('held');
-  } else {
-    const btn = document.querySelector('#pad button[data-cmd="'+name+'"]');
-    if (btn) btn.classList.add('held');
+  if (el) el.classList.add('held');
+  else {
+    document.querySelectorAll('#pad button[data-cmd="'+name+'"]').forEach(b => b.classList.add('held'));
   }
   refreshDriveLoop();
 }
@@ -198,9 +192,8 @@ function holdStart(name, el) {
 function holdEnd(name, el) {
   if (!name || name === 'stop') return;
   held.delete(name);
-  if (el) {
-    el.classList.remove('held');
-  } else if (!held.has(name)) {
+  if (el) el.classList.remove('held');
+  else {
     document.querySelectorAll('#pad button[data-cmd="'+name+'"]').forEach(b => b.classList.remove('held'));
   }
   refreshDriveLoop();
@@ -215,7 +208,7 @@ function allStop() {
 
 document.querySelectorAll('#pad button[data-cmd]').forEach((btn) => {
   const name = btn.getAttribute('data-cmd');
-  // Hold while pressed. No mouseleave — that used to cut drive mid-press.
+  // Hold while pressed. Highlight only THIS button (not a twin with same cmd).
   const down = (e) => {
     e.preventDefault();
     e.stopPropagation();
@@ -249,12 +242,10 @@ document.addEventListener('visibilitychange', () => { if (document.hidden) allSt
 const KEY_MAP = {
   KeyW: 'fwd', ArrowUp: 'fwd',
   KeyS: 'back', ArrowDown: 'back',
-  // Tank yaw on arrows + Z/C
-  ArrowLeft: 'yaw_l', KeyZ: 'yaw_l',
-  ArrowRight: 'yaw_r', KeyC: 'yaw_r',
-  // Crab only on A/D
-  KeyA: 'left',
-  KeyD: 'right',
+  KeyA: 'left', ArrowLeft: 'left',      // crab
+  KeyD: 'right', ArrowRight: 'right',  // crab
+  KeyZ: 'yaw_l',                       // tank
+  KeyC: 'yaw_r',                       // tank
   Space: 'stop',
 };
 

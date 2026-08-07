@@ -33,10 +33,27 @@
 #include <string.h>
 #include <stdlib.h>
 
-static const uint8_t FL_PWM = 8,  FL_IN1 = 9,  FL_IN2 = 10;
-static const uint8_t FR_PWM = 7,  FR_IN1 = 5,  FR_IN2 = 6;
-static const uint8_t RL_PWM = 13, RL_IN1 = 11, RL_IN2 = 12;
-static const uint8_t RR_PWM = 2,  RR_IN1 = 3,  RR_IN2 = 4;
+// Wheel layout (top view, robot facing away from operator):
+//   LT left-top     RT right-top
+//   LB left-bottom  RB right-bottom
+enum : int {
+  W_LT = 0,   // FL  left-top
+  W_RT = 1,   // FR  right-top
+  W_LB = 2,   // RL  left-bottom
+  W_RB = 3    // RR  right-bottom
+};
+
+static const uint8_t LT_PWM = 8,  LT_IN1 = 9,  LT_IN2 = 10;   // FL
+static const uint8_t RT_PWM = 7,  RT_IN1 = 5,  RT_IN2 = 6;    // FR
+// LB IN swapped vs board silk — both directions must hit working FETs.
+static const uint8_t LB_PWM = 13, LB_IN1 = 12, LB_IN2 = 11;   // RL
+static const uint8_t RB_PWM = 2,  RB_IN1 = 3,  RB_IN2 = 4;    // RR
+
+// Legacy aliases used elsewhere in this file
+static const uint8_t FL_PWM = LT_PWM,  FL_IN1 = LT_IN1,  FL_IN2 = LT_IN2;
+static const uint8_t FR_PWM = RT_PWM,  FR_IN1 = RT_IN1,  FR_IN2 = RT_IN2;
+static const uint8_t RL_PWM = LB_PWM,  RL_IN1 = LB_IN1,  RL_IN2 = LB_IN2;
+static const uint8_t RR_PWM = RB_PWM,  RR_IN1 = RB_IN1,  RR_IN2 = RB_IN2;
 
 static const uint8_t ENC_FL_A = 50, ENC_FL_B = 51;
 static const uint8_t ENC_FR_A = 48, ENC_FR_B = 49;
@@ -77,13 +94,15 @@ static float velKp = 0.0f;
 static float velKi = 0.0f;
 static const float VEL_INT_MAX = 0.35f;
 static const float EMA_ALPHA = 0.38f;
-// Smooth start: jump to 50%, then ramp to full. Yaw axis a bit snappier.
-static const float RAMP_START = 0.50f;
-static const float RAMP_UP = 0.085f;
-static const float RAMP_DOWN = 0.060f;
-static const float WHEEL_RAMP_UP = 0.100f;
-static const float WHEEL_RAMP_DOWN = 0.070f;
-static const int PWM_FLOOR = 128;   // 50% of 255 — never creep from 0 under load
+// Smooth start everywhere — soft ramp so PSU does not sag; crab builds even slower.
+static const float RAMP_START = 0.28f;
+static const float RAMP_UP = 0.050f;
+static const float RAMP_DOWN = 0.055f;
+static const float CRAB_RAMP_UP = 0.35f;    // fast strafe ramp
+static const int CRAB_PWM_FLOOR = 220;      // max torque — break stiction on floor
+static const float WHEEL_RAMP_UP = 0.055f;
+static const float WHEEL_RAMP_DOWN = 0.065f;
+static const int PWM_FLOOR = 85;
 
 static int cmd_vx = 0, cmd_vy = 0, cmd_w_mrad = 0;
 static unsigned long lastCmdMs = 0;
@@ -98,6 +117,7 @@ static uint8_t prevFLA, prevFRA, prevRLA, prevRRA;
 static long prevTicks[4] = {0, 0, 0, 0};
 static float rampX = 0.0f, rampY = 0.0f, rampW = 0.0f;
 static float rampOut[4] = {0.0f, 0.0f, 0.0f, 0.0f};
+static float crabMag = 0.0f;   // dedicated crab throttle ramp
 static float emaTps[4] = {0, 0, 0, 0};
 static float velInt[4] = {0, 0, 0, 0};
 static float lastCorr = 0.0f;   // max |PI correction| for telemetry
@@ -181,10 +201,8 @@ static void driveOneIdx(int idx, uint8_t pwm, uint8_t in1, uint8_t in2, int sign
     delayMicroseconds(250);
   }
   float mag = clampf(fabsf(v), 0.0f, 1.0f);
-  // Smooth power: command 0.5 → ~50% PWM, 1.0 → full; never below PWM_FLOOR while moving.
   int spd = (int)(mag * (float)BASE_PWM + 0.5f);
   if (spd < PWM_FLOOR) spd = PWM_FLOOR;
-  if (mag >= 0.42f) spd = BASE_PWM;  // hit full PWM early under load
   motor(pwm, in1, in2, dir, sign, clampPwm(spd));
   lastDriveDir[idx] = dir;
 }
@@ -208,7 +226,6 @@ static void driveFL(float v) {
   float mag = clampf(fabsf(v), 0.0f, 1.0f);
   int spd = (int)(mag * (float)BASE_PWM + 0.5f);
   if (spd < PWM_FLOOR) spd = PWM_FLOOR;
-  if (mag >= 0.42f) spd = BASE_PWM;
   spd = clampPwm(spd);
   // SIGN_FL = -1: logical +fwd → IN1 LOW, IN2 HIGH; logical -rev → IN1 HIGH, IN2 LOW.
   if (dir > 0) {
@@ -222,8 +239,8 @@ static void driveFL(float v) {
   lastDriveDir[0] = dir;
 }
 
-// RL: both directions use explicit IN levels (avoid flaky d<0 path on this channel).
-// Forward: IN2=HIGH IN1=LOW. Reverse: IN1=HIGH IN2=LOW. PWM=13.
+// RL: both directions use explicit IN levels.
+// Polarity flipped vs previous map — crab needs reverse; one FET pair was dead.
 static void driveRL(float v) {
   int dir = 0;
   if (v > 0.008f) dir = +1;
@@ -235,22 +252,52 @@ static void driveRL(float v) {
   }
   if (lastDriveDir[2] != 0 && lastDriveDir[2] != dir) {
     motorCoast(RL_PWM, RL_IN1, RL_IN2);
+    delayMicroseconds(500);
+  }
+  float mag = clampf(fabsf(v), 0.0f, 1.0f);
+  int spd = (int)(mag * (float)BASE_PWM + 0.5f);
+  if (spd < PWM_FLOOR) spd = PWM_FLOOR;
+  spd = clampPwm(spd);
+  // Flipped IN levels so logical reverse hits the working half-bridge.
+  if (dir > 0) {
+    digitalWrite(RL_IN1, HIGH);
+    digitalWrite(RL_IN2, LOW);
+  } else {
+    digitalWrite(RL_IN1, LOW);
+    digitalWrite(RL_IN2, HIGH);
+  }
+  analogWrite(RL_PWM, spd);
+  lastDriveDir[2] = dir;
+}
+
+// RR: explicit IN levels (same sticky-driver class as FL/RL).
+// SIGN_RR=+1: +v → IN1 HIGH IN2 LOW; −v → IN1 LOW IN2 HIGH.
+static void driveRR(float v) {
+  int dir = 0;
+  if (v > 0.008f) dir = +1;
+  else if (v < -0.008f) dir = -1;
+  if (dir == 0) {
+    motorCoast(RR_PWM, RR_IN1, RR_IN2);
+    lastDriveDir[3] = 0;
+    return;
+  }
+  if (lastDriveDir[3] != 0 && lastDriveDir[3] != dir) {
+    motorCoast(RR_PWM, RR_IN1, RR_IN2);
     delayMicroseconds(300);
   }
   float mag = clampf(fabsf(v), 0.0f, 1.0f);
   int spd = (int)(mag * (float)BASE_PWM + 0.5f);
   if (spd < PWM_FLOOR) spd = PWM_FLOOR;
-  if (mag >= 0.42f) spd = BASE_PWM;
   spd = clampPwm(spd);
   if (dir > 0) {
-    digitalWrite(RL_IN1, LOW);
-    digitalWrite(RL_IN2, HIGH);
+    digitalWrite(RR_IN1, HIGH);
+    digitalWrite(RR_IN2, LOW);
   } else {
-    digitalWrite(RL_IN1, HIGH);
-    digitalWrite(RL_IN2, LOW);
+    digitalWrite(RR_IN1, LOW);
+    digitalWrite(RR_IN2, HIGH);
   }
-  analogWrite(RL_PWM, spd);
-  lastDriveDir[2] = dir;
+  analogWrite(RR_PWM, spd);
+  lastDriveDir[3] = dir;
 }
 
 static void resetControl() {
@@ -267,16 +314,19 @@ static void resetControl() {
 }
 
 static void stopHard() {
+  // Active brake on front; coast rear — short-brake was latching RL/RR off.
   motorBrake(FL_PWM, FL_IN1, FL_IN2);
   motorBrake(FR_PWM, FR_IN1, FR_IN2);
-  motorBrake(RL_PWM, RL_IN1, RL_IN2);
-  motorBrake(RR_PWM, RR_IN1, RR_IN2);
+  motorCoast(RL_PWM, RL_IN1, RL_IN2);
+  motorCoast(RR_PWM, RR_IN1, RR_IN2);
   cmd_vx = cmd_vy = cmd_w_mrad = 0;
   rampX = rampY = rampW = 0.0f;
+  crabMag = 0.0f;
   for (int i = 0; i < 4; i++) {
     rampOut[i] = 0.0f;
     velInt[i] = 0.0f;
     emaTps[i] = 0.0f;
+    lastDriveDir[i] = 0;
   }
   lastCorr = 0.0f;
   hardBrake = true;
@@ -289,6 +339,7 @@ static void stopSoft() {
   cmd_vx = cmd_vy = cmd_w_mrad = 0;
   lastCmdMs = millis();
   rampX = rampY = rampW = 0.0f;
+  crabMag = 0.0f;
   for (int i = 0; i < 4; i++) {
     rampOut[i] = 0.0f;
     velInt[i] = 0.0f;
@@ -311,8 +362,83 @@ static void coastMotors() {
   motorCoast(RR_PWM, RR_IN1, RR_IN2);
 }
 
+// --- Crab: exact proezd.ino (LV/LN/PV/PN) on robot pin pairs ---
+static void proezdPin(uint8_t in1, uint8_t in2, uint8_t pwm, int spd, bool vpered) {
+  spd = clampPwm(spd);
+  digitalWrite(in1, vpered ? HIGH : LOW);
+  digitalWrite(in2, vpered ? LOW : HIGH);
+  analogWrite(pwm, spd);
+}
+
+// proezd wheel → robot H-bridge pins.
+// LN физически сидит на LT-пинах, LV на LB-пинах (иначе танковый разворот).
+enum : int { P_LT = 0, P_LB = 1, P_RT = 2, P_RB = 3 };
+static const uint8_t PIN_IN1[4] = { LT_IN1, LB_IN1, RT_IN1, RB_IN1 };
+static const uint8_t PIN_IN2[4] = { LT_IN2, LB_IN2, RT_IN2, RB_IN2 };
+static const uint8_t PIN_PWM[4] = { LT_PWM, LB_PWM, RT_PWM, RB_PWM };
+static const uint8_t PROEZD_TO_PIN[4] = { P_LB, P_LT, P_RT, P_RB };  // LV LN PV PN
+
+static void proezdMotor(int wheel, int spd, bool vpered) {
+  const int p = PROEZD_TO_PIN[wheel];
+  proezdPin(PIN_IN1[p], PIN_IN2[p], PIN_PWM[p], spd, vpered);
+}
+
+// proezd.ino vpravo()
+static void crabVpravo(int spd) {
+  proezdMotor(2, spd, false);  // PV правый верх — назад
+  proezdMotor(3, spd, true);   // PN правый низ — вперед
+  proezdMotor(0, spd, false);  // LV левый верх — назад
+  proezdMotor(1, spd, true);   // LN левый низ — вперед
+}
+
+// proezd.ino vlevo()
+static void crabVlevo(int spd) {
+  proezdMotor(2, spd, true);
+  proezdMotor(3, spd, false);
+  proezdMotor(0, spd, true);
+  proezdMotor(1, spd, false);
+}
+
+static void verifyCrabEncoders(const long dTicks[4], int cmdVy) {
+  static unsigned long lastWarnMs = 0;
+  const unsigned long now = millis();
+  if (now - lastWarnMs < 800) return;
+
+  const long dFR = dTicks[W_RT];
+  const long dRR = dTicks[W_RB];
+  const long dRL = dTicks[W_LB];
+  if (abs(dFR) < 8 && abs(dRR) < 8) return;
+  lastWarnMs = now;
+
+  // Pure strafe: |dX| should stay small vs |dY|; warn if driving forward/back instead.
+  (void)dRL;
+  (void)cmdVy;
+  (void)dFR;
+  (void)dRR;
+}
+
+static void applyCrab(int cmdVy, const long dTicks[4]) {
+  const float tgt = clampf((float)cmdVy / 500.0f, -1.0f, 1.0f);
+  if (fabsf(tgt) < 0.04f) {
+    coastMotors();
+    crabMag = 0.0f;
+    return;
+  }
+
+  crabMag = slewToward(crabMag, 1.0f, CRAB_RAMP_UP, RAMP_DOWN);
+  int pwm = (int)(crabMag * (float)BASE_PWM + 0.5f);
+  if (pwm < CRAB_PWM_FLOOR) pwm = CRAB_PWM_FLOOR;
+  if (pwm > BASE_PWM) pwm = BASE_PWM;
+
+  // proezd.ino: ▶ vy<0 = vpravo, ◀ vy>0 = vlevo
+  if (cmdVy < 0) crabVpravo(pwm);
+  else if (cmdVy > 0) crabVlevo(pwm);
+
+  verifyCrabEncoders(dTicks, cmdVy);
+}
+
 static float slewToward(float current, float target, float upStep, float downStep) {
-  // Kick-start: leave standstill at 50% thrust, then smooth to target.
+  // Soft kick from standstill, then smooth ramp (all motions).
   if (fabsf(current) < 0.08f && fabsf(target) >= RAMP_START) {
     return (target > 0.0f) ? RAMP_START : -RAMP_START;
   }
@@ -340,8 +466,8 @@ static void applyMotors(float dt, const long dTicks[4]) {
     if ((long)(millis() - brakeUntilMs) < 0) {
       motorBrake(FL_PWM, FL_IN1, FL_IN2);
       motorBrake(FR_PWM, FR_IN1, FR_IN2);
-      motorBrake(RL_PWM, RL_IN1, RL_IN2);
-      motorBrake(RR_PWM, RR_IN1, RR_IN2);
+      motorCoast(RL_PWM, RL_IN1, RL_IN2);
+      motorCoast(RR_PWM, RR_IN1, RR_IN2);
       return;
     }
     hardBrake = false;
@@ -350,18 +476,24 @@ static void applyMotors(float dt, const long dTicks[4]) {
     return;
   }
 
-  // Forward/back: smooth ramp. Crab (vy) and tank yaw (w): snap to full immediately.
-  float tgtX = clampf((float)cmd_vx / 500.0f, -1.0f, 1.0f);
-  const float tgtY = clampf((float)cmd_vy / 500.0f, -1.0f, 1.0f);
-  const float tgtW = clampf((float)cmd_w_mrad / 1000.0f, -1.0f, 1.0f);  // stronger yaw
-  // In-place yaw on this heavy mecanum needs a little roll — auto creep when pure tank.
-  const bool pureYawCmd = fabsf(tgtW) > 0.20f && fabsf(tgtX) < 0.08f && fabsf(tgtY) < 0.08f;
-  if (pureYawCmd) {
-    tgtX = 0.28f;  // break static scrub so the chassis can yaw
+  // CRAB MODE — bypass mecanum mix + per-wheel PID; drive all 4 wheels directly.
+  const bool isCrab =
+      (abs(cmd_vy) > 40) && (abs(cmd_vy) > abs(cmd_vx)) && (abs(cmd_w_mrad) < 400);
+  if (isCrab) {
+    rampX = rampY = rampW = 0.0f;
+    for (int i = 0; i < 4; i++) rampOut[i] = 0.0f;
+    applyCrab(cmd_vy, dTicks);
+    return;
   }
+  crabMag = 0.0f;
+
+  // Normal mecanum (fwd/back/tank/diagonal)
+  const float tgtX = clampf((float)cmd_vx / 500.0f, -1.0f, 1.0f);
+  const float tgtY = clampf((float)cmd_vy / 500.0f, -1.0f, 1.0f);
+  const float tgtW = clampf((float)cmd_w_mrad / 1500.0f, -1.0f, 1.0f);
   rampX = slewToward(rampX, tgtX, RAMP_UP, RAMP_DOWN);
-  rampY = tgtY;
-  rampW = tgtW;
+  rampY = slewToward(rampY, tgtY, RAMP_UP, RAMP_DOWN);
+  rampW = slewToward(rampW, tgtW, RAMP_UP, RAMP_DOWN);
 
   if (!rampsActive() && !wheelRampsActive() &&
       abs(cmd_vx) < 30 && abs(cmd_vy) < 30 && abs(cmd_w_mrad) < 80) {
@@ -372,21 +504,12 @@ static void applyMotors(float dt, const long dTicks[4]) {
   }
 
   float target[4];
-  if (fabsf(tgtW) > 0.20f && fabsf(tgtY) < 0.08f) {
-    // Explicit skid-steer tank: left pair vs right pair at full logical thrust.
-    // +w → left reverse / right forward in wheel space (matches SIGN_* forward).
-    const float s = (tgtW > 0.0f) ? 1.0f : -1.0f;
-    target[0] = -s + rampX;  // FL
-    target[1] = +s + rampX;  // FR
-    target[2] = -s + rampX;  // RL
-    target[3] = +s + rampX;  // RR
-  } else {
-    // Strafe / translate mix (textbook mecanum).
-    target[0] = rampX - rampY - rampW;   // FL
-    target[1] = rampX + rampY + rampW;   // FR
-    target[2] = rampX + rampY - rampW;   // RL
-    target[3] = rampX - rampY + rampW;   // RR
-  }
+  // Mecanum: crab (vy) must be FL+/FR−/RL−/RR+ (and opposite the other way).
+  // Previous −vy on FL/RR made crab cancel / sit still on this chassis.
+  target[0] = rampX + rampY - rampW;   // FL
+  target[1] = rampX - rampY + rampW;   // FR
+  target[2] = rampX - rampY - rampW;   // RL
+  target[3] = rampX + rampY + rampW;   // RR
 
   // Preserve mix ratios if a wheel exceeds full scale.
   float m = 0.0f;
@@ -430,22 +553,15 @@ static void applyMotors(float dt, const long dTicks[4]) {
     out[i] = clampf(ff + corr, -1.35f, 1.35f);
   }
 
-  // Pure fwd/back: smooth per-wheel ramp. Crab/tank: snap wheels to max immediately.
-  const bool snapTurn = (fabsf(tgtY) > 0.02f || fabsf(tgtW) > 0.02f);
   for (int i = 0; i < 4; i++) {
     out[i] = clampf(out[i], -1.0f, 1.0f);
-    // Tank: push every driven wheel to full magnitude (don't leave mid PWM).
-    if (snapTurn && fabsf(out[i]) > 0.05f) {
-      out[i] = (out[i] > 0.0f) ? 1.0f : -1.0f;
-    }
-    if (snapTurn) rampOut[i] = out[i];
-    else rampOut[i] = slewToward(rampOut[i], out[i], WHEEL_RAMP_UP, WHEEL_RAMP_DOWN);
+    rampOut[i] = slewToward(rampOut[i], out[i], WHEEL_RAMP_UP, WHEEL_RAMP_DOWN);
   }
 
   driveFL(rampOut[0]);
   driveOneIdx(1, FR_PWM, FR_IN1, FR_IN2, SIGN_FR, rampOut[1]);
   driveRL(rampOut[2]);
-  driveOneIdx(3, RR_PWM, RR_IN1, RR_IN2, SIGN_RR, rampOut[3]);
+  driveRR(rampOut[3]);
 }
 
 static void integrateOdom(const long dTicks[4]) {
@@ -492,6 +608,46 @@ static int nextInt(char **pp) {
   while (*p && *p != ' ') p++;
   *pp = p;
   return v;
+}
+
+static void testCrabRun(int vy, const __FlashStringHelper *tag, long &sumFR, long &sumRR, float &sumX, float &sumY, float &sumTh) {
+  stopHard();
+  resetControl();
+  setCmd(0, vy, 0);
+  sumFR = sumRR = 0;
+  sumX = sumY = sumTh = 0.0f;
+  const float x0 = x_mm, y0 = y_mm, th0 = th;
+  unsigned long until = millis() + 1800UL;
+  unsigned long lastC = 0;
+  while ((long)(millis() - until) < 0) {
+    pollEncoders();
+    pollSerial();
+    unsigned long now = millis();
+    if (now - lastC >= CTRL_PERIOD_MS) {
+      lastC = now;
+      long cur[4] = {encFL, encFR, encRL, encRR};
+      long dTicks[4];
+      for (int i = 0; i < 4; i++) {
+        dTicks[i] = cur[i] - prevTicks[i];
+        prevTicks[i] = cur[i];
+      }
+      integrateOdom(dTicks);
+      applyCrab(vy, dTicks);
+      sumFR += dTicks[W_RT];
+      sumRR += dTicks[W_RB];
+    }
+  }
+  coastMotors();
+  sumX = x_mm - x0;
+  sumY = y_mm - y0;
+  sumTh = th - th0;
+  stopHard();
+  Serial.print(F("TEST_CRAB ")); Serial.print(tag);
+  Serial.print(F(" dX=")); Serial.print(sumX, 1);
+  Serial.print(F(" dY=")); Serial.print(sumY, 1);
+  Serial.print(F(" dTh=")); Serial.print(sumTh, 3);
+  Serial.print(F(" FR=")); Serial.print(sumFR);
+  Serial.print(F(" RR=")); Serial.println(sumRR);
 }
 
 static void handleLine(char *line) {
@@ -608,6 +764,16 @@ static void handleLine(char *line) {
     }
     return;
   }
+  // TEST_CRAB — run proezd vpravo/vlevo and print encoder check
+  if (!strncmp(line, "TEST_CRAB", 9)) {
+    long sFR, sRR;
+    float dX, dY, dTh;
+    testCrabRun(-500, F("VPRAVO"), sFR, sRR, dX, dY, dTh);
+    delay(400);
+    testCrabRun(500, F("VLEVO"), sFR, sRR, dX, dY, dTh);
+    Serial.println(F("TEST_CRAB_OK"));
+    return;
+  }
   // TEST_WHEEL idx dir ms   idx: 0=FL 1=FR 2=RL 3=RR  dir: +1/-1
   if (!strncmp(line, "TEST_WHEEL", 10)) {
     char *p = line + 10;
@@ -628,6 +794,7 @@ static void handleLine(char *line) {
       pollEncoders();
       if (idx == 0) driveFL(cmd);
       else if (idx == 2) driveRL(cmd);
+      else if (idx == 3) driveRR(cmd);
       else {
         uint8_t pwms[4] = {FL_PWM, FR_PWM, RL_PWM, RR_PWM};
         uint8_t in1s[4] = {FL_IN1, FR_IN1, RL_IN1, RR_IN1};

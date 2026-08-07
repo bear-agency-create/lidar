@@ -355,9 +355,9 @@ def main() -> None:
                 if holding:
                     w = direction_trim_w(vx, vy, trim_w) + hold.correction()
                 # Strong yaw for in-place turn under load (Arduino full mix ~1500).
-                vx_mm = int(max(-1000, min(1000, vx * 1000.0 * 3.8)))
-                vy_mm = int(max(-1000, min(1000, vy * 1000.0 * 3.8)))
-                w_mrad = int(max(-4000, min(4000, w * 1000.0 * 2.5)))
+                vx_mm = int(max(-1000, min(1000, vx * 1000.0 * 5.0)))
+                vy_mm = int(max(-1000, min(1000, vy * 1000.0 * 5.0)))
+                w_mrad = int(max(-4000, min(4000, w * 1000.0 * 2.0)))
                 ser.write(f"SET_ROBOT_VELOCITY {vx_mm} {vy_mm} {w_mrad}\n".encode())
                 last_stop = False
                 cmd_ticks += 1
