@@ -4,14 +4,14 @@
   "pidv_ki_x1000": 0,
   "frb_pct": 100,
   "frf_pct": 100,
-  "wheel_scale_pct": [100, 85, 100, 122],
+  "wheel_scale_pct": [155, 120, 120, 105],
   "yaw_kp": 1.4,
   "yaw_deadband_deg": 3.0,
   "trim_w": {
-    "fwd": 0.35,
-    "back": 0.35,
-    "strl": -0.15,
-    "strr": 0.20
+    "fwd": 0.0,
+    "back": 0.0,
+    "strl": 0.0,
+    "strr": 0.0
   },
-  "notes": "Equal open-loop + soft ramp 2026-08-06: PI off; WSCALE balances FR/RR; STOP=soft, HARD_STOP=brake."
+  "notes": "2026-08-07: RL pins restored 11/12, SIGN_RL=+1 both dirs; no IN swap."
 }

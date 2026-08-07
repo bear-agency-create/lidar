@@ -50,7 +50,7 @@ class DriveCommander:
         self._stamp = time.time()
         if from_teleop and (abs(vx) > 0.02 or abs(vy) > 0.02 or abs(w) > 0.05):
             self._teleop_stamp = time.time()
-        self._emit(vx, vy, w)
+        self._emit(vx, vy, w, teleop=from_teleop)
         return {"ok": True, "vx": vx, "vy": vy, "w": w}
 
     def stop(self) -> dict[str, Any]:
@@ -61,14 +61,14 @@ class DriveCommander:
         age = now - self._stamp if self._stamp > 0 else 1e9
         if age > CMD_WATCHDOG_SEC:
             self._vx = self._vy = self._w = 0.0
-        self._emit(self._vx, self._vy, self._w)
+        self._emit(self._vx, self._vy, self._w, teleop=False)
 
-    def _emit(self, vx: float, vy: float, w: float) -> None:
+    def _emit(self, vx: float, vy: float, w: float, *, teleop: bool = False) -> None:
+        payload: dict[str, Any] = {"vx": vx, "vy": vy, "w": w, "t": time.time()}
+        if teleop:
+            payload["teleop"] = True
         try:
-            CMD_FILE.write_text(
-                json.dumps({"vx": vx, "vy": vy, "w": w, "t": time.time()}),
-                encoding="utf-8",
-            )
+            CMD_FILE.write_text(json.dumps(payload), encoding="utf-8")
         except OSError as exc:
             log.warning("cmd file write failed: %s", exc)
         if self._publish_twist is not None:

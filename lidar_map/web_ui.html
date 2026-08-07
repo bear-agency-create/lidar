@@ -189,12 +189,18 @@ function allStop() {
 
 document.querySelectorAll('#pad button[data-cmd]').forEach((btn) => {
   const name = btn.getAttribute('data-cmd');
-  const down = (e) => { e.preventDefault(); try { btn.setPointerCapture(e.pointerId); } catch(_){} holdStart(name); };
-  const up = (e) => { e.preventDefault(); holdEnd(name); };
+  const down = (e) => { e.preventDefault(); e.stopPropagation(); try { btn.setPointerCapture(e.pointerId); } catch(_){} holdStart(name); };
+  const up = (e) => { e.preventDefault(); e.stopPropagation(); holdEnd(name); };
   btn.addEventListener('pointerdown', down);
   btn.addEventListener('pointerup', up);
   btn.addEventListener('pointercancel', up);
   btn.addEventListener('lostpointercapture', up);
+  btn.addEventListener('mousedown', down);
+  btn.addEventListener('mouseup', up);
+  btn.addEventListener('mouseleave', up);
+  btn.addEventListener('touchstart', down, {passive: false});
+  btn.addEventListener('touchend', up, {passive: false});
+  btn.addEventListener('touchcancel', up, {passive: false});
 });
 
 window.addEventListener('blur', allStop);

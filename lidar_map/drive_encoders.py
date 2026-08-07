@@ -51,10 +51,10 @@ DEFAULT_CAL = {
     "pidv_ki_x1000": 0,
     "frb_pct": 100,
     "frf_pct": 100,
-    "wheel_scale_pct": [100, 85, 100, 122],
+    "wheel_scale_pct": [155, 120, 120, 105],
     "yaw_kp": 2.0,
     "yaw_deadband_deg": 2.0,
-    "trim_w": {"fwd": 0.55, "back": 0.55, "strl": -0.25, "strr": 0.35},
+    "trim_w": {"fwd": 0.0, "back": 0.0, "strl": 0.0, "strr": 0.0},
 }
 
 
@@ -311,6 +311,7 @@ def main() -> None:
 
         vx = vy = w_cmd = 0.0
         fresh = False
+        teleop = False
         try:
             if CMD_FILE.is_file():
                 data = json.loads(CMD_FILE.read_text(encoding="utf-8"))
@@ -320,12 +321,13 @@ def main() -> None:
                     vx = float(data.get("vx", 0.0))
                     vy = float(data.get("vy", 0.0))
                     w_cmd = float(data.get("w", 0.0))
+                    teleop = bool(data.get("teleop", False))
         except (OSError, json.JSONDecodeError, TypeError, ValueError):
             fresh = False
 
         moving = fresh and (abs(vx) > 0.02 or abs(vy) > 0.02 or abs(w_cmd) > 0.05)
-        # Pure translation: user is not commanding a turn — enable alignment.
-        translating = moving and abs(w_cmd) <= 0.05
+        # Pure translation: yaw-hold only for planner/nav — not web teleop buttons.
+        translating = moving and abs(w_cmd) <= 0.05 and not teleop
 
         if translating and not holding:
             hold.start()
@@ -338,7 +340,6 @@ def main() -> None:
             if moving:
                 w = w_cmd
                 if holding:
-                    # Floor feedforward trim + lidar fine correction (not replace user w).
                     w = direction_trim_w(vx, vy, trim_w) + hold.correction()
                 # Stronger FF gain for carpet/demo floors (Arduino full mix ~500).
                 vx_mm = int(max(-900, min(900, vx * 1000.0 * 2.6)))

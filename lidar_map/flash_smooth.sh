@@ -3,7 +3,7 @@
 # call start_drive_map.sh after so only one drive_encoders owns the serial port.
 set -euo pipefail
 export PATH="$HOME/bin:$PATH"
-RESTART_DRIVE="${RESTART_DRIVE:-0}"
+RESTART_DRIVE="${RESTART_DRIVE:-1}"
 
 if [ -e /dev/ttyMEGA ]; then
   MEGA="$(readlink -f /dev/ttyMEGA)"
