@@ -122,6 +122,23 @@ OCC_EDGE = 0.85
 
 WEB_UI_PATH = Path(__file__).resolve().parent / "web_ui.html"
 OPERATOR_PANEL_PATH = Path(__file__).resolve().parent / "operator_panel.html"
-_MONITOR_ROOT = Path(__file__).resolve().parents[1] / "monitor"
+
+
+def _resolve_monitor_root() -> Path:
+    """Find monitor/ next to lidar_map (robot_nav or repo root)."""
+    here = Path(__file__).resolve().parent
+    candidates = [
+        here.parents[0] / "monitor",  # unlikely flat
+        here.parents[1] / "monitor",  # ~/robot_nav/monitor or repo/monitor
+        Path.home() / "robot_nav" / "monitor",
+        Path.home() / "lidar" / "monitor",
+    ]
+    for path in candidates:
+        if (path / "airport_ui.html").is_file():
+            return path
+    return here.parents[1] / "monitor"
+
+
+_MONITOR_ROOT = _resolve_monitor_root()
 AIRPORT_UI_PATH = _MONITOR_ROOT / "airport_ui.html"
 PRIMARY_BUTTONS_PATH = _MONITOR_ROOT / "primary_buttons.json"

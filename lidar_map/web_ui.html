@@ -108,15 +108,26 @@ const CMDS = {
 const held = new Set();
 let driveTimer = null;
 
+let lastCmdErr = '';
 async function postCmd(body) {
   try {
-    await fetch('/api/cmd', {
+    const r = await fetch('/api/cmd', {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify(body),
       cache: 'no-store',
     });
-  } catch (_) {}
+    if (!r.ok) {
+      const j = await r.json().catch(() => ({}));
+      lastCmdErr = j.error || ('HTTP ' + r.status);
+      document.getElementById('info').textContent = 'команда отклонена: ' + lastCmdErr;
+    } else {
+      lastCmdErr = '';
+    }
+  } catch (e) {
+    lastCmdErr = String(e);
+    document.getElementById('info').textContent = 'нет связи с /api/cmd';
+  }
 }
 
 async function postStop() {
