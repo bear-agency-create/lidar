@@ -57,18 +57,25 @@ class DriveCommander:
         return self.set(0.0, 0.0, 0.0, from_teleop=False)
 
     def watchdog_tick(self) -> None:
+        # Only act on timeout. Do NOT rewrite the cmd file while teleop is
+        # fresh — that was stripping teleop=true and racing STOP/drive.
         now = time.time()
         age = now - self._stamp if self._stamp > 0 else 1e9
-        if age > CMD_WATCHDOG_SEC:
+        if age > CMD_WATCHDOG_SEC and (self._vx or self._vy or self._w):
             self._vx = self._vy = self._w = 0.0
-        self._emit(self._vx, self._vy, self._w, teleop=False)
+            self._emit(0.0, 0.0, 0.0, teleop=False)
 
     def _emit(self, vx: float, vy: float, w: float, *, teleop: bool = False) -> None:
         payload: dict[str, Any] = {"vx": vx, "vy": vy, "w": w, "t": time.time()}
         if teleop:
             payload["teleop"] = True
         try:
-            CMD_FILE.write_text(json.dumps(payload), encoding="utf-8")
+            # Atomic replace — readers must never see a truncated empty file
+            # (that was causing STOP/drive chatter and dead motors).
+            text = json.dumps(payload)
+            tmp = CMD_FILE.with_name(CMD_FILE.name + ".tmp")
+            tmp.write_text(text, encoding="utf-8")
+            tmp.replace(CMD_FILE)
         except OSError as exc:
             log.warning("cmd file write failed: %s", exc)
         if self._publish_twist is not None:

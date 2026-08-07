@@ -35,7 +35,7 @@ CMD_FILE = Path("/tmp/robot_cmd.json")
 CAL_FILE = Path(os.environ.get("DRIVE_CAL_FILE", str(Path(__file__).resolve().parent / "drive_cal.json")))
 PORT = os.environ.get("MEGA_DEV", "/dev/ttyMEGA" if os.path.exists("/dev/ttyMEGA") else "/dev/ttyUSB1")
 BAUD = 115200
-STALE_SEC = 0.9   # tolerate WiFi/SSH hiccups from the web remote
+STALE_SEC = 1.5   # tolerate WiFi/SSH hiccups from the web remote
 POS_RE = re.compile(r"POS X=([-\d.]+) Y=([-\d.]+) Th=([-\d.]+)")
 
 # Lidar yaw hold (overridden by drive_cal.json when present)
@@ -51,7 +51,7 @@ DEFAULT_CAL = {
     "pidv_ki_x1000": 0,
     "frb_pct": 100,
     "frf_pct": 100,
-    "wheel_scale_pct": [155, 120, 120, 105],
+    "wheel_scale_pct": [200, 200, 200, 200],
     "yaw_kp": 2.0,
     "yaw_deadband_deg": 2.0,
     "trim_w": {"fwd": 0.0, "back": 0.0, "strl": 0.0, "strr": 0.0},
@@ -257,6 +257,9 @@ def main() -> None:
     last_stop = False
     holding = False
     cmd_ticks = 0
+    last_vx = last_vy = last_w = 0.0
+    last_teleop = False
+    last_fresh_mono = 0.0
 
     while rclpy.ok():
         rclpy.spin_once(node, timeout_sec=0.0)
@@ -312,18 +315,28 @@ def main() -> None:
         vx = vy = w_cmd = 0.0
         fresh = False
         teleop = False
+        now_m = time.time()
         try:
             if CMD_FILE.is_file():
-                data = json.loads(CMD_FILE.read_text(encoding="utf-8"))
-                age = time.time() - float(data.get("t", 0.0))
-                if age <= STALE_SEC:
-                    fresh = True
-                    vx = float(data.get("vx", 0.0))
-                    vy = float(data.get("vy", 0.0))
-                    w_cmd = float(data.get("w", 0.0))
-                    teleop = bool(data.get("teleop", False))
+                raw = CMD_FILE.read_text(encoding="utf-8").strip()
+                if raw:
+                    data = json.loads(raw)
+                    age = now_m - float(data.get("t", 0.0))
+                    if age <= STALE_SEC:
+                        fresh = True
+                        vx = float(data.get("vx", 0.0))
+                        vy = float(data.get("vy", 0.0))
+                        w_cmd = float(data.get("w", 0.0))
+                        teleop = bool(data.get("teleop", False))
+                        last_vx, last_vy, last_w = vx, vy, w_cmd
+                        last_teleop = teleop
+                        last_fresh_mono = now_m
         except (OSError, json.JSONDecodeError, TypeError, ValueError):
-            fresh = False
+            # Mid-write glitch: reuse last good cmd briefly.
+            if now_m - last_fresh_mono <= STALE_SEC:
+                fresh = True
+                vx, vy, w_cmd = last_vx, last_vy, last_w
+                teleop = last_teleop
 
         moving = fresh and (abs(vx) > 0.02 or abs(vy) > 0.02 or abs(w_cmd) > 0.05)
         # Pure translation: yaw-hold only for planner/nav — not web teleop buttons.
@@ -341,10 +354,10 @@ def main() -> None:
                 w = w_cmd
                 if holding:
                     w = direction_trim_w(vx, vy, trim_w) + hold.correction()
-                # Stronger FF gain for carpet/demo floors (Arduino full mix ~500).
-                vx_mm = int(max(-900, min(900, vx * 1000.0 * 2.6)))
-                vy_mm = int(max(-900, min(900, vy * 1000.0 * 2.6)))
-                w_mrad = int(max(-2800, min(2800, w * 1000.0 * 1.15)))
+                # Strong yaw for in-place turn under load (Arduino full mix ~1500).
+                vx_mm = int(max(-1000, min(1000, vx * 1000.0 * 3.8)))
+                vy_mm = int(max(-1000, min(1000, vy * 1000.0 * 3.8)))
+                w_mrad = int(max(-4000, min(4000, w * 1000.0 * 2.5)))
                 ser.write(f"SET_ROBOT_VELOCITY {vx_mm} {vy_mm} {w_mrad}\n".encode())
                 last_stop = False
                 cmd_ticks += 1
@@ -354,7 +367,7 @@ def main() -> None:
                         vx, vy, w, holding,
                     )
             elif not last_stop:
-                ser.write(b"STOP\n")
+                ser.write(b"HARD_STOP\n")
                 last_stop = True
                 log.info("STOP")
         except serial.SerialException as e:

@@ -69,18 +69,21 @@ static const bool encTrusted[4] = {false, false, false, false};
 static float frRevScale = 1.00f;
 static float frFwdScale = 1.00f;
 
-// Open-loop equal max.
-static float wheelScale[4] = {1.55f, 1.20f, 1.20f, 1.05f};
+// Open-loop max thrust — WSCALE helps mid-throttle; full cmd saturates PWM.
+static float wheelScale[4] = {2.00f, 2.00f, 2.00f, 2.00f};
 
 // Per-wheel velocity PI (normalized units). Default off for equal motion.
 static float velKp = 0.0f;
 static float velKi = 0.0f;
 static const float VEL_INT_MAX = 0.35f;
 static const float EMA_ALPHA = 0.38f;
-static const float RAMP_UP = 0.026f;       // ~1.0 s chassis 0→full at 40 Hz
-static const float RAMP_DOWN = 0.034f;
-static const float WHEEL_RAMP_UP = 0.030f;   // per-wheel thrust ramp (~0.83 s)
-static const float WHEEL_RAMP_DOWN = 0.042f;
+// Smooth start: jump to 50%, then ramp to full. Yaw axis a bit snappier.
+static const float RAMP_START = 0.50f;
+static const float RAMP_UP = 0.085f;
+static const float RAMP_DOWN = 0.060f;
+static const float WHEEL_RAMP_UP = 0.100f;
+static const float WHEEL_RAMP_DOWN = 0.070f;
+static const int PWM_FLOOR = 128;   // 50% of 255 — never creep from 0 under load
 
 static int cmd_vx = 0, cmd_vy = 0, cmd_w_mrad = 0;
 static unsigned long lastCmdMs = 0;
@@ -151,6 +154,12 @@ static void motor(uint8_t pwm, uint8_t in1, uint8_t in2, int dir, int sign, int 
   }
 }
 
+static void motorCoast(uint8_t pwm, uint8_t in1, uint8_t in2) {
+  digitalWrite(in1, LOW);
+  digitalWrite(in2, LOW);
+  analogWrite(pwm, 0);
+}
+
 static void motorBrake(uint8_t pwm, uint8_t in1, uint8_t in2) {
   // Active short-brake on typical dual-H bridges (IN1=IN2=HIGH).
   digitalWrite(in1, HIGH); digitalWrite(in2, HIGH); analogWrite(pwm, 255);
@@ -163,19 +172,54 @@ static void driveOneIdx(int idx, uint8_t pwm, uint8_t in1, uint8_t in2, int sign
   if (v > 0.008f) dir = +1;
   else if (v < -0.008f) dir = -1;
   if (dir == 0) {
-    motor(pwm, in1, in2, 0, sign, 0);
+    motorCoast(pwm, in1, in2);
     lastDriveDir[idx] = 0;
     return;
   }
   if (lastDriveDir[idx] != 0 && lastDriveDir[idx] != dir) {
-    motor(pwm, in1, in2, 0, sign, 0);
+    motorCoast(pwm, in1, in2);
     delayMicroseconds(250);
   }
   float mag = clampf(fabsf(v), 0.0f, 1.0f);
+  // Smooth power: command 0.5 → ~50% PWM, 1.0 → full; never below PWM_FLOOR while moving.
   int spd = (int)(mag * (float)BASE_PWM + 0.5f);
-  if (spd < 40) spd = 40;
+  if (spd < PWM_FLOOR) spd = PWM_FLOOR;
+  if (mag >= 0.42f) spd = BASE_PWM;  // hit full PWM early under load
   motor(pwm, in1, in2, dir, sign, clampPwm(spd));
   lastDriveDir[idx] = dir;
+}
+
+// FL: explicit IN levels both ways (same class of sticky H-bridge as RL).
+// Logical +v (chassis forward for this wheel): IN1=HIGH IN2=LOW after SIGN_FL=-1
+// → electrical d<0 → IN1=LOW IN2=HIGH. Keep that mapping explicit here.
+static void driveFL(float v) {
+  int dir = 0;
+  if (v > 0.008f) dir = +1;
+  else if (v < -0.008f) dir = -1;
+  if (dir == 0) {
+    motorCoast(FL_PWM, FL_IN1, FL_IN2);
+    lastDriveDir[0] = 0;
+    return;
+  }
+  if (lastDriveDir[0] != 0 && lastDriveDir[0] != dir) {
+    motorCoast(FL_PWM, FL_IN1, FL_IN2);
+    delayMicroseconds(300);
+  }
+  float mag = clampf(fabsf(v), 0.0f, 1.0f);
+  int spd = (int)(mag * (float)BASE_PWM + 0.5f);
+  if (spd < PWM_FLOOR) spd = PWM_FLOOR;
+  if (mag >= 0.42f) spd = BASE_PWM;
+  spd = clampPwm(spd);
+  // SIGN_FL = -1: logical +fwd → IN1 LOW, IN2 HIGH; logical -rev → IN1 HIGH, IN2 LOW.
+  if (dir > 0) {
+    digitalWrite(FL_IN1, LOW);
+    digitalWrite(FL_IN2, HIGH);
+  } else {
+    digitalWrite(FL_IN1, HIGH);
+    digitalWrite(FL_IN2, LOW);
+  }
+  analogWrite(FL_PWM, spd);
+  lastDriveDir[0] = dir;
 }
 
 // RL: both directions use explicit IN levels (avoid flaky d<0 path on this channel).
@@ -185,21 +229,18 @@ static void driveRL(float v) {
   if (v > 0.008f) dir = +1;
   else if (v < -0.008f) dir = -1;
   if (dir == 0) {
-    digitalWrite(RL_IN1, LOW);
-    digitalWrite(RL_IN2, LOW);
-    analogWrite(RL_PWM, 0);
+    motorCoast(RL_PWM, RL_IN1, RL_IN2);
     lastDriveDir[2] = 0;
     return;
   }
   if (lastDriveDir[2] != 0 && lastDriveDir[2] != dir) {
-    digitalWrite(RL_IN1, LOW);
-    digitalWrite(RL_IN2, LOW);
-    analogWrite(RL_PWM, 0);
+    motorCoast(RL_PWM, RL_IN1, RL_IN2);
     delayMicroseconds(300);
   }
   float mag = clampf(fabsf(v), 0.0f, 1.0f);
   int spd = (int)(mag * (float)BASE_PWM + 0.5f);
-  if (spd < 40) spd = 40;
+  if (spd < PWM_FLOOR) spd = PWM_FLOOR;
+  if (mag >= 0.42f) spd = BASE_PWM;
   spd = clampPwm(spd);
   if (dir > 0) {
     digitalWrite(RL_IN1, LOW);
@@ -243,20 +284,38 @@ static void stopHard() {
 }
 
 static void stopSoft() {
-  // Clear command; shared ramps coast down in applyMotors.
+  // Teleop stop must cut FL immediately — soft coast left FL spinning
+  // on this chassis (sticky forward half-bridge + PWM floor).
   cmd_vx = cmd_vy = cmd_w_mrad = 0;
   lastCmdMs = millis();
-  for (int i = 0; i < 4; i++) velInt[i] = 0.0f;
+  rampX = rampY = rampW = 0.0f;
+  for (int i = 0; i < 4; i++) {
+    rampOut[i] = 0.0f;
+    velInt[i] = 0.0f;
+    emaTps[i] = 0.0f;
+    lastDriveDir[i] = 0;
+  }
+  lastCorr = 0.0f;
+  hardBrake = false;
+  brakeUntilMs = 0;
+  motorCoast(FL_PWM, FL_IN1, FL_IN2);
+  motorCoast(FR_PWM, FR_IN1, FR_IN2);
+  motorCoast(RL_PWM, RL_IN1, RL_IN2);
+  motorCoast(RR_PWM, RR_IN1, RR_IN2);
 }
 
 static void coastMotors() {
-  motor(FL_PWM, FL_IN1, FL_IN2, 0, SIGN_FL, 0);
-  motor(FR_PWM, FR_IN1, FR_IN2, 0, SIGN_FR, 0);
-  motor(RL_PWM, RL_IN1, RL_IN2, 0, SIGN_RL, 0);
-  motor(RR_PWM, RR_IN1, RR_IN2, 0, SIGN_RR, 0);
+  motorCoast(FL_PWM, FL_IN1, FL_IN2);
+  motorCoast(FR_PWM, FR_IN1, FR_IN2);
+  motorCoast(RL_PWM, RL_IN1, RL_IN2);
+  motorCoast(RR_PWM, RR_IN1, RR_IN2);
 }
 
 static float slewToward(float current, float target, float upStep, float downStep) {
+  // Kick-start: leave standstill at 50% thrust, then smooth to target.
+  if (fabsf(current) < 0.08f && fabsf(target) >= RAMP_START) {
+    return (target > 0.0f) ? RAMP_START : -RAMP_START;
+  }
   float d = target - current;
   bool accel = fabsf(target) > fabsf(current) + 1e-4f;
   float step = accel ? upStep : downStep;
@@ -291,9 +350,18 @@ static void applyMotors(float dt, const long dTicks[4]) {
     return;
   }
 
-  rampX = slewToward(rampX, clampf((float)cmd_vx / 500.0f, -1.0f, 1.0f), RAMP_UP, RAMP_DOWN);
-  rampY = slewToward(rampY, clampf((float)cmd_vy / 500.0f, -1.0f, 1.0f), RAMP_UP, RAMP_DOWN);
-  rampW = slewToward(rampW, clampf((float)cmd_w_mrad / 1500.0f, -1.0f, 1.0f), RAMP_UP, RAMP_DOWN);
+  // Forward/back: smooth ramp. Crab (vy) and tank yaw (w): snap to full immediately.
+  float tgtX = clampf((float)cmd_vx / 500.0f, -1.0f, 1.0f);
+  const float tgtY = clampf((float)cmd_vy / 500.0f, -1.0f, 1.0f);
+  const float tgtW = clampf((float)cmd_w_mrad / 1000.0f, -1.0f, 1.0f);  // stronger yaw
+  // In-place yaw on this heavy mecanum needs a little roll — auto creep when pure tank.
+  const bool pureYawCmd = fabsf(tgtW) > 0.20f && fabsf(tgtX) < 0.08f && fabsf(tgtY) < 0.08f;
+  if (pureYawCmd) {
+    tgtX = 0.28f;  // break static scrub so the chassis can yaw
+  }
+  rampX = slewToward(rampX, tgtX, RAMP_UP, RAMP_DOWN);
+  rampY = tgtY;
+  rampW = tgtW;
 
   if (!rampsActive() && !wheelRampsActive() &&
       abs(cmd_vx) < 30 && abs(cmd_vy) < 30 && abs(cmd_w_mrad) < 80) {
@@ -304,10 +372,21 @@ static void applyMotors(float dt, const long dTicks[4]) {
   }
 
   float target[4];
-  target[0] = rampX - rampY - rampW;   // FL
-  target[1] = rampX + rampY + rampW;   // FR
-  target[2] = rampX + rampY - rampW;   // RL
-  target[3] = rampX - rampY + rampW;   // RR
+  if (fabsf(tgtW) > 0.20f && fabsf(tgtY) < 0.08f) {
+    // Explicit skid-steer tank: left pair vs right pair at full logical thrust.
+    // +w → left reverse / right forward in wheel space (matches SIGN_* forward).
+    const float s = (tgtW > 0.0f) ? 1.0f : -1.0f;
+    target[0] = -s + rampX;  // FL
+    target[1] = +s + rampX;  // FR
+    target[2] = -s + rampX;  // RL
+    target[3] = +s + rampX;  // RR
+  } else {
+    // Strafe / translate mix (textbook mecanum).
+    target[0] = rampX - rampY - rampW;   // FL
+    target[1] = rampX + rampY + rampW;   // FR
+    target[2] = rampX + rampY - rampW;   // RL
+    target[3] = rampX - rampY + rampW;   // RR
+  }
 
   // Preserve mix ratios if a wheel exceeds full scale.
   float m = 0.0f;
@@ -351,13 +430,19 @@ static void applyMotors(float dt, const long dTicks[4]) {
     out[i] = clampf(ff + corr, -1.35f, 1.35f);
   }
 
+  // Pure fwd/back: smooth per-wheel ramp. Crab/tank: snap wheels to max immediately.
+  const bool snapTurn = (fabsf(tgtY) > 0.02f || fabsf(tgtW) > 0.02f);
   for (int i = 0; i < 4; i++) {
-    // Clamp per-wheel command so WSCALE>1 still saturates at full PWM.
     out[i] = clampf(out[i], -1.0f, 1.0f);
-    rampOut[i] = slewToward(rampOut[i], out[i], WHEEL_RAMP_UP, WHEEL_RAMP_DOWN);
+    // Tank: push every driven wheel to full magnitude (don't leave mid PWM).
+    if (snapTurn && fabsf(out[i]) > 0.05f) {
+      out[i] = (out[i] > 0.0f) ? 1.0f : -1.0f;
+    }
+    if (snapTurn) rampOut[i] = out[i];
+    else rampOut[i] = slewToward(rampOut[i], out[i], WHEEL_RAMP_UP, WHEEL_RAMP_DOWN);
   }
 
-  driveOneIdx(0, FL_PWM, FL_IN1, FL_IN2, SIGN_FL, rampOut[0]);
+  driveFL(rampOut[0]);
   driveOneIdx(1, FR_PWM, FR_IN1, FR_IN2, SIGN_FR, rampOut[1]);
   driveRL(rampOut[2]);
   driveOneIdx(3, RR_PWM, RR_IN1, RR_IN2, SIGN_RR, rampOut[3]);
@@ -541,7 +626,8 @@ static void handleLine(char *line) {
     float cmd = (dir > 0) ? 1.0f : -1.0f;
     while ((long)(millis() - until) < 0) {
       pollEncoders();
-      if (idx == 2) driveRL(cmd);
+      if (idx == 0) driveFL(cmd);
+      else if (idx == 2) driveRL(cmd);
       else {
         uint8_t pwms[4] = {FL_PWM, FR_PWM, RL_PWM, RR_PWM};
         uint8_t in1s[4] = {FL_IN1, FR_IN1, RL_IN1, RR_IN1};

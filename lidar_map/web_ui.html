@@ -50,12 +50,12 @@
 <div id="stage">
   <canvas id="c"></canvas>
   <div id="pad" aria-label="пульт">
-    <button type="button" data-cmd="yaw_l" title="танковый поворот влево (Z)">Ｚ</button>
+    <button type="button" data-cmd="yaw_l" title="танк влево (Z)">Ｚ</button>
     <button type="button" data-cmd="fwd" title="вперёд (W)">▲</button>
-    <button type="button" data-cmd="yaw_r" title="танковый поворот вправо (C)">Ｃ</button>
-    <button type="button" data-cmd="strafe_l" title="меканум боком влево (←) — курс держит">◀</button>
+    <button type="button" data-cmd="yaw_r" title="танк вправо (C)">Ｃ</button>
+    <button type="button" data-cmd="yaw_l" title="танк влево (←)">◀</button>
     <button type="button" class="empty" tabindex="-1" aria-hidden="true"></button>
-    <button type="button" data-cmd="strafe_r" title="меканум боком вправо (→) — курс держит">▶</button>
+    <button type="button" data-cmd="yaw_r" title="танк вправо (→)">▶</button>
     <span class="empty"></span>
     <button type="button" data-cmd="back" title="назад (S)">▼</button>
     <span class="empty"></span>
@@ -64,8 +64,8 @@
     <span class="empty"></span>
   </div>
   <div id="legend">
-    <div><b>Режим:</b> пульт → Arduino. Вперёд/назад: <b>одинаковый PWM</b> на все колёса (без PID).</div>
-    <div>W/↑ вперёд · S/↓ назад · ←→ боком (пока не настраиваем) · Z/C поворот · Space стоп</div>
+    <div><b>Режим:</b> ▲▼ плавно · танк ◀▶ чуть едет вперёд + крутит (иначе корпус не разворачивается) · A D краб.</div>
+    <div>W/↑ вперёд · S/↓ назад · ←→ / Z C — танковый поворот · A D — краб боком · Space стоп</div>
     <div>Кликни по странице, потом держи клавиши. Отпустил — стоп.</div>
     <div><b>заново</b> — сброс. <b>заморозить комнату</b> — стены навечно; люди = оранжевые временно.</div>
     <div>Клик по карте = <b>добавить точку маршрута</b> (1-я = главный приоритет, дальше по порядку).</div>
@@ -92,47 +92,65 @@ let mapFrozen = false;
 let missionPts = []; // [{x,y,label}] in visit order — first = highest priority
 const VIEW_MARGIN_CELLS = 3;
 
-const VX = 0.75, VY = 0.60, W = 1.4;
+const VX = 1.0, VY = 0.85, W = 2.2;
+// Small forward creep with tank yaw — in-place scrub can't overcome chassis weight.
+const YAW_CREEP = 0.35;
 const CMDS = {
   fwd:  {vx: VX,  vy: 0,   w: 0},
   back: {vx:-VX,  vy: 0,   w: 0},
-  left: {vx: 0,   vy: 0,   w: W},
-  right:{vx: 0,   vy: 0,   w:-W},
-  strafe_l:{vx: 0, vy: VY,  w: 0},
-  strafe_r:{vx: 0, vy:-VY,  w: 0},
-  yaw_l:{vx: 0,   vy: 0,   w: W},
-  yaw_r:{vx: 0,   vy: 0,   w:-W},
+  left: {vx: 0,   vy: VY,  w: 0},
+  right:{vx: 0,   vy:-VY,  w: 0},
+  yaw_l:{vx: YAW_CREEP, vy: 0, w: W},
+  yaw_r:{vx: YAW_CREEP, vy: 0, w:-W},
   stop: {vx: 0,   vy: 0,   w: 0},
 };
 
 const held = new Set();
 let driveTimer = null;
+let cmdInFlight = false;
+let pendingCmd = null;
 
 let lastCmdErr = '';
+const API = () => (window.location && location.origin ? location.origin : '');
+
 async function postCmd(body) {
+  // Coalesce: never drop the latest hold while a request is in flight.
+  const payload = Object.assign({teleop: true}, body);
+  if (cmdInFlight) {
+    pendingCmd = payload;
+    return;
+  }
+  cmdInFlight = true;
   try {
-    const r = await fetch('/api/cmd', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify(body),
-      cache: 'no-store',
-    });
-    if (!r.ok) {
-      const j = await r.json().catch(() => ({}));
-      lastCmdErr = j.error || ('HTTP ' + r.status);
-      document.getElementById('info').textContent = 'команда отклонена: ' + lastCmdErr;
-    } else {
-      lastCmdErr = '';
-    }
+    do {
+      const sendBody = pendingCmd || payload;
+      pendingCmd = null;
+      const r = await fetch(API() + '/api/cmd', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(sendBody),
+        cache: 'no-store',
+      });
+      if (!r.ok) {
+        const j = await r.json().catch(() => ({}));
+        lastCmdErr = j.error || ('HTTP ' + r.status);
+        document.getElementById('info').textContent = 'команда отклонена: ' + lastCmdErr;
+      } else {
+        lastCmdErr = '';
+      }
+    } while (pendingCmd);
   } catch (e) {
-    lastCmdErr = String(e);
+    lastCmdErr = String(e && e.message ? e.message : e);
     document.getElementById('info').textContent = 'нет связи с /api/cmd';
+  } finally {
+    cmdInFlight = false;
   }
 }
 
 async function postStop() {
+  pendingCmd = null;
   try {
-    await fetch('/api/cmd/stop', {method:'POST', cache:'no-store'});
+    await fetch(API() + '/api/cmd/stop', {method: 'POST', cache: 'no-store'});
   } catch (_) {}
 }
 
@@ -144,7 +162,7 @@ function mergedCmd() {
     vx += c.vx; vy += c.vy; w += c.w;
   }
   const clamp = (v, m) => Math.max(-m, Math.min(m, v));
-  return {vx: clamp(vx, 0.80), vy: clamp(vy, 0.65), w: clamp(w, 1.5)};
+  return {vx: clamp(vx, 1.0), vy: clamp(vy, 0.85), w: clamp(w, 2.2), teleop: true};
 }
 
 function refreshDriveLoop() {
@@ -158,7 +176,7 @@ function refreshDriveLoop() {
   if (!driveTimer) driveTimer = setInterval(send, 80);
 }
 
-function holdStart(name) {
+function holdStart(name, el) {
   if (!CMDS[name]) return;
   if (name === 'stop') {
     held.clear();
@@ -167,16 +185,24 @@ function holdStart(name) {
     return;
   }
   held.add(name);
-  const btn = document.querySelector('#pad button[data-cmd="'+name+'"]');
-  if (btn) btn.classList.add('held');
+  // Highlight only the pressed control (Z and ◀ share yaw_l — don't light the twin).
+  if (el) {
+    el.classList.add('held');
+  } else {
+    const btn = document.querySelector('#pad button[data-cmd="'+name+'"]');
+    if (btn) btn.classList.add('held');
+  }
   refreshDriveLoop();
 }
 
-function holdEnd(name) {
+function holdEnd(name, el) {
   if (!name || name === 'stop') return;
   held.delete(name);
-  const btn = document.querySelector('#pad button[data-cmd="'+name+'"]');
-  if (btn) btn.classList.remove('held');
+  if (el) {
+    el.classList.remove('held');
+  } else if (!held.has(name)) {
+    document.querySelectorAll('#pad button[data-cmd="'+name+'"]').forEach(b => b.classList.remove('held'));
+  }
   refreshDriveLoop();
 }
 
@@ -189,18 +215,32 @@ function allStop() {
 
 document.querySelectorAll('#pad button[data-cmd]').forEach((btn) => {
   const name = btn.getAttribute('data-cmd');
-  const down = (e) => { e.preventDefault(); e.stopPropagation(); try { btn.setPointerCapture(e.pointerId); } catch(_){} holdStart(name); };
-  const up = (e) => { e.preventDefault(); e.stopPropagation(); holdEnd(name); };
-  btn.addEventListener('pointerdown', down);
-  btn.addEventListener('pointerup', up);
-  btn.addEventListener('pointercancel', up);
-  btn.addEventListener('lostpointercapture', up);
-  btn.addEventListener('mousedown', down);
-  btn.addEventListener('mouseup', up);
-  btn.addEventListener('mouseleave', up);
-  btn.addEventListener('touchstart', down, {passive: false});
-  btn.addEventListener('touchend', up, {passive: false});
-  btn.addEventListener('touchcancel', up, {passive: false});
+  // Hold while pressed. No mouseleave — that used to cut drive mid-press.
+  const down = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.pointerId != null) {
+      try { btn.setPointerCapture(e.pointerId); } catch (_) {}
+    }
+    holdStart(name, btn);
+  };
+  const up = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    holdEnd(name, btn);
+  };
+  if (window.PointerEvent) {
+    btn.addEventListener('pointerdown', down);
+    btn.addEventListener('pointerup', up);
+    btn.addEventListener('pointercancel', up);
+    btn.addEventListener('lostpointercapture', up);
+  } else {
+    btn.addEventListener('mousedown', down);
+    btn.addEventListener('mouseup', up);
+    btn.addEventListener('touchstart', down, {passive: false});
+    btn.addEventListener('touchend', up, {passive: false});
+    btn.addEventListener('touchcancel', up, {passive: false});
+  }
 });
 
 window.addEventListener('blur', allStop);
@@ -209,14 +249,12 @@ document.addEventListener('visibilitychange', () => { if (document.hidden) allSt
 const KEY_MAP = {
   KeyW: 'fwd', ArrowUp: 'fwd',
   KeyS: 'back', ArrowDown: 'back',
-  // Arrows / A/D = mecanum strafe (slide, keep heading)
-  KeyA: 'strafe_l', ArrowLeft: 'strafe_l',
-  KeyD: 'strafe_r', ArrowRight: 'strafe_r',
-  // Z/C = tank turn in place
-  KeyZ: 'yaw_l',
-  KeyC: 'yaw_r',
-  KeyQ: 'yaw_l',
-  KeyE: 'yaw_r',
+  // Tank yaw on arrows + Z/C
+  ArrowLeft: 'yaw_l', KeyZ: 'yaw_l',
+  ArrowRight: 'yaw_r', KeyC: 'yaw_r',
+  // Crab only on A/D
+  KeyA: 'left',
+  KeyD: 'right',
   Space: 'stop',
 };
 

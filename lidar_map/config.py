@@ -93,11 +93,11 @@ CSM_REFINE_XY_SPAN = 0.12
 CSM_REFINE_XY_STEP = 0.06
 MIN_REFINE_SCORE = 0.35
 
-CMD_VX_MAX = 0.85
-CMD_VY_MAX = 0.70
-CMD_W_MAX = 1.6
-# Keep teleop alive across Wi‑Fi / browser hiccups (drive_encoders STALE_SEC=0.9).
-CMD_WATCHDOG_SEC = 1.0
+CMD_VX_MAX = 1.0
+CMD_VY_MAX = 0.85
+CMD_W_MAX = 2.2
+# Keep teleop alive across Wi‑Fi / browser hiccups (drive_encoders STALE_SEC=1.5).
+CMD_WATCHDOG_SEC = 1.5
 CMD_FILE = Path("/tmp/robot_cmd.json")
 ODOM_STALE_SEC = 1.0
 

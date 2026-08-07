@@ -4,7 +4,7 @@
   "pidv_ki_x1000": 0,
   "frb_pct": 100,
   "frf_pct": 100,
-  "wheel_scale_pct": [155, 120, 120, 105],
+  "wheel_scale_pct": [200, 200, 200, 200],
   "yaw_kp": 1.4,
   "yaw_deadband_deg": 3.0,
   "trim_w": {
@@ -13,5 +13,5 @@
     "strl": 0.0,
     "strr": 0.0
   },
-  "notes": "2026-08-07: RL pins restored 11/12, SIGN_RL=+1 both dirs; no IN swap."
+  "notes": "LOCAL ONLY — max WSCALE 200. Do not push to GitHub."
 }
