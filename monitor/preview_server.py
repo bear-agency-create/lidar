@@ -4,8 +4,6 @@
 from __future__ import annotations
 
 import json
-import re
-import sqlite3
 import sys
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -15,59 +13,15 @@ from urllib.parse import parse_qs, urlsplit
 ROOT = Path(__file__).resolve().parent
 HOST = "127.0.0.1"
 PORT = 8877
-TICKET_CODE_RE = re.compile(r"^[A-Za-z0-9_-]{1,128}$")
 
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 from map_route import build_route_preview  # noqa: E402
-
-DEMO_TICKETS: dict[str, dict[str, Any]] = {
-    "KZzKQhLbySCrKtkfNh9xSD2Q": {
-        "passengerName": "Ivanov Alexey",
-        "flight": "SU1245",
-        "departureTime": "08:40",
-        "checkIn": "A03",
-        "gate": "12",
-        "destinationId": "check-in-a",
-        "canEscort": False,
-    },
-    "KZnbU6xaJONFbGzCxQ-B6u_w": {
-        "passengerName": "Petrova Maria",
-        "flight": "FZ991",
-        "departureTime": "11:15",
-        "checkIn": "B07",
-        "gate": "18",
-        "destinationId": "check-in-a",
-        "canEscort": False,
-    },
-    "KZwcE-kMAIppgkb-OFjxWuNA": {
-        "passengerName": "Chen Wei",
-        "flight": "CZ3602",
-        "departureTime": "14:05",
-        "checkIn": "C02",
-        "gate": "5",
-        "destinationId": "check-in-a",
-        "canEscort": False,
-    },
-    "KZ6kWBB_W8PPYxZM1cFxarTQ": {
-        "passengerName": "Karimova Aliya",
-        "flight": "U62214",
-        "departureTime": "16:50",
-        "checkIn": "A11",
-        "gate": "9",
-        "destinationId": "check-in-a",
-        "canEscort": False,
-    },
-    "KZaXTLNCGPD9Ynmf9hH_zMHw": {
-        "passengerName": "John Smith",
-        "flight": "TK1470",
-        "departureTime": "19:25",
-        "checkIn": "D01",
-        "gate": "22",
-        "destinationId": "check-in-a",
-        "canEscort": False,
-    },
-}
+from ticket_store import (  # noqa: E402
+    ensure_store,
+    lookup_ticket as store_lookup_ticket,
+    tickets_path,
+)
 
 DEMO_DESTINATIONS = {
     "ok": True,
@@ -83,63 +37,9 @@ DEMO_DESTINATIONS = {
 }
 
 
-def ticket_db_paths() -> list[Path]:
-    return [
-        ROOT / "data" / "airport_tickets.sqlite3",
-        Path.home() / "robot_nav" / "data" / "airport_tickets.sqlite3",
-    ]
-
-
-def normalize_ticket_code(value: Any) -> str:
-    code = str(value or "").strip()
-    return code if TICKET_CODE_RE.fullmatch(code) else ""
-
-
 def lookup_ticket(raw_code: Any) -> dict[str, Any]:
-    code = normalize_ticket_code(raw_code)
-    if not code:
-        return {"ok": False, "error": "empty_ticket_code"}
-
-    for path in ticket_db_paths():
-        if not path.is_file():
-            continue
-        try:
-            with sqlite3.connect(f"file:{path}?mode=ro", uri=True) as db:
-                db.row_factory = sqlite3.Row
-                row = db.execute(
-                    """
-                    SELECT passenger_name, flight, departure_time, check_in,
-                           gate, destination_id, status
-                    FROM tickets
-                    WHERE code = ?
-                    LIMIT 1
-                    """,
-                    (code,),
-                ).fetchone()
-        except sqlite3.Error:
-            continue
-        if row is None:
-            continue
-        status = str(row["status"] or "").lower()
-        if status not in {"valid", "checked-in", "boarding"}:
-            return {"ok": False, "error": "ticket_not_active"}
-        return {
-            "ok": True,
-            "ticket": {
-                "passengerName": str(row["passenger_name"] or ""),
-                "flight": str(row["flight"] or ""),
-                "departureTime": str(row["departure_time"] or ""),
-                "checkIn": str(row["check_in"] or ""),
-                "gate": str(row["gate"] or ""),
-                "destinationId": str(row["destination_id"] or ""),
-                "canEscort": False,
-            },
-        }
-
-    demo = DEMO_TICKETS.get(code)
-    if demo:
-        return {"ok": True, "ticket": dict(demo)}
-    return {"ok": False, "error": "ticket_not_found"}
+    ensure_store(tickets_path())
+    return store_lookup_ticket(raw_code, tickets_path(), mark_scanned=True)
 
 
 class PreviewHandler(SimpleHTTPRequestHandler):
@@ -200,8 +100,10 @@ class PreviewHandler(SimpleHTTPRequestHandler):
 
 
 def main() -> None:
+    store = ensure_store()
     httpd = ThreadingHTTPServer((HOST, PORT), PreviewHandler)
     print(f"Airport kiosk preview: http://{HOST}:{PORT}/", flush=True)
+    print(f"Tickets file: {store}", flush=True)
     print("Ticket lookup + destinations API enabled (no ROS).", flush=True)
     try:
         httpd.serve_forever()

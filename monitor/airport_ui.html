@@ -883,6 +883,7 @@
   <div id="offline" class="offline hidden" data-i18n="offline">No connection to the robot</div>
   </div>
 
+  <script src="vendor/zxing.min.js"></script>
   <script>
     const ICONS = {
       "check-in": '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M7 9h5M7 13h3M16 8v8M14 12h4"/></svg>',
@@ -1059,9 +1060,13 @@
     let idleTimer;
     let cameraStream = null;
     let barcodeDetector = null;
+    let zxingReader = null;
     let scanLoopToken = 0;
+    let scanAccepted = false;
     let ticketLookupInFlight = false;
     let lastRoutePreview = null;
+    let decodeCanvas = null;
+    let decodeCtx = null;
 
     const $ = id => document.getElementById(id);
     const t = key => COPY[lang][key] || COPY.en[key] || key;
@@ -1115,7 +1120,7 @@
       updateEscortWaitUi();
       if ($("scanModal").classList.contains("open") && $("scanCameraStatus")) {
         if ($("scanCamera").classList.contains("is-unavailable")) $("scanCameraStatus").textContent = t("cameraUnavailable");
-        else if (barcodeDetector) $("scanCameraStatus").textContent = t("cameraScanning");
+        else if (barcodeDetector || zxingReader) $("scanCameraStatus").textContent = t("cameraScanning");
         else if (cameraStream) $("scanCameraStatus").textContent = t("cameraNoDecoder");
         else $("scanCameraStatus").textContent = t("cameraStarting");
       }
@@ -1468,13 +1473,14 @@
         deviceIds = devices.filter(d => d.kind === "videoinput").map(d => d.deviceId).filter(Boolean);
       } catch (_) {}
 
+      const hiRes = { width: { ideal: 1280 }, height: { ideal: 720 }, frameRate: { ideal: 30 } };
       const attempts = [];
       for (const deviceId of deviceIds) {
-        attempts.push({ audio: false, video: { deviceId: { exact: deviceId }, width: { ideal: 640 }, height: { ideal: 480 } } });
+        attempts.push({ audio: false, video: { deviceId: { exact: deviceId }, ...hiRes } });
         attempts.push({ audio: false, video: { deviceId: { exact: deviceId } } });
       }
       // USB webcam on the robot is not a phone "environment" camera — avoid facingMode.
-      attempts.push({ audio: false, video: { width: { ideal: 640 }, height: { ideal: 480 } } });
+      attempts.push({ audio: false, video: { ...hiRes } });
       attempts.push({ audio: false, video: true });
 
       let lastError = null;
@@ -1488,6 +1494,94 @@
       throw lastError || new Error("camera_open_failed");
     }
 
+    function createZxingReader() {
+      const Z = window.ZXing;
+      if (!Z?.BrowserMultiFormatReader) return null;
+      try {
+        const hints = new Map();
+        if (Z.DecodeHintType && Z.BarcodeFormat) {
+          hints.set(Z.DecodeHintType.POSSIBLE_FORMATS, [
+            Z.BarcodeFormat.CODE_128,
+            Z.BarcodeFormat.QR_CODE,
+            Z.BarcodeFormat.PDF_417,
+            Z.BarcodeFormat.DATA_MATRIX,
+            Z.BarcodeFormat.CODE_39,
+            Z.BarcodeFormat.EAN_13,
+            Z.BarcodeFormat.EAN_8,
+            Z.BarcodeFormat.AZTEC,
+            Z.BarcodeFormat.UPC_A,
+            Z.BarcodeFormat.UPC_E,
+          ]);
+          hints.set(Z.DecodeHintType.TRY_HARDER, true);
+        }
+        return new Z.BrowserMultiFormatReader(hints, 80);
+      } catch (_) {
+        try { return new Z.BrowserMultiFormatReader(undefined, 80); } catch (err) { return null; }
+      }
+    }
+
+    function grabScanFrame(video) {
+      const vw = video.videoWidth;
+      const vh = video.videoHeight;
+      if (!vw || !vh) return null;
+      if (!decodeCanvas) {
+        decodeCanvas = document.createElement("canvas");
+        decodeCtx = decodeCanvas.getContext("2d", { willReadFrequently: true });
+      }
+      const cw = Math.max(160, Math.floor(vw * 0.78));
+      const ch = Math.max(120, Math.floor(vh * 0.58));
+      const sx = Math.floor((vw - cw) / 2);
+      const sy = Math.floor((vh - ch) / 2);
+      decodeCanvas.width = cw;
+      decodeCanvas.height = ch;
+      decodeCtx.drawImage(video, sx, sy, cw, ch, 0, 0, cw, ch);
+      return decodeCanvas;
+    }
+
+    async function detectBarcodeValues(video) {
+      const found = [];
+      if (barcodeDetector) {
+        try {
+          const frame = grabScanFrame(video);
+          const codes = await barcodeDetector.detect(frame || video);
+          for (const item of codes || []) {
+            if (item?.rawValue) found.push(String(item.rawValue));
+          }
+        } catch (_) {}
+      }
+      return found;
+    }
+
+    async function acceptScannedCode(raw) {
+      if (scanAccepted || ticketLookupInFlight) return false;
+      const code = normalizeTicketCode(raw);
+      if (!code) return false;
+      scanAccepted = true;
+      scanLoopToken += 1;
+      try { zxingReader?.stopContinuousDecode?.(); } catch (_) {}
+      try { zxingReader?.stopAsyncDecode?.(); } catch (_) {}
+      $("ticketCode").value = code;
+      $("scanCameraStatus").textContent = t("cameraScanning");
+      $("scanError").textContent = "";
+      const ok = await lookupTicket(code);
+      if (!ok) {
+        scanAccepted = false;
+        if ($("scanModal").classList.contains("open")) {
+          runBarcodeLoop();
+          if (zxingReader && typeof zxingReader.decodeFromVideoElementContinuously === "function" && $("scanVideo").srcObject) {
+            try {
+              zxingReader.decodeFromVideoElementContinuously($("scanVideo"), (result) => {
+                if (!result || scanAccepted) return;
+                const text = typeof result.getText === "function" ? result.getText() : result.text;
+                if (text) acceptScannedCode(text);
+              });
+            } catch (_) {}
+          }
+        }
+      }
+      return ok;
+    }
+
     async function startCameraScan() {
       const camera = $("scanCamera");
       const video = $("scanVideo");
@@ -1495,14 +1589,17 @@
       camera.classList.remove("is-unavailable", "hidden");
       status.textContent = t("cameraStarting");
       barcodeDetector = null;
+      zxingReader = null;
+      scanAccepted = false;
       try {
         cameraStream = await openCameraStream();
         video.srcObject = cameraStream;
         video.setAttribute("playsinline", "");
         video.muted = true;
         await video.play();
+
         if ("BarcodeDetector" in window) {
-          let formats = ["qr_code", "pdf417", "code_128", "code_39", "ean_13", "ean_8", "upc_a", "upc_e", "aztec", "data_matrix"];
+          let formats = ["code_128", "qr_code", "pdf417", "code_39", "ean_13", "ean_8", "upc_a", "upc_e", "aztec", "data_matrix"];
           try {
             if (typeof BarcodeDetector.getSupportedFormats === "function") {
               const supported = await BarcodeDetector.getSupportedFormats();
@@ -1511,11 +1608,29 @@
               }
             }
           } catch (_) {}
-          barcodeDetector = formats.length ? new BarcodeDetector({ formats }) : new BarcodeDetector();
-          status.textContent = t("cameraScanning");
-          runBarcodeLoop();
-        } else {
+          try {
+            barcodeDetector = formats.length ? new BarcodeDetector({ formats }) : new BarcodeDetector();
+          } catch (_) {
+            barcodeDetector = null;
+          }
+        }
+
+        zxingReader = createZxingReader();
+        if (!barcodeDetector && !zxingReader) {
           status.textContent = t("cameraNoDecoder");
+          return;
+        }
+
+        status.textContent = t("cameraScanning");
+        runBarcodeLoop();
+        if (zxingReader && typeof zxingReader.decodeFromVideoElementContinuously === "function") {
+          try {
+            zxingReader.decodeFromVideoElementContinuously(video, (result) => {
+              if (!result || scanAccepted) return;
+              const text = typeof result.getText === "function" ? result.getText() : result.text;
+              if (text) acceptScannedCode(text);
+            });
+          } catch (_) {}
         }
       } catch (err) {
         console.warn("camera unavailable", err);
@@ -1536,34 +1651,36 @@
 
     function stopCameraScan() {
       scanLoopToken += 1;
+      scanAccepted = true;
       barcodeDetector = null;
+      try { zxingReader?.stopContinuousDecode?.(); } catch (_) {}
+      try { zxingReader?.stopAsyncDecode?.(); } catch (_) {}
+      try { zxingReader?.reset?.(); } catch (_) {}
+      zxingReader = null;
       stopCameraTracks();
     }
 
     async function runBarcodeLoop() {
       const token = ++scanLoopToken;
       const video = $("scanVideo");
-      while (token === scanLoopToken && $("scanModal").classList.contains("open")) {
-        if (!ticketLookupInFlight && barcodeDetector && video.readyState >= 2) {
+      while (token === scanLoopToken && $("scanModal").classList.contains("open") && !scanAccepted) {
+        if (!ticketLookupInFlight && video.readyState >= 2) {
           try {
-            const codes = await barcodeDetector.detect(video);
-            if (codes?.length) {
-              const code = normalizeTicketCode(codes[0].rawValue);
-              if (code) {
-                $("ticketCode").value = code;
-                await lookupTicket(code);
-                return;
-              }
+            const codes = await detectBarcodeValues(video);
+            if (codes.length) {
+              await acceptScannedCode(codes[0]);
+              return;
             }
           } catch (_) {}
         }
-        await new Promise(resolve => setTimeout(resolve, 240));
+        await new Promise(resolve => setTimeout(resolve, 70));
       }
     }
 
     function openScan() {
       scanReturnFocus = document.activeElement;
       ticketLookupInFlight = false;
+      scanAccepted = false;
       $("scanModal").classList.add("open");
       document.querySelector(".shell").inert = true;
       $("scanError").textContent = "";
@@ -1576,6 +1693,7 @@
     function closeScan(restoreFocus = true) {
       stopCameraScan();
       ticketLookupInFlight = false;
+      scanAccepted = false;
       $("scanModal").classList.remove("open");
       document.querySelector(".shell").inert = false;
       if (restoreFocus && scanReturnFocus && scanReturnFocus.isConnected) scanReturnFocus.focus();
@@ -1623,9 +1741,9 @@
       if (!normalized) {
         $("scanError").textContent = t("notFound");
         $("ticketCode").focus();
-        return;
+        return false;
       }
-      if (ticketLookupInFlight) return;
+      if (ticketLookupInFlight) return false;
       ticketLookupInFlight = true;
       $("ticketCode").value = normalized;
       try {
@@ -1638,25 +1756,27 @@
         try { result = JSON.parse(raw); } catch (_) { result = null; }
         if (result && result.ok && result.ticket) {
           applyTicketSuccess(result.ticket);
-          return;
+          return true;
         }
         if (result && !result.ok) {
           const key = result.error === "ticket_database_unavailable" ? "databaseUnavailable" : result.error === "ticket_not_active" ? "invalidTicket" : "notFound";
           // Если робот-API недоступен по БД — всё равно пробуем демо-коды для превью
-          if (result.error === "ticket_database_unavailable" && lookupDemoTicket(normalized)) return;
+          if (result.error === "ticket_database_unavailable" && lookupDemoTicket(normalized)) return true;
           $("scanError").textContent = t(key);
           $("ticketCode").select();
           ticketLookupInFlight = false;
-          return;
+          return false;
         }
         // Статический preview (нет /api) — демо-билеты
-        if (lookupDemoTicket(normalized)) return;
+        if (lookupDemoTicket(normalized)) return true;
         $("scanError").textContent = t("databaseUnavailable");
         ticketLookupInFlight = false;
+        return false;
       } catch (_) {
-        if (lookupDemoTicket(normalized)) return;
+        if (lookupDemoTicket(normalized)) return true;
         $("scanError").textContent = t("databaseUnavailable");
         ticketLookupInFlight = false;
+        return false;
       }
     }
 

@@ -1,0 +1,65 @@
+{
+  "updatedAt": "2026-08-08T07:19:05+00:00",
+  "tickets": [
+    {
+      "code": "KZzKQhLbySCrKtkfNh9xSD2Q",
+      "passengerName": "Ivanov Alexey",
+      "flight": "SU1245",
+      "departureTime": "08:40",
+      "checkIn": "A03",
+      "gate": "12",
+      "destinationId": "check-in",
+      "status": "valid",
+      "updatedAt": "2026-08-08T07:15:49+00:00",
+      "lastScannedAt": null
+    },
+    {
+      "code": "KZnbU6xaJONFbGzCxQ-B6u_w",
+      "passengerName": "Petrova Maria",
+      "flight": "FZ991",
+      "departureTime": "11:15",
+      "checkIn": "B07",
+      "gate": "18",
+      "destinationId": "check-in",
+      "status": "valid",
+      "updatedAt": "2026-08-08T07:15:49+00:00",
+      "lastScannedAt": null
+    },
+    {
+      "code": "KZwcE-kMAIppgkb-OFjxWuNA",
+      "passengerName": "Chen Wei",
+      "flight": "CZ3602",
+      "departureTime": "14:05",
+      "checkIn": "C02",
+      "gate": "5",
+      "destinationId": "check-in",
+      "status": "checked-in",
+      "updatedAt": "2026-08-08T07:15:49+00:00",
+      "lastScannedAt": null
+    },
+    {
+      "code": "KZ6kWBB_W8PPYxZM1cFxarTQ",
+      "passengerName": "Karimova Aliya",
+      "flight": "U62214",
+      "departureTime": "16:50",
+      "checkIn": "A11",
+      "gate": "9",
+      "destinationId": "check-in",
+      "status": "boarding",
+      "updatedAt": "2026-08-08T07:15:49+00:00",
+      "lastScannedAt": null
+    },
+    {
+      "code": "KZaXTLNCGPD9Ynmf9hH_zMHw",
+      "passengerName": "John Smith",
+      "flight": "TK1470",
+      "departureTime": "19:25",
+      "checkIn": "D01",
+      "gate": "22",
+      "destinationId": "check-in",
+      "status": "valid",
+      "updatedAt": "2026-08-08T07:15:49+00:00",
+      "lastScannedAt": null
+    }
+  ]
+}

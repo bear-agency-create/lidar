@@ -78,26 +78,36 @@ Supported `kind` values are `check-in`, `gates`, `baggage`, `toilet`,
 
 ## Ticket database
 
-The default read-only SQLite database is:
+Tickets are stored in a JSON file:
 
-`~/robot_nav/data/airport_tickets.sqlite3`
+`monitor/data/tickets.json`
 
-Override it with `AIRPORT_TICKETS_DB_PATH`. The integration expects:
+Edit them via the admin panel:
 
-```sql
-CREATE TABLE tickets (
-    code TEXT PRIMARY KEY,
-    passenger_name TEXT,
-    flight TEXT,
-    departure_time TEXT,
-    check_in TEXT,
-    gate TEXT,
-    destination_id TEXT,
-    status TEXT
-);
+```bash
+cd admin_panel
+./start.sh
 ```
 
-`destination_id` must match a calibrated destination. Accepted ticket statuses
-are `valid`, `checked-in`, and `boarding`. The browser receives flight details,
+Open `http://127.0.0.1:8878/` (password from `ADMIN_PASSWORD`, default `admin`).
+The kiosk preview reads the same file on `/api/ticket/lookup`.
+
+Each ticket:
+
+```json
+{
+  "code": "KZzKQhLbySCrKtkfNh9xSD2Q",
+  "passengerName": "Ivanov Alexey",
+  "flight": "SU1245",
+  "departureTime": "08:40",
+  "checkIn": "A03",
+  "gate": "12",
+  "destinationId": "check-in",
+  "status": "valid"
+}
+```
+
+`destination_id` / `destinationId` should match a calibrated destination when escort is enabled.
+Accepted ticket statuses are `valid`, `checked-in`, and `boarding`. The browser receives flight details,
 but never receives map coordinates.
 

@@ -1,12 +1,12 @@
 from __future__ import annotations
 
 import json
-import sqlite3
 import tempfile
 import unittest
 from pathlib import Path
 
 from airport_service import AirportService
+from ticket_store import upsert_ticket
 
 
 class AirportServiceTest(unittest.TestCase):
@@ -14,7 +14,7 @@ class AirportServiceTest(unittest.TestCase):
         self.temp_dir = tempfile.TemporaryDirectory()
         root = Path(self.temp_dir.name)
         self.destinations_path = root / "destinations.json"
-        self.database_path = root / "tickets.sqlite3"
+        self.database_path = root / "tickets.json"
         self.buttons_path = root / "primary_buttons.json"
         self.buttons_path.write_text(
             json.dumps(
@@ -61,25 +61,19 @@ class AirportServiceTest(unittest.TestCase):
         )
 
     def create_ticket_database(self, status: str = "valid") -> None:
-        with sqlite3.connect(self.database_path) as db:
-            db.execute(
-                """
-                CREATE TABLE tickets (
-                    code TEXT PRIMARY KEY,
-                    passenger_name TEXT,
-                    flight TEXT,
-                    departure_time TEXT,
-                    check_in TEXT,
-                    gate TEXT,
-                    destination_id TEXT,
-                    status TEXT
-                )
-                """
-            )
-            db.execute(
-                "INSERT INTO tickets VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-                ("ABC-123", "A. Passenger", "SU100", "10:30", "A12", "4", "check-in-a", status),
-            )
+        upsert_ticket(
+            {
+                "code": "ABC-123",
+                "passengerName": "A. Passenger",
+                "flight": "SU100",
+                "departureTime": "10:30",
+                "checkIn": "A12",
+                "gate": "4",
+                "destinationId": "check-in-a",
+                "status": status,
+            },
+            self.database_path,
+        )
 
     def test_unconfigured_destinations_are_not_escorted(self) -> None:
         result = self.service.public_destinations()
@@ -141,4 +135,3 @@ class AirportServiceTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-

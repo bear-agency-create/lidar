@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Админка билетов</title>
+  <script src="vendor/JsBarcode.all.min.js"></script>
+  <style>
+    :root {
+      --bg: #f3f6fa;
+      --card: #ffffff;
+      --ink: #142033;
+      --muted: #5b6b7c;
+      --line: #d7e0ea;
+      --accent: #0b6bcb;
+      --danger: #c62828;
+      --ok: #1b7f4a;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font: 15px/1.45 "Segoe UI", system-ui, sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at top left, #dcecff 0, transparent 40%),
+        linear-gradient(180deg, #eef3f8, var(--bg));
+      min-height: 100vh;
+    }
+    .wrap { width: min(1100px, calc(100% - 32px)); margin: 24px auto 48px; }
+    h1 { margin: 0 0 6px; font-size: 28px; }
+    .sub { margin: 0 0 18px; color: var(--muted); }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 18px;
+      box-shadow: 0 10px 30px rgba(20, 32, 51, 0.06);
+    }
+    .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+    .grow { flex: 1 1 180px; }
+    label { display: block; font-size: 12px; font-weight: 700; color: var(--muted); margin-bottom: 4px; }
+    input, select, button, textarea {
+      font: inherit;
+      border-radius: 10px;
+      border: 1px solid var(--line);
+      padding: 10px 12px;
+      background: #fff;
+      color: var(--ink);
+    }
+    input, select, textarea { width: 100%; }
+    button {
+      cursor: pointer;
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+      font-weight: 700;
+    }
+    button.secondary { background: #fff; color: var(--ink); border-color: var(--line); }
+    button.danger { background: var(--danger); border-color: var(--danger); }
+    button:disabled { opacity: .55; cursor: not-allowed; }
+    .hidden { display: none !important; }
+    .error { color: var(--danger); min-height: 1.2em; margin-top: 8px; font-weight: 650; }
+    .ok { color: var(--ok); min-height: 1.2em; margin-top: 8px; font-weight: 650; }
+    .grid {
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 16px;
+      margin-top: 16px;
+    }
+    @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { text-align: left; padding: 10px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+    th { font-size: 12px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); }
+    tr:hover td { background: #f7fbff; }
+    .code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; word-break: break-all; }
+    .meta { color: var(--muted); font-size: 12px; }
+    .barcode-box {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      padding: 12px;
+      border: 1px dashed var(--line);
+      border-radius: 12px;
+      background: #fafcfe;
+      min-height: 160px;
+      justify-content: center;
+    }
+    .barcode-box svg { max-width: 100%; height: auto; background: #fff; padding: 8px; }
+    .toolbar { justify-content: space-between; margin-bottom: 12px; }
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    @media (max-width: 640px) { .form-grid { grid-template-columns: 1fr; } }
+    .span2 { grid-column: 1 / -1; }
+    .login-wrap { max-width: 420px; margin: 12vh auto; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <section id="loginView" class="card login-wrap">
+      <h1>Админка билетов</h1>
+      <p class="sub">Пароль из ADMIN_PASSWORD (по умолчанию admin)</p>
+      <form id="loginForm">
+        <label for="password">Пароль</label>
+        <input id="password" type="password" autocomplete="current-password" required />
+        <div class="row" style="margin-top:12px">
+          <button type="submit" class="grow">Войти</button>
+        </div>
+        <div id="loginError" class="error"></div>
+      </form>
+    </section>
+
+    <section id="appView" class="hidden">
+      <div class="row toolbar">
+        <div>
+          <h1>Билеты</h1>
+          <p id="storePath" class="sub">Файл tickets.json</p>
+        </div>
+        <div class="row">
+          <button type="button" id="refreshBtn" class="secondary">Обновить</button>
+          <button type="button" id="logoutBtn" class="secondary">Выйти</button>
+        </div>
+      </div>
+
+      <div class="grid">
+        <div class="card">
+          <div class="row" style="justify-content:space-between;margin-bottom:10px">
+            <strong id="formTitle">Новый билет</strong>
+            <button type="button" id="resetFormBtn" class="secondary">Очистить</button>
+          </div>
+          <form id="ticketForm">
+            <div class="form-grid">
+              <div class="span2">
+                <label for="code">Код штрихкода</label>
+                <div class="row">
+                  <input id="code" class="grow" required pattern="[A-Za-z0-9_-]{1,128}" />
+                  <button type="button" id="genCodeBtn" class="secondary">Сгенерировать</button>
+                </div>
+              </div>
+              <div>
+                <label for="passengerName">Пассажир</label>
+                <input id="passengerName" required />
+              </div>
+              <div>
+                <label for="flight">Рейс</label>
+                <input id="flight" required />
+              </div>
+              <div>
+                <label for="departureTime">Вылет</label>
+                <input id="departureTime" placeholder="08:40" />
+              </div>
+              <div>
+                <label for="checkIn">Регистрация</label>
+                <input id="checkIn" placeholder="A03" />
+              </div>
+              <div>
+                <label for="gate">Выход</label>
+                <input id="gate" placeholder="12" />
+              </div>
+              <div>
+                <label for="destinationId">destinationId</label>
+                <input id="destinationId" value="check-in" />
+              </div>
+              <div class="span2">
+                <label for="status">Статус</label>
+                <select id="status">
+                  <option value="valid">valid</option>
+                  <option value="checked-in">checked-in</option>
+                  <option value="boarding">boarding</option>
+                  <option value="cancelled">cancelled</option>
+                  <option value="used">used</option>
+                </select>
+              </div>
+            </div>
+            <div class="row" style="margin-top:12px">
+              <button type="submit" id="saveBtn">Сохранить в файл</button>
+              <button type="button" id="printBtn" class="secondary">Скачать штрихкод PNG</button>
+            </div>
+            <div id="formMsg" class="ok"></div>
+            <div id="formError" class="error"></div>
+          </form>
+        </div>
+
+        <div class="card">
+          <strong>Штрихкод Code 128</strong>
+          <p class="meta">Распечатай или покажи камере киоска — код должен совпасть с полем выше.</p>
+          <div class="barcode-box">
+            <svg id="barcode"></svg>
+            <div id="barcodeHint" class="meta">Введи или сгенерируй код</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:16px">
+        <strong>Все билеты</strong>
+        <div style="overflow:auto;margin-top:10px">
+          <table>
+            <thead>
+              <tr>
+                <th>Код</th>
+                <th>Пассажир / рейс</th>
+                <th>Статус</th>
+                <th>Обновлён / скан</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="ticketRows"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+    let editingCode = null;
+
+    async function api(method, path, body) {
+      const options = { method, credentials: "same-origin", cache: "no-store", headers: {} };
+      if (body !== undefined) {
+        options.headers["Content-Type"] = "application/json";
+        options.body = JSON.stringify(body);
+      }
+      const response = await fetch(path, options);
+      const text = await response.text();
+      let data = null;
+      try { data = JSON.parse(text); } catch (_) { data = null; }
+      return { response, data };
+    }
+
+    function showLogin() {
+      $("loginView").classList.remove("hidden");
+      $("appView").classList.add("hidden");
+    }
+
+    function showApp() {
+      $("loginView").classList.add("hidden");
+      $("appView").classList.remove("hidden");
+    }
+
+    function renderBarcode(code) {
+      const svg = $("barcode");
+      const hint = $("barcodeHint");
+      svg.innerHTML = "";
+      if (!code || !/^[A-Za-z0-9_-]{1,128}$/.test(code)) {
+        hint.textContent = "Введи или сгенерируй код";
+        return;
+      }
+      try {
+        JsBarcode(svg, code, {
+          format: "CODE128",
+          displayValue: true,
+          fontSize: 14,
+          height: 84,
+          margin: 8,
+          background: "#ffffff",
+        });
+        hint.textContent = code;
+      } catch (err) {
+        hint.textContent = "Не удалось построить штрихкод";
+      }
+    }
+
+    function fillForm(ticket) {
+      editingCode = ticket?.code || null;
+      $("formTitle").textContent = ticket ? "Изменить билет" : "Новый билет";
+      $("code").value = ticket?.code || "";
+      $("code").readOnly = Boolean(ticket);
+      $("passengerName").value = ticket?.passengerName || "";
+      $("flight").value = ticket?.flight || "";
+      $("departureTime").value = ticket?.departureTime || "";
+      $("checkIn").value = ticket?.checkIn || "";
+      $("gate").value = ticket?.gate || "";
+      $("destinationId").value = ticket?.destinationId || "check-in";
+      $("status").value = ticket?.status || "valid";
+      $("formMsg").textContent = "";
+      $("formError").textContent = "";
+      renderBarcode($("code").value.trim());
+    }
+
+    function resetForm() {
+      fillForm(null);
+      $("code").readOnly = false;
+    }
+
+    function renderRows(tickets) {
+      const body = $("ticketRows");
+      body.innerHTML = "";
+      if (!tickets.length) {
+        body.innerHTML = '<tr><td colspan="5" class="meta">Пока нет билетов</td></tr>';
+        return;
+      }
+      for (const ticket of tickets) {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td class="code">${escapeHtml(ticket.code)}</td>
+          <td>
+            <div><strong>${escapeHtml(ticket.passengerName || "—")}</strong></div>
+            <div class="meta">${escapeHtml(ticket.flight || "—")} · выход ${escapeHtml(ticket.gate || "—")} · стойка ${escapeHtml(ticket.checkIn || "—")}</div>
+          </td>
+          <td>${escapeHtml(ticket.status || "")}</td>
+          <td class="meta">
+            <div>${escapeHtml(ticket.updatedAt || "—")}</div>
+            <div>скан: ${escapeHtml(ticket.lastScannedAt || "—")}</div>
+          </td>
+          <td>
+            <div class="row">
+              <button type="button" class="secondary edit-btn">Изменить</button>
+              <button type="button" class="danger delete-btn">Удалить</button>
+            </div>
+          </td>
+        `;
+        tr.querySelector(".edit-btn").onclick = () => fillForm(ticket);
+        tr.querySelector(".delete-btn").onclick = async () => {
+          if (!confirm(`Удалить билет ${ticket.code}?`)) return;
+          const { response, data } = await api("DELETE", `/api/tickets/${encodeURIComponent(ticket.code)}`);
+          if (!response.ok || !data?.ok) {
+            alert(data?.error || "Не удалось удалить");
+            return;
+          }
+          if (editingCode === ticket.code) resetForm();
+          await loadTickets();
+        };
+        body.appendChild(tr);
+      }
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;");
+    }
+
+    async function loadTickets() {
+      const { response, data } = await api("GET", "/api/tickets");
+      if (response.status === 401) {
+        showLogin();
+        return;
+      }
+      if (!response.ok || !data?.ok) {
+        $("formError").textContent = data?.error || "Не удалось загрузить билеты";
+        return;
+      }
+      if (data.path) $("storePath").textContent = `Файл: ${data.path}`;
+      renderRows(data.tickets || []);
+    }
+
+    async function bootstrap() {
+      const { data } = await api("GET", "/api/session");
+      if (data?.authenticated) {
+        showApp();
+        resetForm();
+        await loadTickets();
+      } else {
+        showLogin();
+      }
+    }
+
+    $("loginForm").addEventListener("submit", async (event) => {
+      event.preventDefault();
+      $("loginError").textContent = "";
+      const { response, data } = await api("POST", "/api/login", { password: $("password").value });
+      if (!response.ok || !data?.ok) {
+        $("loginError").textContent = "Неверный пароль";
+        return;
+      }
+      $("password").value = "";
+      showApp();
+      resetForm();
+      await loadTickets();
+    });
+
+    $("logoutBtn").onclick = async () => {
+      await api("POST", "/api/logout", {});
+      showLogin();
+    };
+
+    $("refreshBtn").onclick = () => loadTickets();
+    $("resetFormBtn").onclick = () => resetForm();
+
+    $("genCodeBtn").onclick = async () => {
+      if ($("code").readOnly) return;
+      const { response, data } = await api("GET", "/api/tickets/new-code");
+      if (!response.ok || !data?.ok) {
+        $("formError").textContent = "Не удалось сгенерировать код";
+        return;
+      }
+      $("code").value = data.code;
+      renderBarcode(data.code);
+    };
+
+    $("code").addEventListener("input", () => renderBarcode($("code").value.trim()));
+
+    $("ticketForm").addEventListener("submit", async (event) => {
+      event.preventDefault();
+      $("formMsg").textContent = "";
+      $("formError").textContent = "";
+      const payload = {
+        code: $("code").value.trim(),
+        passengerName: $("passengerName").value.trim(),
+        flight: $("flight").value.trim(),
+        departureTime: $("departureTime").value.trim(),
+        checkIn: $("checkIn").value.trim(),
+        gate: $("gate").value.trim(),
+        destinationId: $("destinationId").value.trim() || "check-in",
+        status: $("status").value,
+      };
+      const { response, data } = await api("POST", "/api/tickets", payload);
+      if (!response.ok || !data?.ok) {
+        $("formError").textContent = data?.error || "Не удалось сохранить";
+        return;
+      }
+      $("formMsg").textContent = data.created ? "Билет добавлен" : "Билет обновлён";
+      editingCode = data.ticket.code;
+      $("code").readOnly = true;
+      $("formTitle").textContent = "Изменить билет";
+      renderBarcode(data.ticket.code);
+      await loadTickets();
+    });
+
+    $("printBtn").onclick = () => {
+      const code = $("code").value.trim();
+      if (!code) return;
+      const canvas = document.createElement("canvas");
+      try {
+        JsBarcode(canvas, code, {
+          format: "CODE128",
+          displayValue: true,
+          fontSize: 18,
+          height: 120,
+          margin: 16,
+          background: "#ffffff",
+        });
+      } catch (_) {
+        $("formError").textContent = "Не удалось построить PNG";
+        return;
+      }
+      const link = document.createElement("a");
+      link.download = `ticket-${code}.png`;
+      link.href = canvas.toDataURL("image/png");
+      link.click();
+    };
+
+    bootstrap();
+  </script>
+</body>
+</html>

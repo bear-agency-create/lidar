@@ -1,5 +1,6 @@
 Sample ticket barcode codes
 Use Code 128 (alphanumeric). Exact string, no spaces.
+Source of truth: monitor/data/tickets.json (edit via admin_panel).
 
 1. KZzKQhLbySCrKtkfNh9xSD2Q
    Ivanov Alexey | SU1245 | dep 08:40 | desk A03 | gate 12 | valid

@@ -56,8 +56,18 @@ python3 preview_server.py
 
 `preview_server.py` поднимает не только UI, но и API:
 - `/api/map/preview` для карты регистрации,
-- `/api/ticket/lookup` для билетов,
+- `/api/ticket/lookup` для билетов из `data/tickets.json`,
 - `/api/airport/*` для статуса/кнопок.
+
+Админка билетов (добавить / изменить / удалить + Code 128):
+
+```bash
+cd admin_panel
+./start.sh
+```
+
+Открыть: `http://127.0.0.1:8878/` (пароль `ADMIN_PASSWORD`, по умолчанию `admin`).
+Билеты пишутся в тот же файл `monitor/data/tickets.json`.
 
 Карта регистрации берётся из:
 1. `monitor/data/remembered_occupancy.json` (локальный приоритет),

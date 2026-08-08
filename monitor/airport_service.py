@@ -5,10 +5,12 @@ from __future__ import annotations
 import json
 import math
 import re
-import sqlite3
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
+
+from ticket_store import lookup_ticket as store_lookup_ticket
+from ticket_store import normalize_ticket_code as store_normalize_ticket_code
 
 
 PRIMARY_KINDS: tuple[str, ...] = (
@@ -48,7 +50,7 @@ class Destination:
 
 
 class AirportService:
-    """Loads calibrated waypoints and resolves scanned tickets from SQLite."""
+    """Loads calibrated waypoints and resolves scanned tickets from tickets.json."""
 
     def __init__(
         self,
@@ -183,10 +185,7 @@ class AirportService:
 
     @staticmethod
     def normalize_ticket_code(value: Any) -> str:
-        code = str(value or "").strip()
-        if not re.fullmatch(r"[A-Za-z0-9_-]{1,128}", code):
-            return ""
-        return code
+        return store_normalize_ticket_code(value)
 
     def lookup_ticket(self, raw_code: Any) -> dict[str, Any]:
         code = self.normalize_ticket_code(raw_code)
@@ -195,35 +194,11 @@ class AirportService:
         if not self.tickets_db_path.exists():
             return {"ok": False, "error": "ticket_database_unavailable"}
 
-        try:
-            with sqlite3.connect(f"file:{self.tickets_db_path}?mode=ro", uri=True) as db:
-                db.row_factory = sqlite3.Row
-                row = db.execute(
-                    """
-                    SELECT code, passenger_name, flight, departure_time, check_in,
-                           gate, destination_id, status
-                    FROM tickets
-                    WHERE code = ?
-                    LIMIT 1
-                    """,
-                    (code,),
-                ).fetchone()
-        except sqlite3.Error:
-            return {"ok": False, "error": "ticket_database_unavailable"}
+        result = store_lookup_ticket(code, self.tickets_db_path, mark_scanned=True)
+        if not result.get("ok"):
+            return result
 
-        if row is None:
-            return {"ok": False, "error": "ticket_not_found"}
-        if str(row["status"] or "").lower() not in {"valid", "checked-in", "boarding"}:
-            return {"ok": False, "error": "ticket_not_active"}
-
-        destination = self.get_destination(str(row["destination_id"] or ""))
-        ticket = {
-            "passengerName": str(row["passenger_name"] or ""),
-            "flight": str(row["flight"] or ""),
-            "departureTime": str(row["departure_time"] or ""),
-            "checkIn": str(row["check_in"] or ""),
-            "gate": str(row["gate"] or ""),
-            "destinationId": str(row["destination_id"] or ""),
-            "canEscort": destination is not None,
-        }
+        ticket = dict(result["ticket"])
+        destination = self.get_destination(str(ticket.get("destinationId") or ""))
+        ticket["canEscort"] = destination is not None
         return {"ok": True, "ticket": ticket}
