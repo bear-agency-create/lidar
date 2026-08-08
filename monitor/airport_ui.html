@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
   <meta name="theme-color" content="#071c33">
   <meta http-equiv="Permissions-Policy" content="camera=(self), microphone=()">
-  <title>Airport guide</title>
+  <title>AirPorter</title>
   <style>
     :root {
       --navy: #071c33;
@@ -65,20 +65,25 @@
       transition: transform 1.25s cubic-bezier(.6,0,.25,1), opacity 1s ease;
     }
     .attract-content {
-      position: absolute; left: 50%; bottom: 11%; width: min(560px, 76vw);
+      position: absolute; left: 50%; bottom: 8%; width: min(720px, 88vw);
       transform: translateX(-50%); text-align: center;
+      color: #fff;
       transition: opacity .42s ease, transform .65s ease;
     }
     .attract-logo {
-      display: block; width: min(560px, 78vw); max-height: 200px; margin: 0 auto 28px;
-      object-fit: contain; filter: drop-shadow(0 8px 25px rgba(0,48,88,.26));
+      display: block; width: min(560px, 82vw); max-height: 420px; margin: 0 auto 22px;
+      object-fit: contain;
+      image-rendering: -webkit-optimize-contrast;
+      filter: drop-shadow(0 10px 28px rgba(0,30,60,.45));
     }
     .attract-start {
-      display: inline-flex; align-items: center; gap: 13px; padding: 13px 22px;
-      border: 1px solid rgba(255,255,255,.58); border-radius: 999px;
+      display: inline-flex; align-items: center; gap: 13px; padding: 14px 24px;
+      border: 1px solid rgba(255,255,255,.72); border-radius: 999px;
       background: rgba(5,66,109,.42);
-      font-size: 20px; font-weight: 850; letter-spacing: .01em;
+      color: #fff;
+      font-size: 22px; font-weight: 850; letter-spacing: .01em;
       box-shadow: 0 12px 32px rgba(0,54,95,.16);
+      text-shadow: 0 1px 2px rgba(0,40,70,.35);
     }
     .attract-start::before {
       content: ""; width: 10px; height: 10px; border-radius: 50%; background: white;
@@ -114,8 +119,8 @@
       background: var(--navy);
       box-shadow: 0 4px 22px rgba(3, 20, 38, .24);
     }
-    .brand { display: flex; align-items: center; min-width: 0; flex: 1; }
-    .brand img { width: min(280px, 32vw); height: 78px; object-fit: contain; object-position: left center; }
+    .brand { display: flex; align-items: center; min-width: 0; flex: 1; gap: 12px; }
+    .brand img { width: min(220px, 28vw); height: 72px; object-fit: contain; object-position: left center; }
     .languages { display: flex; gap: 7px; }
     .language {
       min-width: 82px; height: 48px; padding: 0 13px;
@@ -649,7 +654,7 @@
     <img class="attract-cloud left" src="assets/kazan-clouds-left.png" alt="">
     <img class="attract-cloud right" src="assets/kazan-clouds-right.png" alt="">
     <div class="attract-content">
-      <img class="attract-logo" src="assets/kazan-airport-logo-white.png" alt="Kazan International Airport">
+      <img class="attract-logo" src="assets/airporter-logo-white.png" alt="AirPorter">
       <div class="attract-start" data-i18n="touchToStart">Коснитесь экрана, чтобы начать</div>
     </div>
     <img class="attract-plane" src="assets/realistic-airliner-balanced.png" alt="">
@@ -657,8 +662,8 @@
   </div>
   <div class="shell">
     <header>
-      <div class="brand" aria-label="Kazan International Airport">
-        <img src="assets/kazan-airport-logo-white.png" alt="Kazan International Airport">
+      <div class="brand" aria-label="AirPorter">
+        <img src="assets/airporter-logo-white.png" alt="AirPorter">
       </div>
       <nav class="languages" aria-label="Language" data-i18n-aria="languageLabel">
         <button class="language active" data-lang="ru" lang="ru">Русский</button>
@@ -903,7 +908,7 @@
     };
     const COPY = {
       ru: {
-        brand:"Аэропорт",brandSub:"Робот-помощник пассажира",services:"Сервисы аэропорта",where:"Куда вам нужно?",languageLabel:"Выбор языка",ticketBarcode:"Штрихкод билета",touchToStart:"Коснитесь экрана, чтобы начать",
+        brand:"AirPorter",brandSub:"Робот-помощник пассажира",services:"Сервисы аэропорта",where:"Куда вам нужно?",languageLabel:"Выбор языка",ticketBarcode:"Штрихкод билета",touchToStart:"Коснитесь экрана, чтобы начать",
         welcomeEyebrow:"Добро пожаловать в аэропорт",welcomeTitle:"Помогу найти нужное место",welcomeLead:"Выберите место слева или отсканируйте билет. Я покажу информацию и могу проводить вас.",
         artTitle:"Отсюда — до нужного места",artLead:"Робот построит безопасный маршрут и объедет препятствия.",scanTicket:"Сканировать билет",
         location:"Расположение",howToFind:"Как найти",routeUnavailable:"Маршрут сопровождения временно недоступен. Обратитесь на стойку информации.",
@@ -936,7 +941,7 @@
         placeHints:{"restaurants":"Фуд-корты и заведения","souvenirs":"Магазины подарков","toilet":"Санузлы поблизости","cafe":"Кофе и лёгкие перекусы","pharmacy":"Лекарства и гигиена"}
       },
       en: {
-        brand:"Airport",brandSub:"Passenger assistance robot",services:"Airport services",where:"Where do you need to go?",languageLabel:"Language selection",ticketBarcode:"Ticket barcode",touchToStart:"Touch the screen to begin",
+        brand:"AirPorter",brandSub:"Passenger assistance robot",services:"Airport services",where:"Where do you need to go?",languageLabel:"Language selection",ticketBarcode:"Ticket barcode",touchToStart:"Touch the screen to begin",
         welcomeEyebrow:"Welcome to the airport",welcomeTitle:"I’ll help you find your way",welcomeLead:"Choose a place on the left or scan your ticket. I can show the information and escort you there.",
         artTitle:"From here to your destination",artLead:"The robot builds a safe route and avoids obstacles along the way.",scanTicket:"Scan ticket",
         location:"Location",howToFind:"How to find it",routeUnavailable:"Escort route is temporarily unavailable. Please use the information desk.",
@@ -969,7 +974,7 @@
         placeHints:{"restaurants":"Food courts and dining","souvenirs":"Gift shops","toilet":"Nearby facilities","cafe":"Coffee and light snacks","pharmacy":"Medicine and essentials"}
       },
       zh: {
-        brand:"机场向导",brandSub:"旅客服务机器人",services:"机场服务",where:"您要去哪里？",languageLabel:"语言选择",ticketBarcode:"机票条码",touchToStart:"触摸屏幕开始",
+        brand:"AirPorter",brandSub:"旅客服务机器人",services:"机场服务",where:"您要去哪里？",languageLabel:"语言选择",ticketBarcode:"机票条码",touchToStart:"触摸屏幕开始",
         welcomeEyebrow:"欢迎来到机场",welcomeTitle:"我来帮您找到目的地",welcomeLead:"请在左侧选择地点或扫描机票。我会显示信息，也可以带您前往。",
         artTitle:"从这里到您的目的地",artLead:"机器人将规划安全路线并避开障碍物。",scanTicket:"扫描机票",
         location:"位置",howToFind:"如何到达",routeUnavailable:"引导路线暂时不可用，请前往问讯处。",
@@ -1002,7 +1007,7 @@
         placeHints:{"restaurants":"美食广场与餐饮","souvenirs":"礼品店","toilet":"附近设施","cafe":"咖啡与轻食","pharmacy":"药品与日用品"}
       },
       tt: {
-        brand:"Аэропорт",brandSub:"Юлчыларга ярдәмче робот",services:"Аэропорт хезмәтләре",where:"Сезгә кая барырга?",languageLabel:"Тел сайлау",ticketBarcode:"Билет штрихкоды",touchToStart:"Башлау өчен экранга кагылыгыз",
+        brand:"AirPorter",brandSub:"Юлчыларга ярдәмче робот",services:"Аэропорт хезмәтләре",where:"Сезгә кая барырга?",languageLabel:"Тел сайлау",ticketBarcode:"Билет штрихкоды",touchToStart:"Башлау өчен экранга кагылыгыз",
         welcomeEyebrow:"Аэропортка рәхим итегез",welcomeTitle:"Кирәкле урынны табарга булышам",welcomeLead:"Сул яктагы урынны сайлагыз яки билетны сканерлагыз. Мин мәгълүмат күрсәтәм һәм озата алам.",
         artTitle:"Моннан — кирәкле урынга",artLead:"Робот куркынычсыз юл төзи һәм киртәләрне урап үтә.",scanTicket:"Билетны сканерлау",
         location:"Урнашу",howToFind:"Ничек табарга",routeUnavailable:"Озату маршруты вакытлыча эшләми. Мәгълүмат өстәленә мөрәҗәгать итегез.",

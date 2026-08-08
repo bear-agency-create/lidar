@@ -49,6 +49,8 @@ _AIRPORT_ASSETS = {
     "/assets/realistic-airliner-balanced.png": AIRPORT_UI_PATH.parent / "assets" / "realistic-airliner-balanced.png",
     "/assets/realistic-airliner-clean.png": AIRPORT_UI_PATH.parent / "assets" / "realistic-airliner-clean.png",
     "/assets/kazan-airport-logo-white.png": AIRPORT_UI_PATH.parent / "assets" / "kazan-airport-logo-white.png",
+    "/assets/airporter-logo.png": AIRPORT_UI_PATH.parent / "assets" / "airporter-logo.png",
+    "/assets/airporter-logo-white.png": AIRPORT_UI_PATH.parent / "assets" / "airporter-logo-white.png",
 }
 
 
