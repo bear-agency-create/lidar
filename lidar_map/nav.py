@@ -133,8 +133,9 @@ def pursuit_cmd(
     look = path[min(i + 1, len(path) - 1)]
     lx, ly = look[0], look[1]
     speed = NAV_V
-    if dist < 0.45:
-        speed *= max(0.55, dist / 0.45)
+    # Only ease in the last ~20 cm before a waypoint — keep cruise at full power.
+    if dist < 0.20:
+        speed *= max(0.70, dist / 0.20)
     ux = (lx - x) / max(1e-3, math.hypot(lx - x, ly - y))
     uy = (ly - y) / max(1e-3, math.hypot(lx - x, ly - y))
     if i > 0:

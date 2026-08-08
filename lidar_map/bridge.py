@@ -22,6 +22,8 @@ from config import (
     LOG_PATH,
     MAP_PATH,
     MAP_RES,
+    MIN_MATCH_SCORE,
+    MIN_REFINE_SCORE,
     NAV_ROBOT_R,
     ODOM_QOS,
     ODOM_STALE_SEC,
@@ -34,7 +36,7 @@ from config import (
     TEMP_TTL_SEC,
 )
 from drive import DriveCommander
-from geometry import clamp, transform_local, wrap_angle, yaw_from_quat
+from geometry import clamp, filter_self_hits_world, transform_local, wrap_angle, yaw_from_quat
 from lidar import hits_to_world, local_from_scan
 from logutil import get_logger
 from mission import mission_public, normalize_waypoints
@@ -75,6 +77,7 @@ class ScanBridge(Node):
         self._last_scan_t = 0.0
         self._map_bootstrap_scans = 120
         self._scan_count = 0
+        self._self_wipe_done = False
         self.omap = OccupancyMap()
 
         self._cmd_pub = self.create_publisher(Twist, "/cmd_vel", 10)
@@ -168,27 +171,27 @@ class ScanBridge(Node):
             lx = float(self._pose["x"])
             ly = float(self._pose["y"])
             lyaw = float(self._pose["yaw"])
-            pose_ok = bool(self._pose.get("ok"))
             cmd_vx, cmd_vy, cmd_w = self.drive.get()
             prev = None if self._prev_world is None else self._prev_world.copy()
             last_t = float(self._last_scan_t)
 
         now = time.time()
         dt = 0.1 if last_t <= 0 else clamp(now - last_t, 0.02, 0.35)
-        c0, s0 = math.cos(lyaw), math.sin(lyaw)
-        pred_x = lx + (c0 * cmd_vx - s0 * cmd_vy) * dt
-        pred_y = ly + (s0 * cmd_vx + c0 * cmd_vy) * dt
-        pred_yaw = wrap_angle(lyaw + cmd_w * dt)
-        if pose_ok:
-            x, y, yaw = pred_x, pred_y, pred_yaw
-        elif odom_ok:
+        # Prefer Mega /odom as motion prior. cmd_vel is UI units (not m/s) —
+        # only use it as a short gap-fill when odom is stale.
+        if odom_ok:
             x, y, yaw = ox, oy, oyaw
         else:
-            x, y, yaw = lx, ly, lyaw
+            c0, s0 = math.cos(lyaw), math.sin(lyaw)
+            x = lx + (c0 * cmd_vx - s0 * cmd_vy) * dt
+            y = ly + (s0 * cmd_vx + c0 * cmd_vy) * dt
+            yaw = wrap_angle(lyaw + cmd_w * dt)
 
         score = 0.0
         mapping_ok = False
+        match_ok = False
         map_pts = self.omap.occupied_xy()
+        map_empty = map_pts.shape[0] < 40
         with self._lock:
             bootstrap = self._map_bootstrap_scans > 0
             if bootstrap:
@@ -212,8 +215,9 @@ class ScanBridge(Node):
                         yaw_span=math.radians(40.0), yaw_step=math.radians(3.0),
                         xy_span=0.40, xy_step=0.10,
                     )
-                    if score >= 0.16:
+                    if score >= MIN_MATCH_SCORE:
                         x, y, yaw = nx, ny, nyaw
+                        match_ok = True
                         mapping_ok = True
                 else:
                     nx, ny, nyaw, score = correlative_search(
@@ -221,14 +225,16 @@ class ScanBridge(Node):
                         yaw_span=CSM_REFINE_YAW_SPAN, yaw_step=CSM_REFINE_YAW_STEP,
                         xy_span=CSM_REFINE_XY_SPAN, xy_step=CSM_REFINE_XY_STEP,
                     )
-                    if score >= 0.18:
+                    if score >= MIN_REFINE_SCORE:
                         x, y, yaw = nx, ny, nyaw
-                    mapping_ok = True
+                        match_ok = True
+                    # Young maps: integrate only on decent score or while seeding.
+                    mapping_ok = score >= MIN_MATCH_SCORE or map_empty
             else:
                 mapping_ok = True
                 score = 1.0
         else:
-            mapping_ok = young or map_pts.shape[0] < 20
+            mapping_ok = map_pts.shape[0] < 20
 
         world = (
             transform_local(local, x, y, yaw)
@@ -236,20 +242,30 @@ class ScanBridge(Node):
             else np.zeros((0, 2))
         )
         hits, points = hits_to_world(map_hits_local, x, y, yaw)
+        hits = filter_self_hits_world(hits, x, y, yaw)
         if not points and world.shape[0]:
             for wx, wy in world:
                 points.append({"x": float(wx), "y": float(wy), "r": 0.0})
 
         with self._lock:
             frozen = self._map_frozen
+            need_self_wipe = not self._self_wipe_done
         if hits and mapping_ok:
             if frozen:
                 self._update_temp_from_hits(hits)
             else:
                 self.omap.integrate(x, y, hits)
+        # One-shot: erase self-hits under the deck + posts (not a 0.58 m disk).
+        if need_self_wipe and mapping_ok:
+            wiped = self.omap.clear_robot_footprint(x, y, yaw)
+            with self._lock:
+                self._self_wipe_done = True
+            if wiped:
+                log.info("cleared %s self-map cells under robot footprint", wiped)
 
+        pose_ok = bool(odom_ok or match_ok)
         with self._lock:
-            self._pose = {"x": x, "y": y, "yaw": yaw, "ok": True}
+            self._pose = {"x": x, "y": y, "yaw": yaw, "ok": pose_ok}
             self._prev_world = world if world.shape[0] else self._prev_world
             self._points = points
             self._stamp = time.time()
@@ -667,6 +683,15 @@ class ScanBridge(Node):
                 base["error"] = "лидар молчит — проверь USB / перезапуск драйвера"
             return base
 
+    def scan_health(self) -> dict[str, Any]:
+        """Return LiDAR freshness without serializing the full occupancy map."""
+        with self._lock:
+            ready = bool(self._ok)
+            stamp = float(self._stamp)
+        age = time.time() - stamp if stamp > 0.0 else float("inf")
+        stale = (not ready) or age > 2.0
+        return {"ok": not stale, "stale": stale, "age": age if stamp > 0.0 else None}
+
     def clear_map(self) -> dict[str, Any]:
         with self._lock:
             if self._odom_ok and (time.time() - self._odom_stamp) <= ODOM_STALE_SEC:
@@ -694,6 +719,7 @@ class ScanBridge(Node):
             self._mission_status = "cancelled"
             self._map_bootstrap_scans = 120
             self._last_scan_t = 0.0
+            self._self_wipe_done = False
         self.omap.recentre(x, y)
         self.omap.save(MAP_PATH)
         self.get_logger().info("Карта сброшена — запись стен снова включена")

@@ -1,0 +1,3755 @@
+[
+  {
+    "name": "AirPorter Speech (EN, polished).docx",
+    "exists": true,
+    "paragraphs": 57,
+    "tables": 0,
+    "sections": 1,
+    "styles": [
+      [
+        "Normal",
+        1
+      ],
+      [
+        "Header",
+        1
+      ],
+      [
+        "Footer",
+        1
+      ],
+      [
+        "Heading 1",
+        1
+      ],
+      [
+        "Heading 2",
+        1
+      ],
+      [
+        "Heading 3",
+        1
+      ],
+      [
+        "Heading 4",
+        1
+      ],
+      [
+        "Heading 5",
+        1
+      ],
+      [
+        "Heading 6",
+        1
+      ],
+      [
+        "Heading 7",
+        1
+      ],
+      [
+        "Heading 8",
+        1
+      ],
+      [
+        "Heading 9",
+        1
+      ],
+      [
+        "No Spacing",
+        1
+      ],
+      [
+        "Title",
+        1
+      ],
+      [
+        "Subtitle",
+        1
+      ],
+      [
+        "List Paragraph",
+        1
+      ],
+      [
+        "Body Text",
+        1
+      ],
+      [
+        "Body Text 2",
+        1
+      ],
+      [
+        "Body Text 3",
+        1
+      ],
+      [
+        "List",
+        1
+      ]
+    ],
+    "paragraph_data": [
+      {
+        "i": 0,
+        "style": "Title",
+        "text": "AirPorter — presentation speech",
+        "alignment": 1,
+        "runs": [
+          [
+            "AirPorter — presentation speech",
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "i": 1,
+        "style": "Heading 1",
+        "text": "Slide 1. Introduction to the project",
+        "alignment": null,
+        "runs": [
+          [
+            "Slide 1. Introduction to the project",
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "i": 2,
+        "style": "Normal",
+        "text": "AirPorter — a mobile robot assistant for the airport",
+        "alignment": null,
+        "runs": [
+          [
+            "AirPorter — a mobile robot assistant for the airport",
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "i": 3,
+        "style": "Normal",
+        "text": "Good afternoon! We present the AirPorter project — a mobile robot assistant for the airport.",
+        "alignment": null,
+        "runs": [
+          [
+            "Good afternoon! We present the AirPorter project — a mobile robot assistant for the airport.",
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "i": 4,
+        "style": "Normal",
+        "text": "The goal of the project is to make passengers’ time at the airport more comfortable. The robot helps people find their way around the terminal, escorts them to the right location, and can carry luggage — reducing physical strain and stress, especially for first-time visitors.",
+        "alignment": null,
+        "runs": [
+          [
+            "The goal of the project is to make passengers’ time at the airport more comfortable. The robot helps people find their way around the terminal, escorts them to the right location, and can carry luggage — reducing physical strain and stress, especially for first-time visitors.",
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "i": 5,
+        "style": "Heading 1",
+        "text": "Slide 2. The problem",
+        "alignment": null,
+        "runs": [
+          [
+            "Slide 2. The problem",
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "i": 6,
+        "style": "Normal",
+        "text": "A modern airport is a complex system with a large amount of information, services, and zones. For many passengers — especially international travelers or those who fly rarely — finding one’s way is a serious challenge.",
+        "alignment": null,
+        "runs": [
+          [
+            "A modern airport is a complex system with a large amount of information, services, and zones. For many passengers — especially international travelers or those who fly rarely — finding one’s way is a serious challenge.",
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "i": 7,
+        "style": "Normal",
+        "text": "We identified three main difficulties:",
+        "alignment": null,
+        "runs": [
+          [
+            "We identified three main difficulties:",
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "i": 8,
+        "style": "Normal",
+        "text": "• physical strain when carrying luggage;",
+        "alignment": null,
+        "runs": [
+          [
+            "• physical strain when carrying luggage;",
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "i": 9,
+        "style": "Normal",
+        "text": "• complex navigation inside the terminal;",
+        "alignment": null,
+        "runs": [
+          [
+            "• complex navigation inside the terminal;",
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "i": 10,
+        "style": "Normal",
+        "text": "• the language barrier when obtaining information.",
+        "alignment": null,
+        "runs": [
+          [
+            "• the language barrier when obtaining information.",
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "i": 11,
+        "style": "Normal",
+        "text": "These problems formed the foundation of our project.",
+        "alignment": null,
+        "runs": [
+          [
+            "These problems formed the foundation of our project.",
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "i": 12,
+        "style": "Heading 1",
+        "text": "Slide 3. The solution",
+        "alignment": null,
+        "runs": [
+          [
+            "Slide 3. The solution",
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "i": 13,
+        "style": "Normal",
+        "text": "We propose a robot assistant that helps a passenger travel from a starting point to a destination according to their needs.",
+        "alignment": null,
+        "runs": [
+          [
+            "We propose a robot assistant that helps a passenger travel from a starting point to a destination according to their needs.",
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "i": 14,
+        "style": "Normal",
+        "text": "The system works in several stages.",
+        "alignment": null,
+        "runs": [
+          [
+            "The system works in several stages.",
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "i": 15,
+        "style": "Normal",
+        "text": "Stage one — ticket scanning. The robot receives key information about the passenger and their flight.",
+        "alignment": null,
+        "runs": [
+          [
+            "Stage one — ticket scanning. The robot receives key information about the passenger and their flight.",
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "i": 16,
+        "style": "Normal",
+        "text": "Stage two — displaying information. The screen shows the flight number, boarding time, gate, and available services.",
+        "alignment": null,
+        "runs": [
+          [
+            "Stage two — displaying information. The screen shows the flight number, boarding time, gate, and available services.",
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "i": 17,
+        "style": "Normal",
+        "text": "Then three operating scenarios are possible.",
+        "alignment": null,
+        "runs": [
+          [
+            "Then three operating scenarios are possible.",
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "i": 18,
+        "style": "Normal",
+        "text": "Scenario one. The passenger only needs information. The robot shows the route and required data, and the session ends.",
+        "alignment": null,
+        "runs": [
+          [
+            "Scenario one. The passenger only needs information. The robot shows the route and required data, and the session ends.",
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "i": 19,
+        "style": "Normal",
+        "text": "Scenario two. The passenger needs escorting. The robot suggests a route via selected points: check-in, restrooms, Duty Free, café, or the boarding gate. After the route is chosen, the robot escorts the passenger.",
+        "alignment": null,
+        "runs": [
+          [
+            "Scenario two. The passenger needs escorting. The robot suggests a route via selected points: check-in, restrooms, Duty Free, café, or the boarding gate. After the route is chosen, the robot escorts the passenger.",
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "i": 20,
+        "style": "Normal",
+        "text": "Scenario three. The passenger needs help only with luggage transport. The robot takes the bags and goes through all baggage-screening stages; the passenger only needs to complete personal security screening and board the aircraft.",
+        "alignment": null,
+        "runs": [
+          [
+            "Scenario three. The passenger needs help only with luggage transport. The robot takes the bags and goes through all baggage-screening stages; the passenger only needs to complete personal security screening and board the aircraft.",
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "i": 21,
+        "style": "Normal",
+        "text": "In the second and third scenarios the robot can handle luggage. If full escorting is not required, it can also serve as a temporary place to store belongings.",
+        "alignment": null,
+        "runs": [
+          [
+            "In the second and third scenarios the robot can handle luggage. If full escorting is not required, it can also serve as a temporary place to store belongings.",
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "i": 22,
+        "style": "Heading 1",
+        "text": "Slide 4. Hardware platform",
+        "alignment": null,
+        "runs": [
+          [
+            "Slide 4. Hardware platform",
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "i": 23,
+        "style": "Normal",
+        "text": "To implement the project, we built the first working prototype.",
+        "alignment": null,
+        "runs": [
+          [
+            "To implement the project, we built the first working prototype.",
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "i": 24,
+        "style": "Normal",
+        "text": "The main computing module is a Raspberry Pi 5 (16 GB). It runs ROS 2 Jazzy, processes lidar and camera data, and handles high-level logic.",
+        "alignment": null,
+        "runs": [
+          [
+            "The main computing module is a Raspberry Pi 5 (16 GB). It runs ROS 2 Jazzy, processes lidar and camera data, and handles high-level logic.",
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "i": 25,
+        "style": "Normal",
+        "text": "Motor control is performed by an Arduino Mega 2560, which processes encoder signals and drives the platform.",
+        "alignment": null,
+        "runs": [
+          [
+            "Motor control is performed by an Arduino Mega 2560, which processes encoder signals and drives the platform.",
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "i": 26,
+        "style": "Normal",
+        "text": "We use L298N drivers, JGB37-520 motors, Mecanum wheels, a 10.1\" touchscreen, a camera, and a COIN D6 lidar.",
+        "alignment": null,
+        "runs": [
+          [
+            "We use L298N drivers, JGB37-520 motors, Mecanum wheels, a 10.1\" touchscreen, a camera, and a COIN D6 lidar.",
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "i": 27,
+        "style": "Heading 1",
+        "text": "Slide 5. Navigation",
+        "alignment": null,
+        "runs": [
+          [
+            "Slide 5. Navigation",
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "i": 28,
+        "style": "Normal",
+        "text": "We implemented indoor mapping with lidar. The robot estimates its pose, accounts for its footprint and encoder data, builds a route, and avoids obstacles. It supports waypoint travel and operator supervision.",
+        "alignment": null,
+        "runs": [
+          [
+            "We implemented indoor mapping with lidar. The robot estimates its pose, accounts for its footprint and encoder data, builds a route, and avoids obstacles. It supports waypoint travel and operator supervision.",
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "i": 29,
+        "style": "Heading 1",
+        "text": "Slide 6. Interface",
+        "alignment": null,
+        "runs": [
+          [
+            "Slide 6. Interface",
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "i": 30,
+        "style": "Normal",
+        "text": "The home screen presents the main airport services: check-in, boarding, baggage claim, the information desk, and other terminal points.",
+        "alignment": null,
+        "runs": [
+          [
+            "The home screen presents the main airport services: check-in, boarding, baggage claim, the information desk, and other terminal points.",
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "i": 31,
+        "style": "Normal",
+        "text": "Russian, English, and Tatar are supported. The interface follows an airport visual theme and is designed to be simple for passengers.",
+        "alignment": null,
+        "runs": [
+          [
+            "Russian, English, and Tatar are supported. The interface follows an airport visual theme and is designed to be simple for passengers.",
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "i": 32,
+        "style": "Heading 1",
+        "text": "Slide 7. Safety",
+        "alignment": null,
+        "runs": [
+          [
+            "Slide 7. Safety",
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "i": 33,
+        "style": "Normal",
+        "text": "We implemented automatic stop on loss of connection, route monitoring, obstacle recognition, a protective acrylic body, low ground clearance, and status lighting.",
+        "alignment": null,
+        "runs": [
+          [
+            "We implemented automatic stop on loss of connection, route monitoring, obstacle recognition, a protective acrylic body, low ground clearance, and status lighting.",
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "i": 34,
+        "style": "Heading 1",
+        "text": "Slide 8. First prototype",
+        "alignment": null,
+        "runs": [
+          [
+            "Slide 8. First prototype",
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "i": 35,
+        "style": "Normal",
+        "text": "Today we present our team’s first prototype: an interactive on-screen menu, waypoint travel, spatial orientation, and the ability to carry a load.",
+        "alignment": null,
+        "runs": [
+          [
+            "Today we present our team’s first prototype: an interactive on-screen menu, waypoint travel, spatial orientation, and the ability to carry a load.",
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "i": 36,
+        "style": "Heading 1",
+        "text": "Slide 9. Expert feedback",
+        "alignment": null,
+        "runs": [
+          [
+            "Slide 9. Expert feedback",
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "i": 37,
+        "style": "Normal",
+        "text": "The project was presented to aviation-industry experts and received positive feedback. Airport representatives expressed interest in further testing.",
+        "alignment": null,
+        "runs": [
+          [
+            "The project was presented to aviation-industry experts and received positive feedback. Airport representatives expressed interest in further testing.",
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "i": 38,
+        "style": "Heading 1",
+        "text": "Slide 10. Economics",
+        "alignment": null,
+        "runs": [
+          [
+            "Slide 10. Economics",
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "i": 39,
+        "style": "Normal",
+        "text": "The current prototype costs about 90,000 rubles. The modular design allows upgrades without fully replacing the hardware.",
+        "alignment": null,
+        "runs": [
+          [
+            "The current prototype costs about 90,000 rubles. The modular design allows upgrades without fully replacing the hardware.",
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "i": 40,
+        "style": "Heading 1",
+        "text": "Slide 11. Future plans",
+        "alignment": null,
+        "runs": [
+          [
+            "Slide 11. Future plans",
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "i": 41,
+        "style": "Normal",
+        "text": "Our plans are large and ambitious: substantial and exciting work on the project still lies ahead.",
+        "alignment": null,
+        "runs": [
+          [
+            "Our plans are large and ambitious: substantial and exciting work on the project still lies ahead.",
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "i": 42,
+        "style": "Normal",
+        "text": "First, we will reinforce the structure with metal profiles to increase payload capacity and impact resistance.",
+        "alignment": null,
+        "runs": [
+          [
+            "First, we will reinforce the structure with metal profiles to increase payload capacity and impact resistance.",
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "i": 43,
+        "style": "Normal",
+        "text": "The wheelbase will also change: we plan industrial metal Mecanum wheels.",
+        "alignment": null,
+        "runs": [
+          [
+            "The wheelbase will also change: we plan industrial metal Mecanum wheels.",
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "i": 44,
+        "style": "Normal",
+        "text": "Safety and appearance remain important — with the move to metal we will add more protective and cosmetic body details.",
+        "alignment": null,
+        "runs": [
+          [
+            "Safety and appearance remain important — with the move to metal we will add more protective and cosmetic body details.",
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "i": 45,
+        "style": "Normal",
+        "text": "On the electronics side, we plan a gradual shift to industrial-grade components to reach real airport trials sooner.",
+        "alignment": null,
+        "runs": [
+          [
+            "On the electronics side, we plan a gradual shift to industrial-grade components to reach real airport trials sooner.",
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "i": 46,
+        "style": "Normal",
+        "text": "In navigation, a key goal is stronger sensing, including a 360° industrial camera and additional modules.",
+        "alignment": null,
+        "runs": [
+          [
+            "In navigation, a key goal is stronger sensing, including a 360° industrial camera and additional modules.",
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "i": 47,
+        "style": "Normal",
+        "text": "We will also develop convenient interfaces for passengers and for the development team.",
+        "alignment": null,
+        "runs": [
+          [
+            "We will also develop convenient interfaces for passengers and for the development team.",
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "i": 48,
+        "style": "Normal",
+        "text": "For users — an app showing where the robot is, what stage of service it is in, and baggage alerts when needed.",
+        "alignment": null,
+        "runs": [
+          [
+            "For users — an app showing where the robot is, what stage of service it is in, and baggage alerts when needed.",
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "i": 49,
+        "style": "Normal",
+        "text": "For developers — a fleet dashboard with system health, occupancy, and possible faults.",
+        "alignment": null,
+        "runs": [
+          [
+            "For developers — a fleet dashboard with system health, occupancy, and possible faults.",
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "i": 50,
+        "style": "Normal",
+        "text": "This will let the team pinpoint issues, fix them remotely, or send a robot to a specialized hub for repair.",
+        "alignment": null,
+        "runs": [
+          [
+            "This will let the team pinpoint issues, fix them remotely, or send a robot to a specialized hub for repair.",
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "i": 51,
+        "style": "Normal",
+        "text": "The hub will be a charging station and holding area for robots awaiting service, from which they can be taken to the workshop for repair and cleaning.",
+        "alignment": null,
+        "runs": [
+          [
+            "The hub will be a charging station and holding area for robots awaiting service, from which they can be taken to the workshop for repair and cleaning.",
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "i": 52,
+        "style": "Normal",
+        "text": "We also plan heating and cooling for drinks in the existing cup holder.",
+        "alignment": null,
+        "runs": [
+          [
+            "We also plan heating and cooling for drinks in the existing cup holder.",
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "i": 53,
+        "style": "Normal",
+        "text": "The final stage is testing the system in real airport scenarios.",
+        "alignment": null,
+        "runs": [
+          [
+            "The final stage is testing the system in real airport scenarios.",
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "i": 54,
+        "style": "Heading 1",
+        "text": "Slide 13. Closing",
+        "alignment": null,
+        "runs": [
+          [
+            "Slide 13. Closing",
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "i": 55,
+        "style": "Normal",
+        "text": "Thank you for your attention!",
+        "alignment": null,
+        "runs": [
+          [
+            "Thank you for your attention!",
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "i": 56,
+        "style": "Normal",
+        "text": "The AirPorter Team",
+        "alignment": null,
+        "runs": [
+          [
+            "The AirPorter Team",
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        ]
+      }
+    ]
+  },
+  {
+    "name": "AirPorter Выступление (RU, правленый).docx",
+    "exists": true,
+    "paragraphs": 57,
+    "tables": 0,
+    "sections": 1,
+    "styles": [
+      [
+        "Normal",
+        1
+      ],
+      [
+        "Header",
+        1
+      ],
+      [
+        "Footer",
+        1
+      ],
+      [
+        "Heading 1",
+        1
+      ],
+      [
+        "Heading 2",
+        1
+      ],
+      [
+        "Heading 3",
+        1
+      ],
+      [
+        "Heading 4",
+        1
+      ],
+      [
+        "Heading 5",
+        1
+      ],
+      [
+        "Heading 6",
+        1
+      ],
+      [
+        "Heading 7",
+        1
+      ],
+      [
+        "Heading 8",
+        1
+      ],
+      [
+        "Heading 9",
+        1
+      ],
+      [
+        "No Spacing",
+        1
+      ],
+      [
+        "Title",
+        1
+      ],
+      [
+        "Subtitle",
+        1
+      ],
+      [
+        "List Paragraph",
+        1
+      ],
+      [
+        "Body Text",
+        1
+      ],
+      [
+        "Body Text 2",
+        1
+      ],
+      [
+        "Body Text 3",
+        1
+      ],
+      [
+        "List",
+        1
+      ]
+    ],
+    "paragraph_data": [
+      {
+        "i": 0,
+        "style": "Title",
+        "text": "AirPorter — текст выступления",
+        "alignment": 1,
+        "runs": [
+          [
+            "AirPorter — текст выступления",
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "i": 1,
+        "style": "Heading 1",
+        "text": "Слайд 1. Знакомство с проектом",
+        "alignment": null,
+        "runs": [
+          [
+            "Слайд 1. Знакомство с проектом",
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "i": 2,
+        "style": "Normal",
+        "text": "AirPorter — мобильный робот-ассистент для аэропорта",
+        "alignment": null,
+        "runs": [
+          [
+            "AirPorter — мобильный робот-ассистент для аэропорта",
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "i": 3,
+        "style": "Normal",
+        "text": "Добрый день! Мы представляем проект AirPorter — мобильного робота-ассистента для аэропорта.",
+        "alignment": null,
+        "runs": [
+          [
+            "Добрый день! Мы представляем проект AirPorter — мобильного робота-ассистента для аэропорта.",
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "i": 4,
+        "style": "Normal",
+        "text": "Цель проекта — сделать пребывание пассажиров в аэропорту более комфортным. Робот помогает ориентироваться в терминале, сопровождает до нужной точки и может перевозить багаж, снижая физическую нагрузку и стресс — особенно для тех, кто оказался в аэропорту впервые.",
+        "alignment": null,
+        "runs": [
+          [
+            "Цель проекта — сделать пребывание пассажиров в аэропорту более комфортным. Робот помогает ориентироваться в терминале, сопровождает до нужной точки и может перевозить багаж, снижая физическую нагрузку и стресс — особенно для тех, кто оказался в аэропорту впервые.",
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "i": 5,
+        "style": "Heading 1",
+        "text": "Слайд 2. Проблема",
+        "alignment": null,
+        "runs": [
+          [
+            "Слайд 2. Проблема",
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "i": 6,
+        "style": "Normal",
+        "text": "Современный аэропорт — сложная система с большим объёмом информации, сервисов и зон. Для многих пассажиров, особенно иностранных или редко летающих, ориентирование становится серьёзной проблемой.",
+        "alignment": null,
+        "runs": [
+          [
+            "Современный аэропорт — сложная система с большим объёмом информации, сервисов и зон. Для многих пассажиров, особенно иностранных или редко летающих, ориентирование становится серьёзной проблемой.",
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "i": 7,
+        "style": "Normal",
+        "text": "Мы выделили три основные сложности:",
+        "alignment": null,
+        "runs": [
+          [
+            "Мы выделили три основные сложности:",
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "i": 8,
+        "style": "Normal",
+        "text": "• физическая нагрузка при перевозке багажа;",
+        "alignment": null,
+        "runs": [
+          [
+            "• физическая нагрузка при перевозке багажа;",
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "i": 9,
+        "style": "Normal",
+        "text": "• сложная навигация внутри терминала;",
+        "alignment": null,
+        "runs": [
+          [
+            "• сложная навигация внутри терминала;",
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "i": 10,
+        "style": "Normal",
+        "text": "• языковой барьер при получении информации.",
+        "alignment": null,
+        "runs": [
+          [
+            "• языковой барьер при получении информации.",
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "i": 11,
+        "style": "Normal",
+        "text": "Именно эти проблемы легли в основу нашего проекта.",
+        "alignment": null,
+        "runs": [
+          [
+            "Именно эти проблемы легли в основу нашего проекта.",
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "i": 12,
+        "style": "Heading 1",
+        "text": "Слайд 3. Решение",
+        "alignment": null,
+        "runs": [
+          [
+            "Слайд 3. Решение",
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "i": 13,
+        "style": "Normal",
+        "text": "Мы предлагаем робота-ассистента, который помогает пассажиру пройти путь от стартовой точки до пункта назначения с учётом его потребностей.",
+        "alignment": null,
+        "runs": [
+          [
+            "Мы предлагаем робота-ассистента, который помогает пассажиру пройти путь от стартовой точки до пункта назначения с учётом его потребностей.",
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "i": 14,
+        "style": "Normal",
+        "text": "Работа системы состоит из нескольких этапов.",
+        "alignment": null,
+        "runs": [
+          [
+            "Работа системы состоит из нескольких этапов.",
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "i": 15,
+        "style": "Normal",
+        "text": "Первый этап — сканирование билета. Робот получает основную информацию о пассажире и его рейсе.",
+        "alignment": null,
+        "runs": [
+          [
+            "Первый этап — сканирование билета. Робот получает основную информацию о пассажире и его рейсе.",
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "i": 16,
+        "style": "Normal",
+        "text": "Второй этап — отображение информации. На экране показываются номер рейса, время посадки, выход и доступные сервисы.",
+        "alignment": null,
+        "runs": [
+          [
+            "Второй этап — отображение информации. На экране показываются номер рейса, время посадки, выход и доступные сервисы.",
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "i": 17,
+        "style": "Normal",
+        "text": "Далее возможны три сценария работы.",
+        "alignment": null,
+        "runs": [
+          [
+            "Далее возможны три сценария работы.",
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "i": 18,
+        "style": "Normal",
+        "text": "Первый сценарий. Пассажиру нужна только информация. Робот показывает маршрут и необходимые данные, после чего сессия завершается.",
+        "alignment": null,
+        "runs": [
+          [
+            "Первый сценарий. Пассажиру нужна только информация. Робот показывает маршрут и необходимые данные, после чего сессия завершается.",
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "i": 19,
+        "style": "Normal",
+        "text": "Второй сценарий. Пассажиру требуется сопровождение. Робот предлагает маршрут с учётом выбранных точек: регистрация, туалет, Duty Free, кафе или выход на посадку. После выбора маршрута робот сопровождает пассажира.",
+        "alignment": null,
+        "runs": [
+          [
+            "Второй сценарий. Пассажиру требуется сопровождение. Робот предлагает маршрут с учётом выбранных точек: регистрация, туалет, Duty Free, кафе или выход на посадку. После выбора маршрута робот сопровождает пассажира.",
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "i": 20,
+        "style": "Normal",
+        "text": "Третий сценарий. Пассажиру требуется помощь только перевозкой багажа. Робот берёт вещи на себя и проходит все этапы проверки багажа; клиенту остаётся пройти личный досмотр и сесть в самолёт.",
+        "alignment": null,
+        "runs": [
+          [
+            "Третий сценарий. Пассажиру требуется помощь только перевозкой багажа. Робот берёт вещи на себя и проходит все этапы проверки багажа; клиенту остаётся пройти личный досмотр и сесть в самолёт.",
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "i": 21,
+        "style": "Normal",
+        "text": "Во втором и третьем сценариях предусмотрена работа с багажом. Если полное сопровождение не нужно, робот также может использоваться как временная точка хранения вещей.",
+        "alignment": null,
+        "runs": [
+          [
+            "Во втором и третьем сценариях предусмотрена работа с багажом. Если полное сопровождение не нужно, робот также может использоваться как временная точка хранения вещей.",
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "i": 22,
+        "style": "Heading 1",
+        "text": "Слайд 4. Аппаратная платформа",
+        "alignment": null,
+        "runs": [
+          [
+            "Слайд 4. Аппаратная платформа",
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "i": 23,
+        "style": "Normal",
+        "text": "Для реализации проекта мы собрали первый рабочий прототип.",
+        "alignment": null,
+        "runs": [
+          [
+            "Для реализации проекта мы собрали первый рабочий прототип.",
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "i": 24,
+        "style": "Normal",
+        "text": "Основной вычислительный модуль — Raspberry Pi 5 (16 ГБ). На нём работают ROS 2 Jazzy, обработка данных лидара и камеры, а также высокоуровневая логика.",
+        "alignment": null,
+        "runs": [
+          [
+            "Основной вычислительный модуль — Raspberry Pi 5 (16 ГБ). На нём работают ROS 2 Jazzy, обработка данных лидара и камеры, а также высокоуровневая логика.",
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "i": 25,
+        "style": "Normal",
+        "text": "Управление двигателями выполняет Arduino Mega 2560: она обрабатывает сигналы энкодеров и обеспечивает движение платформы.",
+        "alignment": null,
+        "runs": [
+          [
+            "Управление двигателями выполняет Arduino Mega 2560: она обрабатывает сигналы энкодеров и обеспечивает движение платформы.",
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "i": 26,
+        "style": "Normal",
+        "text": "Используются драйверы L298N, моторы JGB37-520, колёса Mecanum, сенсорный экран 10,1\", камера и лидар COIN D6.",
+        "alignment": null,
+        "runs": [
+          [
+            "Используются драйверы L298N, моторы JGB37-520, колёса Mecanum, сенсорный экран 10,1\", камера и лидар COIN D6.",
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "i": 27,
+        "style": "Heading 1",
+        "text": "Слайд 5. Навигация",
+        "alignment": null,
+        "runs": [
+          [
+            "Слайд 5. Навигация",
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "i": 28,
+        "style": "Normal",
+        "text": "Реализована система построения карты помещения с помощью лидара. Робот определяет своё положение, учитывает габариты корпуса и данные энкодеров, строит маршрут и объезжает препятствия. Есть режим проезда по заданным точкам и операторский контроль.",
+        "alignment": null,
+        "runs": [
+          [
+            "Реализована система построения карты помещения с помощью лидара. Робот определяет своё положение, учитывает габариты корпуса и данные энкодеров, строит маршрут и объезжает препятствия. Есть режим проезда по заданным точкам и операторский контроль.",
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "i": 29,
+        "style": "Heading 1",
+        "text": "Слайд 6. Интерфейс",
+        "alignment": null,
+        "runs": [
+          [
+            "Слайд 6. Интерфейс",
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "i": 30,
+        "style": "Normal",
+        "text": "На главном экране — основные сервисы аэропорта: регистрация, посадка, выдача багажа, информационная стойка и другие точки терминала.",
+        "alignment": null,
+        "runs": [
+          [
+            "На главном экране — основные сервисы аэропорта: регистрация, посадка, выдача багажа, информационная стойка и другие точки терминала.",
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "i": 31,
+        "style": "Normal",
+        "text": "Поддерживаются русский, английский и татарский языки. Интерфейс выполнен в тематике аэропорта и рассчитан на простое использование пассажиром.",
+        "alignment": null,
+        "runs": [
+          [
+            "Поддерживаются русский, английский и татарский языки. Интерфейс выполнен в тематике аэропорта и рассчитан на простое использование пассажиром.",
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "i": 32,
+        "style": "Heading 1",
+        "text": "Слайд 7. Безопасность",
+        "alignment": null,
+        "runs": [
+          [
+            "Слайд 7. Безопасность",
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "i": 33,
+        "style": "Normal",
+        "text": "Реализованы автоматическая остановка при потере связи, контроль маршрута, распознавание препятствий, защитный корпус из оргстекла, небольшой дорожный просвет и световая индикация состояния робота.",
+        "alignment": null,
+        "runs": [
+          [
+            "Реализованы автоматическая остановка при потере связи, контроль маршрута, распознавание препятствий, защитный корпус из оргстекла, небольшой дорожный просвет и световая индикация состояния робота.",
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "i": 34,
+        "style": "Heading 1",
+        "text": "Слайд 8. Первый прототип",
+        "alignment": null,
+        "runs": [
+          [
+            "Слайд 8. Первый прототип",
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "i": 35,
+        "style": "Normal",
+        "text": "Сейчас мы представляем первый прототип команды: интерактивное меню на экране, проезд по точкам, ориентирование в пространстве и возможность перевозить груз.",
+        "alignment": null,
+        "runs": [
+          [
+            "Сейчас мы представляем первый прототип команды: интерактивное меню на экране, проезд по точкам, ориентирование в пространстве и возможность перевозить груз.",
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "i": 36,
+        "style": "Heading 1",
+        "text": "Слайд 9. Экспертная оценка",
+        "alignment": null,
+        "runs": [
+          [
+            "Слайд 9. Экспертная оценка",
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "i": 37,
+        "style": "Normal",
+        "text": "Проект был представлен экспертам авиационной отрасли и получил положительную оценку. Представители аэропорта выразили заинтересованность в дальнейшем тестировании разработки.",
+        "alignment": null,
+        "runs": [
+          [
+            "Проект был представлен экспертам авиационной отрасли и получил положительную оценку. Представители аэропорта выразили заинтересованность в дальнейшем тестировании разработки.",
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "i": 38,
+        "style": "Heading 1",
+        "text": "Слайд 10. Экономическая часть",
+        "alignment": null,
+        "runs": [
+          [
+            "Слайд 10. Экономическая часть",
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "i": 39,
+        "style": "Normal",
+        "text": "Стоимость текущего прототипа — около 90 000 рублей. Модульная конструкция позволяет модернизировать систему без полной замены оборудования.",
+        "alignment": null,
+        "runs": [
+          [
+            "Стоимость текущего прототипа — около 90 000 рублей. Модульная конструкция позволяет модернизировать систему без полной замены оборудования.",
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "i": 40,
+        "style": "Heading 1",
+        "text": "Слайд 11. Планы на будущее",
+        "alignment": null,
+        "runs": [
+          [
+            "Слайд 11. Планы на будущее",
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "i": 41,
+        "style": "Normal",
+        "text": "Наши планы масштабные и амбициозные: впереди большая и интересная работа над проектом.",
+        "alignment": null,
+        "runs": [
+          [
+            "Наши планы масштабные и амбициозные: впереди большая и интересная работа над проектом.",
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "i": 42,
+        "style": "Normal",
+        "text": "Первое — усилить конструкцию металлическими профилями. Это повысит грузоподъёмность и устойчивость к ударам.",
+        "alignment": null,
+        "runs": [
+          [
+            "Первое — усилить конструкцию металлическими профилями. Это повысит грузоподъёмность и устойчивость к ударам.",
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "i": 43,
+        "style": "Normal",
+        "text": "Потребуются изменения и в колёсной базе: планируем промышленные металлические колёса Mecanum.",
+        "alignment": null,
+        "runs": [
+          [
+            "Потребуются изменения и в колёсной базе: планируем промышленные металлические колёса Mecanum.",
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "i": 44,
+        "style": "Normal",
+        "text": "Важно сохранить безопасность и аккуратный внешний вид: при переходе на металл добавим больше защитных и косметических элементов корпуса.",
+        "alignment": null,
+        "runs": [
+          [
+            "Важно сохранить безопасность и аккуратный внешний вид: при переходе на металл добавим больше защитных и косметических элементов корпуса.",
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "i": 45,
+        "style": "Normal",
+        "text": "По электронике планируем поэтапно переходить на промышленные компоненты, чтобы быстрее выйти на испытания в реальных условиях аэропорта.",
+        "alignment": null,
+        "runs": [
+          [
+            "По электронике планируем поэтапно переходить на промышленные компоненты, чтобы быстрее выйти на испытания в реальных условиях аэропорта.",
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "i": 46,
+        "style": "Normal",
+        "text": "В навигации одна из ключевых задач — усилить сенсорику, в том числе промышленной камерой на 360° и дополнительными модулями.",
+        "alignment": null,
+        "runs": [
+          [
+            "В навигации одна из ключевых задач — усилить сенсорику, в том числе промышленной камерой на 360° и дополнительными модулями.",
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "i": 47,
+        "style": "Normal",
+        "text": "Также планируем удобные интерфейсы для пассажиров и для команды разработки.",
+        "alignment": null,
+        "runs": [
+          [
+            "Также планируем удобные интерфейсы для пассажиров и для команды разработки.",
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "i": 48,
+        "style": "Normal",
+        "text": "Для пользователей — приложение, где видно, где находится робот, на каком он этапе обслуживания, и при необходимости — уведомления о проблемах с багажом.",
+        "alignment": null,
+        "runs": [
+          [
+            "Для пользователей — приложение, где видно, где находится робот, на каком он этапе обслуживания, и при необходимости — уведомления о проблемах с багажом.",
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "i": 49,
+        "style": "Normal",
+        "text": "Для разработчиков — панель флота: состояние систем, занятость, возможные неисправности.",
+        "alignment": null,
+        "runs": [
+          [
+            "Для разработчиков — панель флота: состояние систем, занятость, возможные неисправности.",
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "i": 50,
+        "style": "Normal",
+        "text": "Так команда сможет точечно находить проблемы, устранять их удалённо или направлять робота в специализированный хаб для ремонта.",
+        "alignment": null,
+        "runs": [
+          [
+            "Так команда сможет точечно находить проблемы, устранять их удалённо или направлять робота в специализированный хаб для ремонта.",
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "i": 51,
+        "style": "Normal",
+        "text": "Хаб станет станцией зарядки и местом хранения роботов, ожидающих обслуживания, откуда их можно забирать в мастерскую для ремонта и очистки корпуса.",
+        "alignment": null,
+        "runs": [
+          [
+            "Хаб станет станцией зарядки и местом хранения роботов, ожидающих обслуживания, откуда их можно забирать в мастерскую для ремонта и очистки корпуса.",
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "i": 52,
+        "style": "Normal",
+        "text": "Отдельно планируем добавить подогрев и охлаждение напитков в уже имеющийся подстаканник.",
+        "alignment": null,
+        "runs": [
+          [
+            "Отдельно планируем добавить подогрев и охлаждение напитков в уже имеющийся подстаканник.",
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "i": 53,
+        "style": "Normal",
+        "text": "Заключительный этап — испытания системы в реальных сценариях аэропорта.",
+        "alignment": null,
+        "runs": [
+          [
+            "Заключительный этап — испытания системы в реальных сценариях аэропорта.",
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "i": 54,
+        "style": "Heading 1",
+        "text": "Слайд 13. Заключение",
+        "alignment": null,
+        "runs": [
+          [
+            "Слайд 13. Заключение",
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "i": 55,
+        "style": "Normal",
+        "text": "Спасибо за внимание!",
+        "alignment": null,
+        "runs": [
+          [
+            "Спасибо за внимание!",
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        ]
+      },
+      {
+        "i": 56,
+        "style": "Normal",
+        "text": "Команда AirPorter",
+        "alignment": null,
+        "runs": [
+          [
+            "Команда AirPorter",
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        ]
+      }
+    ]
+  },
+  {
+    "name": "AirPorter Выступление(рус.).docx",
+    "exists": true,
+    "paragraphs": 97,
+    "tables": 0,
+    "sections": 1,
+    "styles": [
+      [
+        "Normal",
+        1
+      ],
+      [
+        "Heading 1",
+        1
+      ],
+      [
+        "Heading 2",
+        1
+      ],
+      [
+        "Heading 3",
+        1
+      ],
+      [
+        "Heading 4",
+        1
+      ],
+      [
+        "Heading 5",
+        1
+      ],
+      [
+        "Heading 6",
+        1
+      ],
+      [
+        "Heading 7",
+        1
+      ],
+      [
+        "Heading 8",
+        1
+      ],
+      [
+        "Heading 9",
+        1
+      ],
+      [
+        "Header",
+        1
+      ],
+      [
+        "Footer",
+        1
+      ],
+      [
+        "No Spacing",
+        1
+      ],
+      [
+        "Title",
+        1
+      ],
+      [
+        "Subtitle",
+        1
+      ],
+      [
+        "List Paragraph",
+        1
+      ],
+      [
+        "Body Text",
+        1
+      ],
+      [
+        "Body Text 2",
+        1
+      ],
+      [
+        "Body Text 3",
+        1
+      ],
+      [
+        "List",
+        1
+      ]
+    ],
+    "paragraph_data": [
+      {
+        "i": 0,
+        "style": "Normal",
+        "text": "Слайд 1. Знакомство с проектом",
+        "alignment": null,
+        "runs": [
+          [
+            "Слайд 1. Знакомство с проектом",
+            null,
+            null,
+            null,
+            "Times New Roman",
+            18.0
+          ]
+        ]
+      },
+      {
+        "i": 1,
+        "style": "Normal",
+        "text": "",
+        "alignment": null,
+        "runs": []
+      },
+      {
+        "i": 2,
+        "style": "Normal",
+        "text": "AirPorter — мобильный робот-ассистент для аэропорта",
+        "alignment": null,
+        "runs": [
+          [
+            "AirPorter",
+            null,
+            null,
+            null,
+            "Times New Roman",
+            18.0
+          ],
+          [
+            " — мобильный робот-ассистент для аэропорта",
+            null,
+            null,
+            null,
+            "Times New Roman",
+            18.0
+          ]
+        ]
+      },
+      {
+        "i": 3,
+        "style": "Normal",
+        "text": "",
+        "alignment": null,
+        "runs": []
+      },
+      {
+        "i": 4,
+        "style": "Normal",
+        "text": "Добрый день! Мы представляем проект AirPorter — мобильного робота-ассистента для аэропорта.",
+        "alignment": null,
+        "runs": [
+          [
+            "Добрый день! Мы представляем проект ",
+            null,
+            null,
+            null,
+            "Times New Roman",
+            18.0
+          ],
+          [
+            "AirPorter",
+            null,
+            null,
+            null,
+            "Times New Roman",
+            18.0
+          ],
+          [
+            " — мобильного робота-ассистента для аэропорта.",
+            null,
+            null,
+            null,
+            "Times New Roman",
+            18.0
+          ]
+        ]
+      },
+      {
+        "i": 5,
+        "style": "Normal",
+        "text": "",
+        "alignment": null,
+        "runs": []
+      },
+      {
+        "i": 6,
+        "style": "Normal",
+        "text": "Цель проекта — сделать пребывание пассажиров в аэропорту более комфортным. Робот помогает ориентироваться в терминале, сопровождает до нужной точки, а также может перевозить багаж, снижая физическую нагрузку и стресс, особенно для людей, впервые оказавшихся в аэропорту.",
+        "alignment": null,
+        "runs": [
+          [
+            "Цель проекта — сделать пребывание пассажиров в аэропорту более комфортным. Робот помогает ориентироваться в терминале, сопровождает до нужной точки, а также может перевозить багаж, снижая физическую нагрузку и стресс, особенно для людей, впервые оказавшихся в аэропорту.",
+            null,
+            null,
+            null,
+            "Times New Roman",
+            18.0
+          ]
+        ]
+      },
+      {
+        "i": 7,
+        "style": "Normal",
+        "text": "",
+        "alignment": null,
+        "runs": []
+      },
+      {
+        "i": 8,
+        "style": "Normal",
+        "text": "Слайд 2. Проблема",
+        "alignment": null,
+        "runs": [
+          [
+            "Слайд 2. Проблема",
+            null,
+            null,
+            null,
+            "Times New Roman",
+            18.0
+          ]
+        ]
+      },
+      {
+        "i": 9,
+        "style": "Normal",
+        "text": "",
+        "alignment": null,
+        "runs": []
+      },
+      {
+        "i": 10,
+        "style": "Normal",
+        "text": "Современный аэропорт — это сложная система с большим количеством информации, сервисов и зон. Для большинства пассажиров, особенно иностранных или редко летающих, ориентирование становится серьезной проблемой.",
+        "alignment": null,
+        "runs": [
+          [
+            "Современный аэропорт — это сложная система с большим количеством информации, сервисов и зон. Для большинства пассажиров, особенно иностранных или редко летающих, ориентирование становится серьезной проблемой.",
+            null,
+            null,
+            null,
+            "Times New Roman",
+            18.0
+          ]
+        ]
+      },
+      {
+        "i": 11,
+        "style": "Normal",
+        "text": "",
+        "alignment": null,
+        "runs": []
+      },
+      {
+        "i": 12,
+        "style": "Normal",
+        "text": "Мы выделили три основные сложности:",
+        "alignment": null,
+        "runs": [
+          [
+            "Мы выделили три основные сложности:",
+            null,
+            null,
+            null,
+            "Times New Roman",
+            18.0
+          ]
+        ]
+      },
+      {
+        "i": 13,
+        "style": "Normal",
+        "text": "• физическая нагрузка при перевозке багажа;",
+        "alignment": null,
+        "runs": [
+          [
+            "• физическая нагрузка при перевозке багажа;",
+            null,
+            null,
+            null,
+            "Times New Roman",
+            18.0
+          ]
+        ]
+      },
+      {
+        "i": 14,
+        "style": "Normal",
+        "text": "• сложная навигация внутри терминала;",
+        "alignment": null,
+        "runs": [
+          [
+            "• сложная навигация внутри терминала;",
+            null,
+            null,
+            null,
+            "Times New Roman",
+            18.0
+          ]
+        ]
+      },
+      {
+        "i": 15,
+        "style": "Normal",
+        "text": "• языковой барьер при получении информации.",
+        "alignment": null,
+        "runs": [
+          [
+            "• языковой барьер при получении информации.",
+            null,
+            null,
+            null,
+            "Times New Roman",
+            18.0
+          ]
+        ]
+      },
+      {
+        "i": 16,
+        "style": "Normal",
+        "text": "",
+        "alignment": null,
+        "runs": []
+      },
+      {
+        "i": 17,
+        "style": "Normal",
+        "text": "Именно эти проблемы легли в основу нашего проекта.",
+        "alignment": null,
+        "runs": [
+          [
+            "Именно эти проблемы легли в основу нашего проекта.",
+            null,
+            null,
+            null,
+            "Times New Roman",
+            18.0
+          ]
+        ]
+      },
+      {
+        "i": 18,
+        "style": "Normal",
+        "text": "",
+        "alignment": null,
+        "runs": []
+      },
+      {
+        "i": 19,
+        "style": "Normal",
+        "text": "Слайд 3. Решение",
+        "alignment": null,
+        "runs": [
+          [
+            "Слайд 3. Решение",
+            null,
+            null,
+            null,
+            "Times New Roman",
+            18.0
+          ]
+        ]
+      },
+      {
+        "i": 20,
+        "style": "Normal",
+        "text": "",
+        "alignment": null,
+        "runs": []
+      },
+      {
+        "i": 21,
+        "style": "Normal",
+        "text": "Мы предлагаем использовать автономного робота, который сопровождает пассажира от начальной точки до пункта назначения с учетом его потребностей.",
+        "alignment": null,
+        "runs": [
+          [
+            "Мы предлагаем использовать автономного робота, который сопровождает пассажира от начальной точки до пункта назначения с учетом его потребностей.",
+            null,
+            null,
+            null,
+            "Times New Roman",
+            18.0
+          ]
+        ]
+      },
+      {
+        "i": 22,
+        "style": "Normal",
+        "text": "",
+        "alignment": null,
+        "runs": []
+      },
+      {
+        "i": 23,
+        "style": "Normal",
+        "text": "Работа системы состоит из нескольких этапов.",
+        "alignment": null,
+        "runs": [
+          [
+            "Работа системы состоит из нескольких этапов.",
+            null,
+            null,
+            null,
+            "Times New Roman",
+            18.0
+          ]
+        ]
+      },
+      {
+        "i": 24,
+        "style": "Normal",
+        "text": "",
+        "alignment": null,
+        "runs": []
+      },
+      {
+        "i": 25,
+        "style": "Normal",
+        "text": "Первый этап — сканирование билета. Робот получает основную информацию о пассажире и его рейсе.",
+        "alignment": null,
+        "runs": [
+          [
+            "Первый этап — сканирование билета. Робот получает основную информацию о пассажире и его рейсе.",
+            null,
+            null,
+            null,
+            "Times New Roman",
+            18.0
+          ]
+        ]
+      },
+      {
+        "i": 26,
+        "style": "Normal",
+        "text": "",
+        "alignment": null,
+        "runs": []
+      },
+      {
+        "i": 27,
+        "style": "Normal",
+        "text": "Второй этап — отображение информации. На экране выводятся номер рейса, время посадки, выход, а также предлагаются доступные сервисы.",
+        "alignment": null,
+        "runs": [
+          [
+            "Второй этап — отображение информации. На экране выводятся номер рейса, время посадки, выход, а также предлагаются доступные сервисы.",
+            null,
+            null,
+            null,
+            "Times New Roman",
+            18.0
+          ]
+        ]
+      },
+      {
+        "i": 28,
+        "style": "Normal",
+        "text": "",
+        "alignment": null,
+        "runs": []
+      },
+      {
+        "i": 29,
+        "style": "Normal",
+        "text": "Далее возможны три сценария работы.",
+        "alignment": null,
+        "runs": [
+          [
+            "Далее возможны три сценария работы.",
+            null,
+            null,
+            null,
+            "Times New Roman",
+            18.0
+          ]
+        ]
+      },
+      {
+        "i": 30,
+        "style": "Normal",
+        "text": "",
+        "alignment": null,
+        "runs": []
+      },
+      {
+        "i": 31,
+        "style": "Normal",
+        "text": "Первый сценарий. Пассажиру нужна только информация. Робот показывает маршрут и необходимые данные, после чего работа завершается.",
+        "alignment": null,
+        "runs": [
+          [
+            "Первый сценарий. Пассажиру нужна только информация. Робот показывает маршрут и необходимые данные, после чего работа завершается.",
+            null,
+            null,
+            null,
+            "Times New Roman",
+            18.0
+          ]
+        ]
+      },
+      {
+        "i": 32,
+        "style": "Normal",
+        "text": "",
+        "alignment": null,
+        "runs": []
+      },
+      {
+        "i": 33,
+        "style": "Normal",
+        "text": "Второй сценарий. Пассажиру требуется сопровождение. Робот предлагает оптимальный маршрут с учетом выбранных точек: регистрация, туалет, Duty Free, кафе или выход на посадку. После выбора маршрута робот сопровождает пассажира.",
+        "alignment": null,
+        "runs": [
+          [
+            "Второй сценарий. Пассажиру требуется сопровождение. Робот предлагает оптимальный маршрут с учетом выбранных точек: регистрация, туалет, ",
+            null,
+            null,
+            null,
+            "Times New Roman",
+            18.0
+          ],
+          [
+            "Duty",
+            null,
+            null,
+            null,
+            "Times New Roman",
+            18.0
+          ],
+          [
+            " ",
+            null,
+            null,
+            null,
+            "Times New Roman",
+            18.0
+          ],
+          [
+            "Free",
+            null,
+            null,
+            null,
+            "Times New Roman",
+            18.0
+          ],
+          [
+            ", кафе или выход на посадку. После выбора маршрута робот сопровождает пассажира.",
+            null,
+            null,
+            null,
+            "Times New Roman",
+            18.0
+          ]
+        ]
+      },
+      {
+        "i": 34,
+        "style": "Normal",
+        "text": "",
+        "alignment": null,
+        "runs": []
+      },
+      {
+        "i": 35,
+        "style": "Normal",
+        "text": "Третий сценарий. Пассажиру требуется помощь только перевозкой багажа. Робот берет вещи на себя и проходит все этапы проверки багажа, клиенту остается только пройти личный досмотр и сесть в самолет.",
+        "alignment": null,
+        "runs": [
+          [
+            "Третий сценарий. Пассажиру требуется помощь ",
+            null,
+            null,
+            null,
+            "Times New Roman",
+            18.0
+          ],
+          [
+            "только",
+            null,
+            null,
+            null,
+            "Times New Roman",
+            18.0
+          ],
+          [
+            " перевозкой багажа. Робот берет вещи на себя и ",
+            null,
+            null,
+            null,
+            "Times New Roman",
+            18.0
+          ],
+          [
+            "проходит все этапы проверки багажа, клиенту остается только пройти личный досмотр и сесть в самолет.",
+            null,
+            null,
+            null,
+            "Times New Roman",
+            18.0
+          ]
+        ]
+      },
+      {
+        "i": 36,
+        "style": "Normal",
+        "text": "",
+        "alignment": null,
+        "runs": []
+      },
+      {
+        "i": 37,
+        "style": "Normal",
+        "text": "Во всех сценариях, кроме первого, предусмотрена возможность перевозки багажа. Если сопровождение не требуется, робот может использоваться как временная точка хранения вещей.",
+        "alignment": null,
+        "runs": [
+          [
+            "Во всех сценариях, кроме первого, предусмотрена возможность перевозки багажа. Если сопровождение не требуется, робот может использоваться как временная точка хранения вещей.",
+            null,
+            null,
+            null,
+            "Times New Roman",
+            18.0
+          ]
+        ]
+      },
+      {
+        "i": 38,
+        "style": "Normal",
+        "text": "",
+        "alignment": null,
+        "runs": []
+      },
+      {
+        "i": 39,
+        "style": "Normal",
+        "text": "Слайд 4. Аппаратная платформа",
+        "alignment": null,
+        "runs": [
+          [
+            "Слайд 4. Аппаратная платформа",
+            null,
+            null,
+            null,
+            "Times New Roman",
+            18.0
+          ]
+        ]
+      },
+      {
+        "i": 40,
+        "style": "Normal",
+        "text": "",
+        "alignment": null,
+        "runs": []
+      },
+      {
+        "i": 41,
+        "style": "Normal",
+        "text": "Для реализации проекта мы разработали первый рабочий прототип.",
+        "alignment": null,
+        "runs": [
+          [
+            "Для реализации проекта мы разработали первый рабочий прототип.",
+            null,
+            null,
+            null,
+            "Times New Roman",
+            18.0
+          ]
+        ]
+      },
+      {
+        "i": 42,
+        "style": "Normal",
+        "text": "",
+        "alignment": null,
+        "runs": []
+      },
+      {
+        "i": 43,
+        "style": "Normal",
+        "text": "Основным вычислительным модулем является Raspberry Pi 5 (16 ГБ). Он отвечает за работу ROS 2 Jazzy, обработку данных лидара, камеры и высокоуровневую логику.",
+        "alignment": null,
+        "runs": [
+          [
+            "Основным вычислительным модулем является ",
+            null,
+            null,
+            null,
+            "Times New Roman",
+            18.0
+          ],
+          [
+            "Raspberry",
+            null,
+            null,
+            null,
+            "Times New Roman",
+            18.0
+          ],
+          [
+            " ",
+            null,
+            null,
+            null,
+            "Times New Roman",
+            18.0
+          ],
+          [
+            "Pi",
+            null,
+            null,
+            null,
+            "Times New Roman",
+            18.0
+          ],
+          [
+            " 5 (16 ГБ). Он отвечает за работу ",
+            null,
+            null,
+            null,
+            "Times New Roman",
+            18.0
+          ],
+          [
+            "ROS",
+            null,
+            null,
+            null,
+            "Times New Roman",
+            18.0
+          ],
+          [
+            " 2 ",
+            null,
+            null,
+            null,
+            "Times New Roman",
+            18.0
+          ],
+          [
+            "Jazzy",
+            null,
+            null,
+            null,
+            "Times New Roman",
+            18.0
+          ],
+          [
+            ", обработку данных лидара, камеры и высокоуровневую логику.",
+            null,
+            null,
+            null,
+            "Times New Roman",
+            18.0
+          ]
+        ]
+      },
+      {
+        "i": 44,
+        "style": "Normal",
+        "text": "",
+        "alignment": null,
+        "runs": []
+      },
+      {
+        "i": 45,
+        "style": "Normal",
+        "text": "Управление двигателями выполняет Arduino Mega 2560, которая обрабатывает сигналы энкодеров и обеспечивает точное движение платформы.",
+        "alignment": null,
+        "runs": [
+          [
+            "Управление двигателями выполняет ",
+            null,
+            null,
+            null,
+            "Times New Roman",
+            18.0
+          ],
+          [
+            "Arduino",
+            null,
+            null,
+            null,
+            "Times New Roman",
+            18.0
+          ],
+          [
+            " ",
+            null,
+            null,
+            null,
+            "Times New Roman",
+            18.0
+          ],
+          [
+            "Mega",
+            null,
+            null,
+            null,
+            "Times New Roman",
+            18.0
+          ],
+          [
+            " 2560, которая обрабатывает сигналы энкодеров и обеспечивает точное движение платформы.",
+            null,
+            null,
+            null,
+            "Times New Roman",
+            18.0
+          ]
+        ]
+      },
+      {
+        "i": 46,
+        "style": "Normal",
+        "text": "",
+        "alignment": null,
+        "runs": []
+      },
+      {
+        "i": 47,
+        "style": "Normal",
+        "text": "Используются драйверы L298N, моторы JGB37-520, колеса Mecanum, сенсорный экран 10,1\", камера и лидар COIN D6.",
+        "alignment": null,
+        "runs": [
+          [
+            "Используются драйверы ",
+            null,
+            null,
+            null,
+            "Times New Roman",
+            18.0
+          ],
+          [
+            "L",
+            null,
+            null,
+            null,
+            "Times New Roman",
+            18.0
+          ],
+          [
+            "298",
+            null,
+            null,
+            null,
+            "Times New Roman",
+            18.0
+          ],
+          [
+            "N",
+            null,
+            null,
+            null,
+            "Times New Roman",
+            18.0
+          ],
+          [
+            ", моторы ",
+            null,
+            null,
+            null,
+            "Times New Roman",
+            18.0
+          ],
+          [
+            "JGB",
+            null,
+            null,
+            null,
+            "Times New Roman",
+            18.0
+          ],
+          [
+            "37-520, колеса ",
+            null,
+            null,
+            null,
+            "Times New Roman",
+            18.0
+          ],
+          [
+            "Mecanum",
+            null,
+            null,
+            null,
+            "Times New Roman",
+            18.0
+          ],
+          [
+            ", сенсорный экран 10,1\", камера и лидар ",
+            null,
+            null,
+            null,
+            "Times New Roman",
+            18.0
+          ],
+          [
+            "COIN",
+            null,
+            null,
+            null,
+            "Times New Roman",
+            18.0
+          ],
+          [
+            " ",
+            null,
+            null,
+            null,
+            "Times New Roman",
+            18.0
+          ],
+          [
+            "D",
+            null,
+            null,
+            null,
+            "Times New Roman",
+            18.0
+          ],
+          [
+            "6.",
+            null,
+            null,
+            null,
+            "Times New Roman",
+            18.0
+          ]
+        ]
+      },
+      {
+        "i": 48,
+        "style": "Normal",
+        "text": "",
+        "alignment": null,
+        "runs": []
+      },
+      {
+        "i": 49,
+        "style": "Normal",
+        "text": "Слайд 5. Навигация",
+        "alignment": null,
+        "runs": [
+          [
+            "Слайд 5. Навигация",
+            null,
+            null,
+            null,
+            "Times New Roman",
+            18.0
+          ]
+        ]
+      },
+      {
+        "i": 50,
+        "style": "Normal",
+        "text": "",
+        "alignment": null,
+        "runs": []
+      },
+      {
+        "i": 51,
+        "style": "Normal",
+        "text": "Реализована система построения карты помещения с использованием лидара. Робот определяет собственное положение, учитывает свои габариты и данные энкодеров, строит оптимальный маршрут и объезжает препятствия.",
+        "alignment": null,
+        "runs": [
+          [
+            "Реализована система построения карты помещения с использованием лидара. Робот определяет собственное ",
+            null,
+            null,
+            null,
+            "Times New Roman",
+            18.0
+          ],
+          [
+            "положение, учитывает свои габариты и данные энкодеров, строит оптимальный маршрут и объезжает препятствия.",
+            null,
+            null,
+            null,
+            "Times New Roman",
+            18.0
+          ]
+        ]
+      },
+      {
+        "i": 52,
+        "style": "Normal",
+        "text": "",
+        "alignment": null,
+        "runs": []
+      },
+      {
+        "i": 53,
+        "style": "Normal",
+        "text": "Слайд 6. Интерфейс",
+        "alignment": null,
+        "runs": [
+          [
+            "Слайд 6. Интерфейс",
+            null,
+            null,
+            null,
+            "Times New Roman",
+            18.0
+          ]
+        ]
+      },
+      {
+        "i": 54,
+        "style": "Normal",
+        "text": "",
+        "alignment": null,
+        "runs": []
+      },
+      {
+        "i": 55,
+        "style": "Normal",
+        "text": "Главный экран содержит основные сервисы аэропорта: регистрацию, посадку, выдачу багажа, информационную стойку и другие точки терминала.",
+        "alignment": null,
+        "runs": [
+          [
+            "Главный экран содержит основные сервисы аэропорта: регистрацию, посадку, выдачу багажа, информационную стойку и другие точки терминала.",
+            null,
+            null,
+            null,
+            "Times New Roman",
+            18.0
+          ]
+        ]
+      },
+      {
+        "i": 56,
+        "style": "Normal",
+        "text": "",
+        "alignment": null,
+        "runs": []
+      },
+      {
+        "i": 57,
+        "style": "Normal",
+        "text": "Поддерживаются русский, английский и татарский языки. Интерфейс выполнен в тематике аэропорта и максимально прост для пассажиров.",
+        "alignment": null,
+        "runs": [
+          [
+            "Поддерживаются русский, английский и татарский языки. Интерфейс выполнен в тематике аэропорта и максимально прост для пассажиров.",
+            null,
+            null,
+            null,
+            "Times New Roman",
+            18.0
+          ]
+        ]
+      },
+      {
+        "i": 58,
+        "style": "Normal",
+        "text": "",
+        "alignment": null,
+        "runs": []
+      },
+      {
+        "i": 59,
+        "style": "Normal",
+        "text": "Слайд 7. Безопасность",
+        "alignment": null,
+        "runs": [
+          [
+            "Слайд 7. Безопасность",
+            null,
+            null,
+            null,
+            "Times New Roman",
+            18.0
+          ]
+        ]
+      },
+      {
+        "i": 60,
+        "style": "Normal",
+        "text": "",
+        "alignment": null,
+        "runs": []
+      },
+      {
+        "i": 61,
+        "style": "Normal",
+        "text": "Реализованы автоматическая остановка при потере связи, контроль маршрута, распознавание препятствий, защитный корпус из оргстекла, минимальный дорожный просвет и световая индикация состояния робота.",
+        "alignment": null,
+        "runs": [
+          [
+            "Реализованы автоматическая остановка при потере связи, контроль маршрута, распознавание препятствий, защитный корпус из оргстекла, минимальный дорожный просвет и световая индикация состояния робота.",
+            null,
+            null,
+            null,
+            "Times New Roman",
+            18.0
+          ]
+        ]
+      },
+      {
+        "i": 62,
+        "style": "Normal",
+        "text": "",
+        "alignment": null,
+        "runs": []
+      },
+      {
+        "i": 63,
+        "style": "Normal",
+        "text": "Слайд 8. Первый прототип",
+        "alignment": null,
+        "runs": [
+          [
+            "Слайд 8. Первый прототип",
+            null,
+            null,
+            null,
+            "Times New Roman",
+            18.0
+          ]
+        ]
+      },
+      {
+        "i": 64,
+        "style": "Normal",
+        "text": "",
+        "alignment": null,
+        "runs": []
+      },
+      {
+        "i": 65,
+        "style": "Normal",
+        "text": "На данный момент мы представляем первый прототип нашей команды, где реализовано интерактивное меню на экране, проезд по точкам, ориентирование в пространстве. А также выдерживание груза.",
+        "alignment": null,
+        "runs": [
+          [
+            "На данный момент мы представляем первый прототип нашей команды",
+            null,
+            null,
+            null,
+            "Times New Roman",
+            18.0
+          ],
+          [
+            ", где реализовано интерактивное меню на экране, проезд по точкам, ориентирование в пространстве. А также выдерживание груза.",
+            null,
+            null,
+            null,
+            "Times New Roman",
+            18.0
+          ]
+        ]
+      },
+      {
+        "i": 66,
+        "style": "Normal",
+        "text": "",
+        "alignment": null,
+        "runs": []
+      },
+      {
+        "i": 67,
+        "style": "Normal",
+        "text": "Слайд 9. Экспертная оценка",
+        "alignment": null,
+        "runs": [
+          [
+            "Слайд 9. Экспертная оценка",
+            null,
+            null,
+            null,
+            "Times New Roman",
+            18.0
+          ]
+        ]
+      },
+      {
+        "i": 68,
+        "style": "Normal",
+        "text": "",
+        "alignment": null,
+        "runs": []
+      },
+      {
+        "i": 69,
+        "style": "Normal",
+        "text": "Проект был представлен экспертам авиационной отрасли и получил положительную оценку. Представители аэропорта выразили заинтересованность в дальнейшем тестировании разработки.",
+        "alignment": null,
+        "runs": [
+          [
+            "Проект был представлен экспертам авиационной отрасли и получил положительную оценку. Представители аэропорта выразили заинтересованность в дальнейшем тестировании разработки.",
+            null,
+            null,
+            null,
+            "Times New Roman",
+            18.0
+          ]
+        ]
+      },
+      {
+        "i": 70,
+        "style": "Normal",
+        "text": "",
+        "alignment": null,
+        "runs": []
+      },
+      {
+        "i": 71,
+        "style": "Normal",
+        "text": "Слайд 10. Экономическая часть",
+        "alignment": null,
+        "runs": [
+          [
+            "Слайд 1",
+            null,
+            null,
+            null,
+            "Times New Roman",
+            18.0
+          ],
+          [
+            "0",
+            null,
+            null,
+            null,
+            "Times New Roman",
+            18.0
+          ],
+          [
+            ". Экономическая часть",
+            null,
+            null,
+            null,
+            "Times New Roman",
+            18.0
+          ]
+        ]
+      },
+      {
+        "i": 72,
+        "style": "Normal",
+        "text": "",
+        "alignment": null,
+        "runs": []
+      },
+      {
+        "i": 73,
+        "style": "Normal",
+        "text": "Стоимость текущего прототипа составляет около ",
+        "alignment": null,
+        "runs": [
+          [
+            "Стоимость текущего прототипа составляет около ",
+            null,
+            null,
+            null,
+            "Times New Roman",
+            18.0
+          ]
+        ]
+      },
+      {
+        "i": 74,
+        "style": "Normal",
+        "text": "90 000 рублей. Модульная конструкция позволяет модернизировать систему без полной замены оборудования.",
+        "alignment": null,
+        "runs": [
+          [
+            "90 000 рублей. Модульная конструкция позволяет модернизировать систему без полной замены оборудования.",
+            null,
+            null,
+            null,
+            "Times New Roman",
+            18.0
+          ]
+        ]
+      },
+      {
+        "i": 75,
+        "style": "Normal",
+        "text": "",
+        "alignment": null,
+        "runs": []
+      },
+      {
+        "i": 76,
+        "style": "Normal",
+        "text": "Слайд 11. Планы на будущее",
+        "alignment": null,
+        "runs": [
+          [
+            "Слайд 1",
+            null,
+            null,
+            null,
+            "Times New Roman",
+            18.0
+          ],
+          [
+            "1",
+            null,
+            null,
+            null,
+            "Times New Roman",
+            18.0
+          ],
+          [
+            ". Планы на будущее",
+            null,
+            null,
+            null,
+            "Times New Roman",
+            18.0
+          ]
+        ]
+      },
+      {
+        "i": 77,
+        "style": "Normal",
+        "text": "Наши планы на будущее очень масштабные и амбициозные, нам предстоит огромная и интересная робота над нашим проектом.",
+        "alignment": null,
+        "runs": [
+          [
+            "Наши планы на будущее очень масштабные и амбициозные, нам предстоит огромная и интересная робота над нашим проектом.",
+            null,
+            null,
+            null,
+            "Times New Roman",
+            18.0
+          ]
+        ]
+      },
+      {
+        "i": 78,
+        "style": "Normal",
+        "text": "Первое, что предстоит улучшить в нашем роботе – это усилить конструкцию металлическими профилями. Это позволит роботу выдерживать тяжести в корпусе, а также выдерживать падения и точки в корпус.",
+        "alignment": null,
+        "runs": [
+          [
+            "Первое, что предстоит улучшить в нашем роботе – это ",
+            null,
+            null,
+            null,
+            "Times New Roman",
+            18.0
+          ],
+          [
+            "усил",
+            null,
+            null,
+            null,
+            "Times New Roman",
+            18.0
+          ],
+          [
+            "ить",
+            null,
+            null,
+            null,
+            "Times New Roman",
+            18.0
+          ],
+          [
+            " конструкци",
+            null,
+            null,
+            null,
+            "Times New Roman",
+            18.0
+          ],
+          [
+            "ю металлическими профилями. Это позволит роботу выдерживать тяжести в корпусе, а также выдерживать падения и точки в корпус.",
+            null,
+            null,
+            null,
+            "Times New Roman",
+            18.0
+          ]
+        ]
+      },
+      {
+        "i": 79,
+        "style": "Normal",
+        "text": "Наш корпус требует изменения не только в конструкции, но и в колесах. Мы планируем ставить железные промышленные колеса Mecano.",
+        "alignment": null,
+        "runs": [
+          [
+            "Наш корпус требует изменения не только в конструкции, но и в колесах. Мы планируем ставить ",
+            null,
+            null,
+            null,
+            "Times New Roman",
+            18.0
+          ],
+          [
+            "железные ",
+            null,
+            null,
+            null,
+            "Times New Roman",
+            18.0
+          ],
+          [
+            "промышленные",
+            null,
+            null,
+            null,
+            "Times New Roman",
+            18.0
+          ],
+          [
+            " колеса ",
+            null,
+            null,
+            null,
+            "Times New Roman",
+            18.0
+          ],
+          [
+            "Mecano",
+            null,
+            null,
+            null,
+            "Times New Roman",
+            18.0
+          ],
+          [
+            ".",
+            null,
+            null,
+            null,
+            "Times New Roman",
+            18.0
+          ]
+        ]
+      },
+      {
+        "i": 80,
+        "style": "Normal",
+        "text": "Не стоит забывать и о внешнем виде и безопасности робота. Так как мы будем использовать металлические профиля, наша команда добавит больше безопасных косметических деталей.",
+        "alignment": null,
+        "runs": [
+          [
+            "Не стоит забывать и о внешнем виде и безопасности робота. Так как мы будем использовать металлические профиля, наша команда добавит больше безопасных косметических деталей.",
+            null,
+            null,
+            null,
+            "Times New Roman",
+            18.0
+          ]
+        ]
+      },
+      {
+        "i": 81,
+        "style": "Normal",
+        "text": "Поговорим и о электронных компонентах робота. Мы собираемся полностью заменить детали на промышленные образцы для скорейшего тестирование робота на реальных ситуациях в аэропорту.",
+        "alignment": null,
+        "runs": [
+          [
+            "Поговорим и о электронных компонентах робота. Мы собираемся полностью ",
+            null,
+            null,
+            null,
+            "Times New Roman",
+            18.0
+          ],
+          [
+            "заменить детали на промышленные образцы для скорейшего тестирование робота на реальных ситуациях в аэропорту.",
+            null,
+            null,
+            null,
+            "Times New Roman",
+            18.0
+          ]
+        ]
+      },
+      {
+        "i": 82,
+        "style": "Normal",
+        "text": "Навигация в роботе одна из ключевых задач в проекте, мы планируем внедрять промышленную камеру на 360 градусов и не только ее.\n",
+        "alignment": null,
+        "runs": [
+          [
+            "Навигация в роботе одна из ключевых задач в проекте, мы планируем внедрять промышленную камеру на 360 градусов и не только ее.",
+            null,
+            null,
+            null,
+            "Times New Roman",
+            18.0
+          ],
+          [
+            "\n",
+            null,
+            null,
+            null,
+            "Times New Roman",
+            18.0
+          ]
+        ]
+      },
+      {
+        "i": 83,
+        "style": "Normal",
+        "text": "В наших планах разработать удобный интерфейс для использования робота и его отслеживание не только пользователям, но и разработчикам.\n",
+        "alignment": null,
+        "runs": [
+          [
+            "В наших планах разработать удобный ",
+            null,
+            null,
+            null,
+            "Times New Roman",
+            18.0
+          ],
+          [
+            "интерфейс для использования робота и его отслеживание не только пользователям, но и разработчикам.",
+            null,
+            null,
+            null,
+            "Times New Roman",
+            18.0
+          ],
+          [
+            "\n",
+            null,
+            null,
+            null,
+            "Times New Roman",
+            18.0
+          ]
+        ]
+      },
+      {
+        "i": 84,
+        "style": "Normal",
+        "text": "Для пользователей, будет доступно приложение, в котором будет видно, где находится робот, на какой он стадии проверки и по необходимости предупреждения и объявление о проблемах багажа.\n",
+        "alignment": null,
+        "runs": [
+          [
+            "Для пользователей, будет доступно приложение, в котором будет видно, где находится робот, на какой он стадии проверки и по необходимости предупреждения и объявление о проблемах багажа.",
+            null,
+            null,
+            null,
+            "Times New Roman",
+            18.0
+          ],
+          [
+            "\n",
+            null,
+            null,
+            null,
+            "Times New Roman",
+            18.0
+          ]
+        ]
+      },
+      {
+        "i": 85,
+        "style": "Normal",
+        "text": "На стороне разработчика будет интерфейс всех роботов. Будет подробный отчет о состоянии системы, а занятости, о возможных проблемах и т.п.",
+        "alignment": null,
+        "runs": [
+          [
+            "На стороне разработчика будет интерфейс всех роботов. Будет подробный отчет о состоянии системы, а занятости, о возможных проблемах",
+            null,
+            null,
+            null,
+            "Times New Roman",
+            18.0
+          ],
+          [
+            " и т.п.",
+            null,
+            null,
+            null,
+            "Times New Roman",
+            18.0
+          ]
+        ]
+      },
+      {
+        "i": 86,
+        "style": "Normal",
+        "text": "Благодаря этому, наша команда сможет точечно выявлять проблемы у конкретных роботов, устранять их дистанционно или вызывать их в специализированный хаб для физической починки.",
+        "alignment": null,
+        "runs": [
+          [
+            "Благодаря этому, наша команда сможет точечно выявлять проблемы у конкретных роботов, устранять их дистанционно или вызывать их в специализированный хаб для физической починки.",
+            null,
+            null,
+            null,
+            "Times New Roman",
+            18.0
+          ]
+        ]
+      },
+      {
+        "i": 87,
+        "style": "Normal",
+        "text": "Поговорим и о выше сказанном специализированном хабе для роботов. Это будет станция для зарядки роботов, а также место хранение для не исправленных роботов, откуда наша команда будет их забирать и отвозить в мастерскую для починки и отчистки корпуса по необходимости.",
+        "alignment": null,
+        "runs": [
+          [
+            "Поговорим и о выше сказанном специализированном хабе для роботов. Это будет станция для зарядки роботов, а также место хранение для не исправленных роботов, откуда наша команда будет их забирать и отвозить в мастерскую для починки и отчистки корпуса по необходимости.",
+            null,
+            null,
+            null,
+            "Times New Roman",
+            18.0
+          ]
+        ]
+      },
+      {
+        "i": 88,
+        "style": "Normal",
+        "text": "Так же мы добавим подогрев и охлаждение напитков в уже имеющийся подстаканник.",
+        "alignment": null,
+        "runs": [
+          [
+            "Так же мы добавим подогрев и охлаждение напитков в уже имеющийся подстаканник.",
+            null,
+            null,
+            null,
+            "Times New Roman",
+            18.0
+          ]
+        ]
+      },
+      {
+        "i": 89,
+        "style": "Normal",
+        "text": "Заключительный этап нашего проекта – это тестирование нашей системы на реальных ситуациях в аэропорту.",
+        "alignment": null,
+        "runs": [
+          [
+            "Заключительный этап нашего проекта – это тестирование нашей системы ",
+            null,
+            null,
+            null,
+            "Times New Roman",
+            18.0
+          ],
+          [
+            "на реальных ситуациях в аэропорту.",
+            null,
+            null,
+            null,
+            "Times New Roman",
+            18.0
+          ]
+        ]
+      },
+      {
+        "i": 90,
+        "style": "Normal",
+        "text": "",
+        "alignment": null,
+        "runs": []
+      },
+      {
+        "i": 91,
+        "style": "Normal",
+        "text": "Слайд 13. Заключение",
+        "alignment": null,
+        "runs": [
+          [
+            "Слайд 13. Заключение",
+            null,
+            null,
+            null,
+            "Times New Roman",
+            18.0
+          ]
+        ]
+      },
+      {
+        "i": 92,
+        "style": "Normal",
+        "text": "",
+        "alignment": null,
+        "runs": []
+      },
+      {
+        "i": 93,
+        "style": "Normal",
+        "text": "Спасибо за внимание!",
+        "alignment": null,
+        "runs": [
+          [
+            "Спасибо за внимание!",
+            null,
+            null,
+            null,
+            "Times New Roman",
+            18.0
+          ]
+        ]
+      },
+      {
+        "i": 94,
+        "style": "Normal",
+        "text": "",
+        "alignment": null,
+        "runs": []
+      },
+      {
+        "i": 95,
+        "style": "Normal",
+        "text": "Команда AirPorter",
+        "alignment": null,
+        "runs": [
+          [
+            "Команда",
+            null,
+            null,
+            null,
+            "Times New Roman",
+            18.0
+          ],
+          [
+            " ",
+            null,
+            null,
+            null,
+            "Times New Roman",
+            18.0
+          ],
+          [
+            "AirPorter",
+            null,
+            null,
+            null,
+            "Times New Roman",
+            18.0
+          ]
+        ]
+      },
+      {
+        "i": 96,
+        "style": "Normal",
+        "text": "",
+        "alignment": null,
+        "runs": []
+      }
+    ]
+  }
+]

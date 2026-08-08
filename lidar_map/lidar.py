@@ -10,12 +10,23 @@ from sensor_msgs.msg import LaserScan
 from config import (
     ICP_MAX_POINTS,
     ICP_STRIDE,
+    LIDAR_DX_M,
+    LIDAR_DY_M,
+    LIDAR_DYAW_RAD,
     MAP_HIT_STRIDE,
     MAX_RANGE,
     MIN_RANGE_MAP,
     MIN_RANGE_SHOW,
 )
 from geometry import is_frame_rack_hit
+
+
+def _lidar_to_base(lx: float, ly: float) -> tuple[float, float]:
+    """Apply optional LiDAR mount offset into base_link / chassis frame."""
+    if LIDAR_DX_M == 0.0 and LIDAR_DY_M == 0.0 and LIDAR_DYAW_RAD == 0.0:
+        return lx, ly
+    c, s = math.cos(LIDAR_DYAW_RAD), math.sin(LIDAR_DYAW_RAD)
+    return LIDAR_DX_M + c * lx - s * ly, LIDAR_DY_M + s * lx + c * ly
 
 
 def local_from_scan(
@@ -33,8 +44,7 @@ def local_from_scan(
             if is_frame_rack_hit(angle, dist):
                 angle += float(msg.angle_increment)
                 continue
-            lx = dist * math.cos(angle)
-            ly = dist * math.sin(angle)
+            lx, ly = _lidar_to_base(dist * math.cos(angle), dist * math.sin(angle))
             if i % ICP_STRIDE == 0:
                 locals_xy.append([lx, ly])
             if dist >= MIN_RANGE_MAP and (i % MAP_HIT_STRIDE == 0):

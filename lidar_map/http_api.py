@@ -405,6 +405,11 @@ def make_handler(bridge):
                     return
                 send_json(self, kiosk_navigation.status())
                 return
+            if path == "/api/scan/health":
+                if not self._allow_kiosk_control():
+                    return
+                send_json(self, bridge.scan_health())
+                return
             if path.startswith("/api/scan"):
                 if not self._allow_kiosk_control():
                     return

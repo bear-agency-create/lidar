@@ -10,10 +10,10 @@
   Odometry is solved from FR/RL/RR (3 wheels determine 3-DOF motion).
 
   Serial protocol (115200, \n terminated):
-    SET_ROBOT_VELOCITY vx vy w   vx/vy ~500 = full, w ~1500 = full
+    SET_ROBOT_VELOCITY vx vy w   vx/vy ~1000 = full, w ~4000 = full
     w/s/a/d                      fwd / back / strafe L / strafe R
     q/e (z/c)                    rotate CCW / CW
-    STOP                         smooth coast-down (shared ramp)
+    STOP                         immediate brake (same as HARD_STOP)
     HARD_STOP / BRAKE / x / spc  immediate brake (all wheels)
     PING                         -> PONG
     RESET_ODOM                   zero encoders + pose -> ODOM_OK
@@ -94,15 +94,18 @@ static float velKp = 0.0f;
 static float velKi = 0.0f;
 static const float VEL_INT_MAX = 0.35f;
 static const float EMA_ALPHA = 0.38f;
-// Smooth start everywhere — soft ramp so PSU does not sag; crab builds even slower.
-static const float RAMP_START = 0.28f;
-static const float RAMP_UP = 0.050f;
-static const float RAMP_DOWN = 0.055f;
-static const float CRAB_RAMP_UP = 0.35f;    // fast strafe ramp
-static const int CRAB_PWM_FLOOR = 220;      // max torque — break stiction on floor
-static const float WHEEL_RAMP_UP = 0.055f;
-static const float WHEEL_RAMP_DOWN = 0.065f;
-static const int PWM_FLOOR = 85;
+// Instant full thrust on accel (teleop arrows must bite immediately).
+// Soft slew only when decelerating / releasing.
+static const float RAMP_START = 1.00f;
+static const float RAMP_UP = 1.00f;
+static const float RAMP_DOWN = 0.12f;
+static const float CRAB_RAMP_UP = 1.00f;
+static const int CRAB_PWM_FLOOR = 255;      // full crab thrust
+static const float WHEEL_RAMP_UP = 1.00f;
+static const float WHEEL_RAMP_DOWN = 0.12f;
+static const int PWM_FLOOR = 255;           // any motion = absolute max duty
+// Pure FWD/BACK — absolute max duty on all four wheels.
+static const int STRAIGHT_PWM = 255;
 
 static int cmd_vx = 0, cmd_vy = 0, cmd_w_mrad = 0;
 static unsigned long lastCmdMs = 0;
@@ -200,10 +203,9 @@ static void driveOneIdx(int idx, uint8_t pwm, uint8_t in1, uint8_t in2, int sign
     motorCoast(pwm, in1, in2);
     delayMicroseconds(250);
   }
-  float mag = clampf(fabsf(v), 0.0f, 1.0f);
-  int spd = (int)(mag * (float)BASE_PWM + 0.5f);
-  if (spd < PWM_FLOOR) spd = PWM_FLOOR;
-  motor(pwm, in1, in2, dir, sign, clampPwm(spd));
+  // Available maximum: any non-zero wheel command = full PWM.
+  (void)v;
+  motor(pwm, in1, in2, dir, sign, BASE_PWM);
   lastDriveDir[idx] = dir;
 }
 
@@ -223,10 +225,7 @@ static void driveFL(float v) {
     motorCoast(FL_PWM, FL_IN1, FL_IN2);
     delayMicroseconds(300);
   }
-  float mag = clampf(fabsf(v), 0.0f, 1.0f);
-  int spd = (int)(mag * (float)BASE_PWM + 0.5f);
-  if (spd < PWM_FLOOR) spd = PWM_FLOOR;
-  spd = clampPwm(spd);
+  (void)v;
   // SIGN_FL = -1: logical +fwd → IN1 LOW, IN2 HIGH; logical -rev → IN1 HIGH, IN2 LOW.
   if (dir > 0) {
     digitalWrite(FL_IN1, LOW);
@@ -235,7 +234,7 @@ static void driveFL(float v) {
     digitalWrite(FL_IN1, HIGH);
     digitalWrite(FL_IN2, LOW);
   }
-  analogWrite(FL_PWM, spd);
+  analogWrite(FL_PWM, BASE_PWM);
   lastDriveDir[0] = dir;
 }
 
@@ -254,10 +253,7 @@ static void driveRL(float v) {
     motorCoast(RL_PWM, RL_IN1, RL_IN2);
     delayMicroseconds(500);
   }
-  float mag = clampf(fabsf(v), 0.0f, 1.0f);
-  int spd = (int)(mag * (float)BASE_PWM + 0.5f);
-  if (spd < PWM_FLOOR) spd = PWM_FLOOR;
-  spd = clampPwm(spd);
+  (void)v;
   // Flipped IN levels so logical reverse hits the working half-bridge.
   if (dir > 0) {
     digitalWrite(RL_IN1, HIGH);
@@ -266,7 +262,7 @@ static void driveRL(float v) {
     digitalWrite(RL_IN1, LOW);
     digitalWrite(RL_IN2, HIGH);
   }
-  analogWrite(RL_PWM, spd);
+  analogWrite(RL_PWM, BASE_PWM);
   lastDriveDir[2] = dir;
 }
 
@@ -285,10 +281,7 @@ static void driveRR(float v) {
     motorCoast(RR_PWM, RR_IN1, RR_IN2);
     delayMicroseconds(300);
   }
-  float mag = clampf(fabsf(v), 0.0f, 1.0f);
-  int spd = (int)(mag * (float)BASE_PWM + 0.5f);
-  if (spd < PWM_FLOOR) spd = PWM_FLOOR;
-  spd = clampPwm(spd);
+  (void)v;
   if (dir > 0) {
     digitalWrite(RR_IN1, HIGH);
     digitalWrite(RR_IN2, LOW);
@@ -296,7 +289,7 @@ static void driveRR(float v) {
     digitalWrite(RR_IN1, LOW);
     digitalWrite(RR_IN2, HIGH);
   }
-  analogWrite(RR_PWM, spd);
+  analogWrite(RR_PWM, BASE_PWM);
   lastDriveDir[3] = dir;
 }
 
@@ -362,6 +355,28 @@ static void coastMotors() {
   motorCoast(RR_PWM, RR_IN1, RR_IN2);
 }
 
+// Exact CleanFwdBack electrical map — arrows FWD/BACK must use this path.
+static void driveStraightDirect(bool forward) {
+  digitalWrite(FL_IN1, forward ? LOW  : HIGH);
+  digitalWrite(FL_IN2, forward ? HIGH : LOW);
+  analogWrite(FL_PWM, STRAIGHT_PWM);
+
+  digitalWrite(FR_IN1, forward ? LOW  : HIGH);
+  digitalWrite(FR_IN2, forward ? HIGH : LOW);
+  analogWrite(FR_PWM, STRAIGHT_PWM);
+
+  digitalWrite(RL_IN1, forward ? HIGH : LOW);
+  digitalWrite(RL_IN2, forward ? LOW  : HIGH);
+  analogWrite(RL_PWM, STRAIGHT_PWM);
+
+  digitalWrite(RR_IN1, forward ? HIGH : LOW);
+  digitalWrite(RR_IN2, forward ? LOW  : HIGH);
+  analogWrite(RR_PWM, STRAIGHT_PWM);
+
+  const int dir = forward ? +1 : -1;
+  for (int i = 0; i < 4; i++) lastDriveDir[i] = dir;
+}
+
 // --- Crab: exact proezd.ino (LV/LN/PV/PN) on robot pin pairs ---
 static void proezdPin(uint8_t in1, uint8_t in2, uint8_t pwm, int spd, bool vpered) {
   spd = clampPwm(spd);
@@ -418,17 +433,14 @@ static void verifyCrabEncoders(const long dTicks[4], int cmdVy) {
 }
 
 static void applyCrab(int cmdVy, const long dTicks[4]) {
-  const float tgt = clampf((float)cmdVy / 500.0f, -1.0f, 1.0f);
-  if (fabsf(tgt) < 0.04f) {
+  if (abs(cmdVy) < 40) {
     coastMotors();
     crabMag = 0.0f;
     return;
   }
 
-  crabMag = slewToward(crabMag, 1.0f, CRAB_RAMP_UP, RAMP_DOWN);
-  int pwm = (int)(crabMag * (float)BASE_PWM + 0.5f);
-  if (pwm < CRAB_PWM_FLOOR) pwm = CRAB_PWM_FLOOR;
-  if (pwm > BASE_PWM) pwm = BASE_PWM;
+  crabMag = 1.0f;
+  int pwm = BASE_PWM;  // absolute max
 
   // proezd.ino: ▶ vy<0 = vpravo, ◀ vy>0 = vlevo
   if (cmdVy < 0) crabVpravo(pwm);
@@ -438,16 +450,12 @@ static void applyCrab(int cmdVy, const long dTicks[4]) {
 }
 
 static float slewToward(float current, float target, float upStep, float downStep) {
-  // Soft kick from standstill, then smooth ramp (all motions).
-  if (fabsf(current) < 0.08f && fabsf(target) >= RAMP_START) {
-    return (target > 0.0f) ? RAMP_START : -RAMP_START;
-  }
-  float d = target - current;
-  bool accel = fabsf(target) > fabsf(current) + 1e-4f;
-  float step = accel ? upStep : downStep;
-  if (d > step) d = step;
-  if (d < -step) d = -step;
-  return current + d;
+  // No soft ramp — jump straight to target (100% start / stop feel).
+  (void)current;
+  (void)upStep;
+  (void)downStep;
+  (void)RAMP_START;
+  return target;
 }
 
 static bool rampsActive() {
@@ -476,6 +484,20 @@ static void applyMotors(float dt, const long dTicks[4]) {
     return;
   }
 
+  // STRAIGHT — CleanFwdBack pin states; no mix/ramp/PI/yaw can cancel motion.
+  const bool isStraight =
+      (abs(cmd_vx) > 40) && (abs(cmd_vy) <= 40) && (abs(cmd_w_mrad) <= 80);
+  if (isStraight) {
+    rampX = rampY = rampW = 0.0f;
+    crabMag = 0.0f;
+    for (int i = 0; i < 4; i++) {
+      rampOut[i] = 0.0f;
+      velInt[i] = 0.0f;
+    }
+    driveStraightDirect(cmd_vx > 0);
+    return;
+  }
+
   // CRAB MODE — bypass mecanum mix + per-wheel PID; drive all 4 wheels directly.
   const bool isCrab =
       (abs(cmd_vy) > 40) && (abs(cmd_vy) > abs(cmd_vx)) && (abs(cmd_w_mrad) < 400);
@@ -488,9 +510,9 @@ static void applyMotors(float dt, const long dTicks[4]) {
   crabMag = 0.0f;
 
   // Normal mecanum (fwd/back/tank/diagonal)
-  const float tgtX = clampf((float)cmd_vx / 500.0f, -1.0f, 1.0f);
-  const float tgtY = clampf((float)cmd_vy / 500.0f, -1.0f, 1.0f);
-  const float tgtW = clampf((float)cmd_w_mrad / 1500.0f, -1.0f, 1.0f);
+  const float tgtX = clampf((float)cmd_vx / 1000.0f, -1.0f, 1.0f);
+  const float tgtY = clampf((float)cmd_vy / 1000.0f, -1.0f, 1.0f);
+  const float tgtW = clampf((float)cmd_w_mrad / 4000.0f, -1.0f, 1.0f);
   rampX = slewToward(rampX, tgtX, RAMP_UP, RAMP_DOWN);
   rampY = slewToward(rampY, tgtY, RAMP_UP, RAMP_DOWN);
   rampW = slewToward(rampW, tgtW, RAMP_UP, RAMP_DOWN);
@@ -536,6 +558,8 @@ static void applyMotors(float dt, const long dTicks[4]) {
       if (ff < 0.0f) ff *= frRevScale;
       else if (ff > 0.0f) ff *= frFwdScale;
     }
+    // Available maximum: saturate wheel command to ±1 before PWM mapping.
+    if (fabsf(ff) > 0.008f) ff = (ff > 0.0f) ? 1.0f : -1.0f;
 
     if (!encTrusted[i] || (velKp <= 0.0f && velKi <= 0.0f)) {
       out[i] = ff;
@@ -597,7 +621,32 @@ static void publishPose() {
 static void setCmd(int vx, int vy, int w_mrad) {
   hardBrake = false;
   brakeUntilMs = 0;
-  cmd_vx = vx; cmd_vy = vy; cmd_w_mrad = w_mrad;
+  // Available maximum: snap any motion to full Mega units (1000/1000/4000).
+  if (abs(vx) > 20) vx = (vx > 0) ? 1000 : -1000;
+  else vx = 0;
+  if (abs(vy) > 20) vy = (vy > 0) ? 1000 : -1000;
+  else vy = 0;
+  if (abs(w_mrad) > 40) w_mrad = (w_mrad > 0) ? 4000 : -4000;
+  else w_mrad = 0;
+  cmd_vx = vx;
+  cmd_vy = vy;
+  cmd_w_mrad = w_mrad;
+  // Preload to ±1.0 immediately (no soft kick).
+  rampX = clampf((float)cmd_vx / 1000.0f, -1.0f, 1.0f);
+  rampY = clampf((float)cmd_vy / 1000.0f, -1.0f, 1.0f);
+  rampW = clampf((float)cmd_w_mrad / 4000.0f, -1.0f, 1.0f);
+  crabMag = (abs(cmd_vy) > 40) ? 1.0f : 0.0f;
+  for (int i = 0; i < 4; i++) {
+    float t = 0.0f;
+    if (i == 0) t = rampX + rampY - rampW;
+    else if (i == 1) t = rampX - rampY + rampW;
+    else if (i == 2) t = rampX - rampY - rampW;
+    else t = rampX + rampY + rampW;
+    // Saturate every wheel to full magnitude when commanded.
+    if (fabsf(t) > 0.008f) t = (t > 0.0f) ? 1.0f : -1.0f;
+    rampOut[i] = t;
+    velInt[i] = 0.0f;
+  }
   lastCmdMs = millis();
 }
 
@@ -654,12 +703,12 @@ static void handleLine(char *line) {
   if (!line[0]) return;
   if (line[1] == '\0') {
     char c = line[0];
-    if (c=='w'||c=='W') { setCmd( 500, 0, 0); return; }
-    if (c=='s'||c=='S') { setCmd(-500, 0, 0); return; }
-    if (c=='a'||c=='A') { setCmd(0,  500, 0); return; }
-    if (c=='d'||c=='D') { setCmd(0, -500, 0); return; }
-    if (c=='q'||c=='Q'||c=='z'||c=='Z') { setCmd(0, 0,  1500); return; }
-    if (c=='e'||c=='E'||c=='c'||c=='C') { setCmd(0, 0, -1500); return; }
+    if (c=='w'||c=='W') { setCmd( 1000, 0, 0); return; }
+    if (c=='s'||c=='S') { setCmd(-1000, 0, 0); return; }
+    if (c=='a'||c=='A') { setCmd(0,  1000, 0); return; }
+    if (c=='d'||c=='D') { setCmd(0, -1000, 0); return; }
+    if (c=='q'||c=='Q'||c=='z'||c=='Z') { setCmd(0, 0,  4000); return; }
+    if (c=='e'||c=='E'||c=='c'||c=='C') { setCmd(0, 0, -4000); return; }
     if (c=='x'||c=='X'||c==' ') { stopHard(); return; }
   }
   if (!strncmp(line, "HARD_STOP", 9) || !strncmp(line, "BRAKE", 5)) {
@@ -751,7 +800,7 @@ static void handleLine(char *line) {
     char *p = line + 10;
     int a = nextInt(&p), b = nextInt(&p), c = nextInt(&p), d = nextInt(&p);
     if (a >= 40 && b >= 40 && c >= 40 && d >= 40 &&
-        a <= 200 && b <= 200 && c <= 200 && d <= 200) {
+        a <= 255 && b <= 255 && c <= 255 && d <= 255) {
       wheelScale[0] = (float)a / 100.0f;
       wheelScale[1] = (float)b / 100.0f;
       wheelScale[2] = (float)c / 100.0f;
@@ -768,9 +817,9 @@ static void handleLine(char *line) {
   if (!strncmp(line, "TEST_CRAB", 9)) {
     long sFR, sRR;
     float dX, dY, dTh;
-    testCrabRun(-500, F("VPRAVO"), sFR, sRR, dX, dY, dTh);
+    testCrabRun(-1000, F("VPRAVO"), sFR, sRR, dX, dY, dTh);
     delay(400);
-    testCrabRun(500, F("VLEVO"), sFR, sRR, dX, dY, dTh);
+    testCrabRun(1000, F("VLEVO"), sFR, sRR, dX, dY, dTh);
     Serial.println(F("TEST_CRAB_OK"));
     return;
   }

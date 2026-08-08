@@ -1,0 +1,8 @@
+# Direct USB: Mega on xhci-hcd.0 port2, LiDAR on xhci-hcd.1 port1
+ACTION=="add", SUBSYSTEM=="tty", ENV{ID_PATH}=="platform-xhci-hcd.1-usb-0:1:1.0", SYMLINK+="ttyLIDAR", MODE="0666", GROUP="dialout"
+ACTION=="add", SUBSYSTEM=="tty", ENV{ID_PATH}=="platform-xhci-hcd.0-usb-0:2:1.0", SYMLINK+="ttyMEGA", MODE="0666", GROUP="dialout"
+# Fallback old direct layout
+ACTION=="add", SUBSYSTEM=="tty", ENV{ID_PATH}=="platform-xhci-hcd.0-usb-0:1:1.0", SYMLINK+="ttyLIDAR", MODE="0666", GROUP="dialout"
+# Hub layout fallback
+ACTION=="add", SUBSYSTEM=="tty", ENV{ID_PATH}=="platform-xhci-hcd.1-usb-0:1.4:1.0", SYMLINK+="ttyLIDAR", MODE="0666", GROUP="dialout"
+ACTION=="add", SUBSYSTEM=="tty", ENV{ID_PATH}=="platform-xhci-hcd.1-usb-0:1.3:1.0", SYMLINK+="ttyMEGA", MODE="0666", GROUP="dialout"

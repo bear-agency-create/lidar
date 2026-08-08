@@ -1,0 +1,996 @@
+[
+  {
+    "slide": 1,
+    "transition": 0,
+    "effects": 0,
+    "texts": [
+      {
+        "shape": 2,
+        "name": "TextBox 2",
+        "text": "РОБОТОТЕХНИКА · ПРОЕКТНАЯ РАБОТА"
+      },
+      {
+        "shape": 3,
+        "name": "TextBox 3",
+        "text": "AeroPorter"
+      },
+      {
+        "shape": 4,
+        "name": "TextBox 4",
+        "text": "Мобильный робот-ассистент\rдля аэропорта"
+      },
+      {
+        "shape": 5,
+        "name": "TextBox 5",
+        "text": "Цель: считать билет · показать рейс · построить маршрут сопровождения"
+      },
+      {
+        "shape": 7,
+        "name": "TextBox 7",
+        "text": "Команда"
+      },
+      {
+        "shape": 8,
+        "name": "TextBox 8",
+        "text": "Илья Карякин · 9 класс\rПарамонов Станислав · 9 класс\rСабирзанов Артур · 11 класс"
+      },
+      {
+        "shape": 9,
+        "name": "TextBox 9",
+        "text": "Руководитель"
+      },
+      {
+        "shape": 10,
+        "name": "TextBox 10",
+        "text": "Александр Борисович\rЧетвергов"
+      },
+      {
+        "shape": 11,
+        "name": "TextBox 11",
+        "text": "AEROPORTER"
+      },
+      {
+        "shape": 12,
+        "name": "TextBox 12",
+        "text": "01"
+      }
+    ]
+  },
+  {
+    "slide": 2,
+    "transition": 0,
+    "effects": 0,
+    "texts": [
+      {
+        "shape": 2,
+        "name": "TextBox 2",
+        "text": "01 · ПРОБЛЕМА"
+      },
+      {
+        "shape": 3,
+        "name": "TextBox 3",
+        "text": "Аэропорт сложен для пассажира"
+      },
+      {
+        "shape": 4,
+        "name": "TextBox 4",
+        "text": "Информация меняется быстро, а помощь нужна здесь и сейчас"
+      },
+      {
+        "shape": 10,
+        "name": "TextBox 11",
+        "text": "Навигация"
+      },
+      {
+        "shape": 11,
+        "name": "TextBox 12",
+        "text": "Поиск стойки, выхода и багажа отнимает время."
+      },
+      {
+        "shape": 17,
+        "name": "TextBox 19",
+        "text": "Информация"
+      },
+      {
+        "shape": 18,
+        "name": "TextBox 20",
+        "text": "Статус рейса и номер выхода могут измениться."
+      },
+      {
+        "shape": 25,
+        "name": "TextBox 28",
+        "text": "Доступность"
+      },
+      {
+        "shape": 26,
+        "name": "TextBox 29",
+        "text": "Язык, возраст и стресс усложняют общение."
+      },
+      {
+        "shape": 27,
+        "name": "TextBox 35",
+        "text": "AEROPORTER"
+      },
+      {
+        "shape": 28,
+        "name": "TextBox 36",
+        "text": "02"
+      }
+    ]
+  },
+  {
+    "slide": 3,
+    "transition": 0,
+    "effects": 0,
+    "texts": [
+      {
+        "shape": 2,
+        "name": "TextBox 2",
+        "text": "02 · РЕШЕНИЕ"
+      },
+      {
+        "shape": 3,
+        "name": "TextBox 3",
+        "text": "Один понятный путь: от билета до нужного места"
+      },
+      {
+        "shape": 6,
+        "name": "TextBox 6",
+        "text": "01"
+      },
+      {
+        "shape": 11,
+        "name": "TextBox 11",
+        "text": "Сканирование"
+      },
+      {
+        "shape": 12,
+        "name": "TextBox 12",
+        "text": "Камера считывает штрихкод билета"
+      },
+      {
+        "shape": 14,
+        "name": "TextBox 14",
+        "text": "02"
+      },
+      {
+        "shape": 20,
+        "name": "TextBox 20",
+        "text": "Информация"
+      },
+      {
+        "shape": 21,
+        "name": "TextBox 21",
+        "text": "Экран показывает рейс, время и выход"
+      },
+      {
+        "shape": 23,
+        "name": "TextBox 23",
+        "text": "03"
+      },
+      {
+        "shape": 28,
+        "name": "TextBox 28",
+        "text": "Маршрут"
+      },
+      {
+        "shape": 29,
+        "name": "TextBox 29",
+        "text": "Билет связывается с настроенной точкой"
+      },
+      {
+        "shape": 31,
+        "name": "TextBox 31",
+        "text": "04"
+      },
+      {
+        "shape": 36,
+        "name": "TextBox 36",
+        "text": "Сопровождение"
+      },
+      {
+        "shape": 37,
+        "name": "TextBox 37",
+        "text": "Робот запускает маршрут A→B"
+      },
+      {
+        "shape": 39,
+        "name": "TextBox 39",
+        "text": "Цель: снизить стресс пассажира и нагрузку на персонал"
+      },
+      {
+        "shape": 40,
+        "name": "TextBox 40",
+        "text": "AEROPORTER"
+      },
+      {
+        "shape": 41,
+        "name": "TextBox 41",
+        "text": "03"
+      }
+    ]
+  },
+  {
+    "slide": 4,
+    "transition": 0,
+    "effects": 0,
+    "texts": [
+      {
+        "shape": 2,
+        "name": "TextBox 2",
+        "text": "03 · ПРОТОТИП"
+      },
+      {
+        "shape": 3,
+        "name": "TextBox 3",
+        "text": "Аппаратная платформа"
+      },
+      {
+        "shape": 4,
+        "name": "TextBox 4",
+        "text": "Манёвренное шасси и два уровня управления"
+      },
+      {
+        "shape": 7,
+        "name": "TextBox 7",
+        "text": "1"
+      },
+      {
+        "shape": 8,
+        "name": "TextBox 8",
+        "text": "Raspberry Pi 5"
+      },
+      {
+        "shape": 9,
+        "name": "TextBox 9",
+        "text": "обработка изображения и интерфейс"
+      },
+      {
+        "shape": 12,
+        "name": "TextBox 12",
+        "text": "2"
+      },
+      {
+        "shape": 13,
+        "name": "TextBox 13",
+        "text": "Arduino Mega"
+      },
+      {
+        "shape": 14,
+        "name": "TextBox 14",
+        "text": "управление моторами и watchdog команд"
+      },
+      {
+        "shape": 17,
+        "name": "TextBox 17",
+        "text": "3"
+      },
+      {
+        "shape": 18,
+        "name": "TextBox 18",
+        "text": "4 Mecanum-колеса"
+      },
+      {
+        "shape": 19,
+        "name": "TextBox 19",
+        "text": "движение вперёд, вбок и с разворотом"
+      },
+      {
+        "shape": 22,
+        "name": "TextBox 22",
+        "text": "4"
+      },
+      {
+        "shape": 23,
+        "name": "TextBox 23",
+        "text": "Привод и датчики"
+      },
+      {
+        "shape": 24,
+        "name": "TextBox 24",
+        "text": "4 двигателя · 2 драйвера · камера · датчики"
+      },
+      {
+        "shape": 25,
+        "name": "TextBox 25",
+        "text": "AEROPORTER"
+      },
+      {
+        "shape": 26,
+        "name": "TextBox 26",
+        "text": "04"
+      }
+    ]
+  },
+  {
+    "slide": 5,
+    "transition": 0,
+    "effects": 0,
+    "texts": [
+      {
+        "shape": 2,
+        "name": "TextBox 2",
+        "text": "04 · АРХИТЕКТУРА"
+      },
+      {
+        "shape": 3,
+        "name": "TextBox 3",
+        "text": "Как устроена система"
+      },
+      {
+        "shape": 4,
+        "name": "TextBox 4",
+        "text": "Каждый модуль отвечает за свою задачу"
+      },
+      {
+        "shape": 7,
+        "name": "TextBox 7",
+        "text": "КАМЕРА"
+      },
+      {
+        "shape": 8,
+        "name": "TextBox 8",
+        "text": "штрихкод · видеопоток"
+      },
+      {
+        "shape": 11,
+        "name": "TextBox 11",
+        "text": "RASPBERRY PI 5"
+      },
+      {
+        "shape": 12,
+        "name": "TextBox 12",
+        "text": "киоск · карта · маршрут"
+      },
+      {
+        "shape": 15,
+        "name": "TextBox 15",
+        "text": "ARDUINO MEGA"
+      },
+      {
+        "shape": 16,
+        "name": "TextBox 16",
+        "text": "привод · энкодеры"
+      },
+      {
+        "shape": 19,
+        "name": "TextBox 19",
+        "text": "ПРИВОД"
+      },
+      {
+        "shape": 20,
+        "name": "TextBox 20",
+        "text": "4 мотора"
+      },
+      {
+        "shape": 22,
+        "name": "TextBox 22",
+        "text": "›"
+      },
+      {
+        "shape": 24,
+        "name": "TextBox 24",
+        "text": "›"
+      },
+      {
+        "shape": 26,
+        "name": "TextBox 26",
+        "text": "›"
+      },
+      {
+        "shape": 28,
+        "name": "TextBox 28",
+        "text": "ПАССАЖИРСКИЙ ИНТЕРФЕЙС"
+      },
+      {
+        "shape": 29,
+        "name": "TextBox 29",
+        "text": "4 языка · билет · выбор пункта"
+      },
+      {
+        "shape": 32,
+        "name": "TextBox 32",
+        "text": "Вычисления разделены: высокоуровневая логика — на Raspberry Pi,\rреальное управление движением — на Arduino."
+      },
+      {
+        "shape": 33,
+        "name": "TextBox 33",
+        "text": "AEROPORTER"
+      },
+      {
+        "shape": 34,
+        "name": "TextBox 34",
+        "text": "05"
+      }
+    ]
+  },
+  {
+    "slide": 6,
+    "transition": 0,
+    "effects": 0,
+    "texts": [
+      {
+        "shape": 2,
+        "name": "TextBox 2",
+        "text": "05 · НАВИГАЦИЯ"
+      },
+      {
+        "shape": 3,
+        "name": "TextBox 3",
+        "text": "От линии — к автономному маршруту"
+      },
+      {
+        "shape": 4,
+        "name": "TextBox 4",
+        "text": "Что уже работает, что сделано в программе, что ещё нужно проверить"
+      },
+      {
+        "shape": 11,
+        "name": "TextBox 11",
+        "text": "Работает в прототипе"
+      },
+      {
+        "shape": 12,
+        "name": "TextBox 12",
+        "text": "Езда по стрелкам\r\r4 стрелки ведут робота"
+      },
+      {
+        "shape": 21,
+        "name": "TextBox 21",
+        "text": "Реализовано в ПО"
+      },
+      {
+        "shape": 22,
+        "name": "TextBox 22",
+        "text": "Карта и маршрут\r\rРобот строит карту по LiDAR и ищет путь A→B."
+      },
+      {
+        "shape": 29,
+        "name": "TextBox 29",
+        "text": "Нужно подтвердить"
+      },
+      {
+        "shape": 30,
+        "name": "TextBox 30",
+        "text": "Полевые испытания\r\rПроверка в реальном зале с людьми."
+      },
+      {
+        "shape": 31,
+        "name": "TextBox 31",
+        "text": "→"
+      },
+      {
+        "shape": 32,
+        "name": "TextBox 32",
+        "text": "→"
+      },
+      {
+        "shape": 33,
+        "name": "TextBox 33",
+        "text": "Программа навигации уже написана; работу в настоящем аэропорту пока не заявляем."
+      },
+      {
+        "shape": 34,
+        "name": "TextBox 34",
+        "text": "AEROPORTER"
+      },
+      {
+        "shape": 35,
+        "name": "TextBox 35",
+        "text": "06"
+      }
+    ]
+  },
+  {
+    "slide": 7,
+    "transition": 0,
+    "effects": 0,
+    "texts": [
+      {
+        "shape": 2,
+        "name": "TextBox 2",
+        "text": "06 · ИНТЕРФЕЙС"
+      },
+      {
+        "shape": 3,
+        "name": "TextBox 3",
+        "text": "Экран, понятный с первого взгляда"
+      },
+      {
+        "shape": 4,
+        "name": "TextBox 4",
+        "text": "Крупные действия, четыре языка и быстрый доступ к билету"
+      },
+      {
+        "shape": 7,
+        "name": "TextBox 8",
+        "text": "4 языка"
+      },
+      {
+        "shape": 8,
+        "name": "TextBox 9",
+        "text": "RU · EN · 中文 · TT"
+      },
+      {
+        "shape": 10,
+        "name": "TextBox 11",
+        "text": "6 направлений"
+      },
+      {
+        "shape": 11,
+        "name": "TextBox 12",
+        "text": "4 из них настраиваются"
+      },
+      {
+        "shape": 13,
+        "name": "TextBox 14",
+        "text": "Билет"
+      },
+      {
+        "shape": 14,
+        "name": "TextBox 15",
+        "text": "камера или ручной ввод"
+      },
+      {
+        "shape": 15,
+        "name": "TextBox 16",
+        "text": "AEROPORTER"
+      },
+      {
+        "shape": 16,
+        "name": "TextBox 17",
+        "text": "07"
+      }
+    ]
+  },
+  {
+    "slide": 8,
+    "transition": 0,
+    "effects": 0,
+    "texts": [
+      {
+        "shape": 2,
+        "name": "TextBox 2",
+        "text": "07 · БЕЗОПАСНОСТЬ"
+      },
+      {
+        "shape": 3,
+        "name": "TextBox 3",
+        "text": "Безопасность заложена в сценарий"
+      },
+      {
+        "shape": 4,
+        "name": "TextBox 4",
+        "text": "Робот должен помогать, не создавая новых рисков"
+      },
+      {
+        "shape": 7,
+        "name": "TextBox 7",
+        "text": "ВНУТРЕННОСТИ ПРОТОТИПА"
+      },
+      {
+        "shape": 11,
+        "name": "TextBox 11",
+        "text": "✓"
+      },
+      {
+        "shape": 12,
+        "name": "TextBox 12",
+        "text": "Watchdog привода"
+      },
+      {
+        "shape": 13,
+        "name": "TextBox 13",
+        "text": "Нет команд → остановка"
+      },
+      {
+        "shape": 17,
+        "name": "TextBox 17",
+        "text": "✓"
+      },
+      {
+        "shape": 18,
+        "name": "TextBox 18",
+        "text": "Heartbeat киоска"
+      },
+      {
+        "shape": 19,
+        "name": "TextBox 19",
+        "text": "Потеря связи → отмена сопровождения"
+      },
+      {
+        "shape": 23,
+        "name": "TextBox 23",
+        "text": "✓"
+      },
+      {
+        "shape": 24,
+        "name": "TextBox 24",
+        "text": "Контроль маршрута"
+      },
+      {
+        "shape": 25,
+        "name": "TextBox 25",
+        "text": "Только заранее настроенные точки"
+      },
+      {
+        "shape": 29,
+        "name": "TextBox 29",
+        "text": "✓"
+      },
+      {
+        "shape": 30,
+        "name": "TextBox 30",
+        "text": "Защитный корпус"
+      },
+      {
+        "shape": 31,
+        "name": "TextBox 31",
+        "text": "Нужно до эксплуатации"
+      },
+      {
+        "shape": 35,
+        "name": "TextBox 35",
+        "text": "✓"
+      },
+      {
+        "shape": 36,
+        "name": "TextBox 36",
+        "text": "Индикация"
+      },
+      {
+        "shape": 37,
+        "name": "TextBox 37",
+        "text": "Показывать состояние робота"
+      },
+      {
+        "shape": 38,
+        "name": "TextBox 38",
+        "text": "AEROPORTER"
+      },
+      {
+        "shape": 39,
+        "name": "TextBox 39",
+        "text": "08"
+      }
+    ]
+  },
+  {
+    "slide": 9,
+    "transition": 0,
+    "effects": 0,
+    "texts": [
+      {
+        "shape": 2,
+        "name": "TextBox 2",
+        "text": "08 · РАЗРАБОТКА"
+      },
+      {
+        "shape": 3,
+        "name": "TextBox 3",
+        "text": "Что было сделано в проекте"
+      },
+      {
+        "shape": 6,
+        "name": "TextBox 6",
+        "text": "1"
+      },
+      {
+        "shape": 7,
+        "name": "TextBox 7",
+        "text": "Сценарий"
+      },
+      {
+        "shape": 8,
+        "name": "TextBox 8",
+        "text": "Определён путь пассажира"
+      },
+      {
+        "shape": 10,
+        "name": "TextBox 10",
+        "text": "2"
+      },
+      {
+        "shape": 11,
+        "name": "TextBox 11",
+        "text": "Шасси"
+      },
+      {
+        "shape": 12,
+        "name": "TextBox 12",
+        "text": "Собрана Mecanum-платформа"
+      },
+      {
+        "shape": 14,
+        "name": "TextBox 14",
+        "text": "3"
+      },
+      {
+        "shape": 15,
+        "name": "TextBox 15",
+        "text": "Электроника"
+      },
+      {
+        "shape": 16,
+        "name": "TextBox 16",
+        "text": "Подключены Pi, Mega и привод"
+      },
+      {
+        "shape": 18,
+        "name": "TextBox 18",
+        "text": "4"
+      },
+      {
+        "shape": 19,
+        "name": "TextBox 19",
+        "text": "Движение"
+      },
+      {
+        "shape": 20,
+        "name": "TextBox 20",
+        "text": "Удалённое управление роботом"
+      },
+      {
+        "shape": 22,
+        "name": "TextBox 22",
+        "text": "5"
+      },
+      {
+        "shape": 23,
+        "name": "TextBox 23",
+        "text": "Развитие"
+      },
+      {
+        "shape": 24,
+        "name": "TextBox 24",
+        "text": "Добавлены киоск и LiDAR-модули"
+      },
+      {
+        "shape": 26,
+        "name": "TextBox 26",
+        "text": "Модульный подход позволяет развивать части проекта независимо"
+      },
+      {
+        "shape": 27,
+        "name": "TextBox 27",
+        "text": "AEROPORTER"
+      },
+      {
+        "shape": 28,
+        "name": "TextBox 28",
+        "text": "09"
+      }
+    ]
+  },
+  {
+    "slide": 10,
+    "transition": 0,
+    "effects": 0,
+    "texts": [
+      {
+        "shape": 2,
+        "name": "TextBox 2",
+        "text": "09 · ЭКОНОМИКА"
+      },
+      {
+        "shape": 3,
+        "name": "TextBox 3",
+        "text": "Смета исходного прототипа — около 18 000 ₽"
+      },
+      {
+        "shape": 5,
+        "name": "TextBox 5",
+        "text": "75 000"
+      },
+      {
+        "shape": 6,
+        "name": "TextBox 6",
+        "text": "рублей"
+      },
+      {
+        "shape": 7,
+        "name": "TextBox 7",
+        "text": "Шасси · двигатели · драйверы · Arduino Mega\rRaspberry Pi 5 · камера · датчики · материалы"
+      },
+      {
+        "shape": 9,
+        "name": "TextBox 9",
+        "text": "Почему это важно"
+      },
+      {
+        "shape": 11,
+        "name": "TextBox 11",
+        "text": "✓"
+      },
+      {
+        "shape": 12,
+        "name": "TextBox 12",
+        "text": "доступная база для школьного прототипа"
+      },
+      {
+        "shape": 14,
+        "name": "TextBox 14",
+        "text": "✓"
+      },
+      {
+        "shape": 15,
+        "name": "TextBox 15",
+        "text": "модульная замена компонентов"
+      },
+      {
+        "shape": 17,
+        "name": "TextBox 17",
+        "text": "✓"
+      },
+      {
+        "shape": 18,
+        "name": "TextBox 18",
+        "text": "масштабирование по мере испытаний"
+      },
+      {
+        "shape": 19,
+        "name": "TextBox 20",
+        "text": "AEROPORTER"
+      },
+      {
+        "shape": 20,
+        "name": "TextBox 21",
+        "text": "10"
+      }
+    ]
+  },
+  {
+    "slide": 11,
+    "transition": 0,
+    "effects": 0,
+    "texts": [
+      {
+        "shape": 2,
+        "name": "TextBox 2",
+        "text": "10 · РЕЗУЛЬТАТ"
+      },
+      {
+        "shape": 3,
+        "name": "TextBox 3",
+        "text": "Что уже достигнуто — и что дальше"
+      },
+      {
+        "shape": 5,
+        "name": "TextBox 5",
+        "text": "РЕАЛИЗОВАНО / ДЕМО"
+      },
+      {
+        "shape": 7,
+        "name": "TextBox 7",
+        "text": "✓"
+      },
+      {
+        "shape": 8,
+        "name": "TextBox 8",
+        "text": "манёвренная Mecanum-платформа"
+      },
+      {
+        "shape": 10,
+        "name": "TextBox 10",
+        "text": "✓"
+      },
+      {
+        "shape": 11,
+        "name": "TextBox 11",
+        "text": "разделённое управление Pi + Arduino"
+      },
+      {
+        "shape": 13,
+        "name": "TextBox 13",
+        "text": "✓"
+      },
+      {
+        "shape": 14,
+        "name": "TextBox 14",
+        "text": "киоск и билетный сценарий на демоданных"
+      },
+      {
+        "shape": 16,
+        "name": "TextBox 16",
+        "text": "✓"
+      },
+      {
+        "shape": 17,
+        "name": "TextBox 17",
+        "text": "watchdog, heartbeat и контроль точек"
+      },
+      {
+        "shape": 19,
+        "name": "TextBox 19",
+        "text": "ТРЕБУЕТ ПОДТВЕРЖДЕНИЯ"
+      },
+      {
+        "shape": 21,
+        "name": "TextBox 21",
+        "text": "1"
+      },
+      {
+        "shape": 22,
+        "name": "TextBox 22",
+        "text": "испытания LiDAR-навигации в терминале"
+      },
+      {
+        "shape": 24,
+        "name": "TextBox 24",
+        "text": "2"
+      },
+      {
+        "shape": 25,
+        "name": "TextBox 25",
+        "text": "устойчивость к динамичным препятствиям"
+      },
+      {
+        "shape": 27,
+        "name": "TextBox 27",
+        "text": "3"
+      },
+      {
+        "shape": 28,
+        "name": "TextBox 28",
+        "text": "интеграция с реальными данными аэропорта"
+      },
+      {
+        "shape": 30,
+        "name": "TextBox 30",
+        "text": "4"
+      },
+      {
+        "shape": 31,
+        "name": "TextBox 31",
+        "text": "промышленный безопасный корпус"
+      },
+      {
+        "shape": 32,
+        "name": "TextBox 32",
+        "text": "AEROPORTER"
+      },
+      {
+        "shape": 33,
+        "name": "TextBox 33",
+        "text": "11"
+      }
+    ]
+  },
+  {
+    "slide": 12,
+    "transition": 0,
+    "effects": 0,
+    "texts": [
+      {
+        "shape": 4,
+        "name": "TextBox 4",
+        "text": "AEROPORTER"
+      },
+      {
+        "shape": 5,
+        "name": "TextBox 5",
+        "text": "Технология,\rкоторая помогает\rне потеряться"
+      },
+      {
+        "shape": 6,
+        "name": "TextBox 6",
+        "text": "Цель — передать роботу часть рутинной навигации\rи потенциально снизить нагрузку на сотрудников."
+      },
+      {
+        "shape": 8,
+        "name": "TextBox 8",
+        "text": "Спасибо за внимание"
+      },
+      {
+        "shape": 9,
+        "name": "TextBox 9",
+        "text": "AEROPORTER"
+      },
+      {
+        "shape": 10,
+        "name": "TextBox 10",
+        "text": "12"
+      }
+    ]
+  }
+]

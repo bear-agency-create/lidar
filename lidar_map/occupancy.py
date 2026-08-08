@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import heapq
 import json
+import math
 import threading
 import time
 from pathlib import Path
@@ -71,9 +72,14 @@ class OccupancyMap:
                     if cx == ex and cy == ey:
                         break
                     i = self._idx(cx, cy)
-                    if i is None or lo[i] > 2.5:
+                    if i is None:
                         continue
-                    lo[i] = max(-5.0, lo[i] - 0.18)
+                    # Strong occupied cells decay slowly so self-hits can clear;
+                    # weaker cells clear at the normal free-ray rate.
+                    if lo[i] > 2.5:
+                        lo[i] = max(-5.0, lo[i] - 0.06)
+                    else:
+                        lo[i] = max(-5.0, lo[i] - 0.18)
                 for dy in range(-HIT_BLOB, HIT_BLOB + 1):
                     for dx in range(-HIT_BLOB, HIT_BLOB + 1):
                         if abs(dx) + abs(dy) > HIT_BLOB:
@@ -174,14 +180,13 @@ class OccupancyMap:
             weak = np.flatnonzero(
                 (self.logodds > OCC_DISPLAY) & (self.logodds <= OCC_SOLID)
             )
-            free = np.flatnonzero(self.logodds < -0.7)
+            # Do not ship free cells over HTTP — unknown reads as empty in the UI
+            # and dumping every free cell bloated /api/scan into watchdog stale.
             cells: list[list[int]] = []
             for i in solid:
                 cells.append([int(i % self.w), int(i // self.w), 100])
             for i in weak:
                 cells.append([int(i % self.w), int(i // self.w), 90])
-            for i in free:
-                cells.append([int(i % self.w), int(i // self.w), 0])
             occupied = int(solid.size + weak.size)
             if temp_cells:
                 cells.extend(temp_cells)
@@ -193,6 +198,68 @@ class OccupancyMap:
                 "cells": cells,
                 "hits": occupied,
             }
+
+    def clear_disk(self, x: float, y: float, radius_m: float) -> int:
+        """Erase occupancy inside a circle (legacy helper; prefer clear_robot_footprint)."""
+        cleared = 0
+        with self.lock:
+            cx, cy = self._world_to_cell(x, y)
+            r_cells = max(1, int(math.ceil(radius_m / self.res)) + 1)
+            r2 = radius_m * radius_m
+            for iy in range(cy - r_cells, cy + r_cells + 1):
+                for ix in range(cx - r_cells, cx + r_cells + 1):
+                    i = self._idx(ix, iy)
+                    if i is None:
+                        continue
+                    wx, wy = self.cell_to_world(ix, iy)
+                    if (wx - x) * (wx - x) + (wy - y) * (wy - y) > r2:
+                        continue
+                    if self.logodds[i] != 0.0:
+                        self.logodds[i] = 0.0
+                        cleared += 1
+            if cleared:
+                self.dirty = True
+        return cleared
+
+    def clear_robot_footprint(self, x: float, y: float, yaw: float) -> int:
+        """Erase occupancy under the 82×56 deck (+ posts), not a 0.58 m disk."""
+        from config import (
+            FRAME_BODY_PAD,
+            FRAME_POST_RADIUS_M,
+            ROBOT_LENGTH_M,
+            ROBOT_WIDTH_M,
+        )
+        from geometry import is_inside_robot_body
+
+        extent = (
+            max(ROBOT_LENGTH_M, ROBOT_WIDTH_M) * 0.5
+            + FRAME_BODY_PAD
+            + FRAME_POST_RADIUS_M
+            + 0.02
+        )
+        cleared = 0
+        c, s = math.cos(yaw), math.sin(yaw)
+        with self.lock:
+            cx, cy = self._world_to_cell(x, y)
+            r_cells = max(1, int(math.ceil(extent / self.res)) + 1)
+            for iy in range(cy - r_cells, cy + r_cells + 1):
+                for ix in range(cx - r_cells, cx + r_cells + 1):
+                    i = self._idx(ix, iy)
+                    if i is None:
+                        continue
+                    wx, wy = self.cell_to_world(ix, iy)
+                    dx = wx - x
+                    dy = wy - y
+                    lx = c * dx + s * dy
+                    ly = -s * dx + c * dy
+                    if not is_inside_robot_body(lx, ly):
+                        continue
+                    if self.logodds[i] != 0.0:
+                        self.logodds[i] = 0.0
+                        cleared += 1
+            if cleared:
+                self.dirty = True
+        return cleared
 
     def is_static_occupied(self, ix: int, iy: int, margin: int = 1) -> bool:
         with self.lock:

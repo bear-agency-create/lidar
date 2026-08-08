@@ -1,0 +1,1862 @@
+[
+  {
+    "slide": 1,
+    "name": "TextBox 2",
+    "text": "РОБОТОТЕХНИКА · ПРОЕКТНАЯ РАБОТА",
+    "font": "Arial",
+    "size": 10.0,
+    "bold": -1,
+    "color": 16766033,
+    "align": 1
+  },
+  {
+    "slide": 1,
+    "name": "TextBox 3",
+    "text": "AeroPorter",
+    "font": "Arial",
+    "size": 48.0,
+    "bold": -1,
+    "color": -2147483648,
+    "align": 1
+  },
+  {
+    "slide": 1,
+    "name": "TextBox 4",
+    "text": "Мобильный робот-ассистент / для аэропорта",
+    "font": "Arial",
+    "size": 28.0,
+    "bold": -1,
+    "color": 16777215,
+    "align": 1
+  },
+  {
+    "slide": 1,
+    "name": "TextBox 5",
+    "text": "Цель: считать билет · показать рейс · построить маршрут сопровождения",
+    "font": "Arial",
+    "size": 16.0,
+    "bold": 0,
+    "color": 15653049,
+    "align": 1
+  },
+  {
+    "slide": 1,
+    "name": "TextBox 7",
+    "text": "Команда",
+    "font": "Arial",
+    "size": 11.0,
+    "bold": -1,
+    "color": 16766033,
+    "align": 1
+  },
+  {
+    "slide": 1,
+    "name": "TextBox 8",
+    "text": "Илья Карякин · 9 класс / Парамонов Станислав · 9 класс / Сабирзанов Артур · 11 класс",
+    "font": "Arial",
+    "size": 14.0,
+    "bold": -1,
+    "color": 16777215,
+    "align": 1
+  },
+  {
+    "slide": 1,
+    "name": "TextBox 9",
+    "text": "Руководитель",
+    "font": "Arial",
+    "size": 11.0,
+    "bold": -1,
+    "color": 16766033,
+    "align": 1
+  },
+  {
+    "slide": 1,
+    "name": "TextBox 10",
+    "text": "Александр Борисович / Четвергов",
+    "font": "Arial",
+    "size": 16.0,
+    "bold": -1,
+    "color": 16777215,
+    "align": 1
+  },
+  {
+    "slide": 1,
+    "name": "TextBox 11",
+    "text": "AEROPORTER",
+    "font": "Arial",
+    "size": 9.0,
+    "bold": -1,
+    "color": 14993832,
+    "align": 1
+  },
+  {
+    "slide": 1,
+    "name": "TextBox 12",
+    "text": "01",
+    "font": "Arial",
+    "size": 9.0,
+    "bold": -1,
+    "color": 14993832,
+    "align": 3
+  },
+  {
+    "slide": 2,
+    "name": "TextBox 2",
+    "text": "01 · ПРОБЛЕМА",
+    "font": "Arial",
+    "size": 10.0,
+    "bold": -1,
+    "color": 16091670,
+    "align": 1
+  },
+  {
+    "slide": 2,
+    "name": "TextBox 3",
+    "text": "Аэропорт сложен для пассажира",
+    "font": "Arial",
+    "size": 30.0,
+    "bold": -1,
+    "color": 3810322,
+    "align": 1
+  },
+  {
+    "slide": 2,
+    "name": "TextBox 4",
+    "text": "Информация меняется быстро, а помощь нужна здесь и сейчас",
+    "font": "Arial",
+    "size": 15.0,
+    "bold": 0,
+    "color": 9073761,
+    "align": 1
+  },
+  {
+    "slide": 2,
+    "name": "TextBox 11",
+    "text": "Навигация",
+    "font": "Arial",
+    "size": 16.0,
+    "bold": -1,
+    "color": 3810322,
+    "align": 1
+  },
+  {
+    "slide": 2,
+    "name": "TextBox 12",
+    "text": "Поиск стойки, выхода и багажа отнимает время.",
+    "font": "Arial",
+    "size": 13.0,
+    "bold": 0,
+    "color": 9073761,
+    "align": 1
+  },
+  {
+    "slide": 2,
+    "name": "TextBox 19",
+    "text": "Информация",
+    "font": "Arial",
+    "size": 16.0,
+    "bold": -1,
+    "color": 3810322,
+    "align": 1
+  },
+  {
+    "slide": 2,
+    "name": "TextBox 20",
+    "text": "Статус рейса и номер выхода могут измениться.",
+    "font": "Arial",
+    "size": 13.0,
+    "bold": 0,
+    "color": 9073761,
+    "align": 1
+  },
+  {
+    "slide": 2,
+    "name": "TextBox 28",
+    "text": "Доступность",
+    "font": "Arial",
+    "size": 16.0,
+    "bold": -1,
+    "color": 3810322,
+    "align": 1
+  },
+  {
+    "slide": 2,
+    "name": "TextBox 29",
+    "text": "Язык, возраст и стресс усложняют общение.",
+    "font": "Arial",
+    "size": 13.0,
+    "bold": 0,
+    "color": 9073761,
+    "align": 1
+  },
+  {
+    "slide": 2,
+    "name": "TextBox 31",
+    "text": "Особенно уязвимы",
+    "font": "Arial",
+    "size": 12.0,
+    "bold": -1,
+    "color": 16766033,
+    "align": 1
+  },
+  {
+    "slide": 2,
+    "name": "TextBox 32",
+    "text": "пожилые люди",
+    "font": "Arial",
+    "size": 19.0,
+    "bold": -1,
+    "color": 16777215,
+    "align": 1
+  },
+  {
+    "slide": 2,
+    "name": "TextBox 33",
+    "text": "семьи с детьми",
+    "font": "Arial",
+    "size": 19.0,
+    "bold": -1,
+    "color": 16777215,
+    "align": 1
+  },
+  {
+    "slide": 2,
+    "name": "TextBox 34",
+    "text": "иностранные пассажиры",
+    "font": "Arial",
+    "size": 19.0,
+    "bold": -1,
+    "color": 16777215,
+    "align": 1
+  },
+  {
+    "slide": 2,
+    "name": "TextBox 35",
+    "text": "AEROPORTER",
+    "font": "Arial",
+    "size": 9.0,
+    "bold": -1,
+    "color": 9073761,
+    "align": 1
+  },
+  {
+    "slide": 2,
+    "name": "TextBox 36",
+    "text": "02",
+    "font": "Arial",
+    "size": 9.0,
+    "bold": -1,
+    "color": 9073761,
+    "align": 3
+  },
+  {
+    "slide": 3,
+    "name": "TextBox 2",
+    "text": "02 · РЕШЕНИЕ",
+    "font": "Arial",
+    "size": 10.0,
+    "bold": -1,
+    "color": 16091670,
+    "align": 1
+  },
+  {
+    "slide": 3,
+    "name": "TextBox 3",
+    "text": "Один понятный путь: от билета до нужного места",
+    "font": "Arial",
+    "size": 30.0,
+    "bold": -1,
+    "color": 3810322,
+    "align": 1
+  },
+  {
+    "slide": 3,
+    "name": "TextBox 6",
+    "text": "01",
+    "font": "Arial",
+    "size": 11.0,
+    "bold": -1,
+    "color": 16777215,
+    "align": 2
+  },
+  {
+    "slide": 3,
+    "name": "TextBox 11",
+    "text": "Сканирование",
+    "font": "Arial",
+    "size": 17.0,
+    "bold": -1,
+    "color": 3810322,
+    "align": 2
+  },
+  {
+    "slide": 3,
+    "name": "TextBox 12",
+    "text": "Камера считывает штрихкод билета",
+    "font": "Arial",
+    "size": 12.0,
+    "bold": 0,
+    "color": 9073761,
+    "align": 2
+  },
+  {
+    "slide": 3,
+    "name": "TextBox 14",
+    "text": "02",
+    "font": "Arial",
+    "size": 11.0,
+    "bold": -1,
+    "color": 16777215,
+    "align": 2
+  },
+  {
+    "slide": 3,
+    "name": "TextBox 20",
+    "text": "Информация",
+    "font": "Arial",
+    "size": 17.0,
+    "bold": -1,
+    "color": 3810322,
+    "align": 2
+  },
+  {
+    "slide": 3,
+    "name": "TextBox 21",
+    "text": "Экран показывает рейс, время и выход",
+    "font": "Arial",
+    "size": 12.0,
+    "bold": 0,
+    "color": 9073761,
+    "align": 2
+  },
+  {
+    "slide": 3,
+    "name": "TextBox 23",
+    "text": "03",
+    "font": "Arial",
+    "size": 11.0,
+    "bold": -1,
+    "color": 16777215,
+    "align": 2
+  },
+  {
+    "slide": 3,
+    "name": "TextBox 28",
+    "text": "Маршрут",
+    "font": "Arial",
+    "size": 17.0,
+    "bold": -1,
+    "color": 3810322,
+    "align": 2
+  },
+  {
+    "slide": 3,
+    "name": "TextBox 29",
+    "text": "Билет связывается с настроенной точкой",
+    "font": "Arial",
+    "size": 12.0,
+    "bold": 0,
+    "color": 9073761,
+    "align": 2
+  },
+  {
+    "slide": 3,
+    "name": "TextBox 31",
+    "text": "04",
+    "font": "Arial",
+    "size": 11.0,
+    "bold": -1,
+    "color": 16777215,
+    "align": 2
+  },
+  {
+    "slide": 3,
+    "name": "TextBox 36",
+    "text": "Сопровождение",
+    "font": "Arial",
+    "size": 17.0,
+    "bold": -1,
+    "color": 3810322,
+    "align": 2
+  },
+  {
+    "slide": 3,
+    "name": "TextBox 37",
+    "text": "Робот запускает маршрут A→B",
+    "font": "Arial",
+    "size": 12.0,
+    "bold": 0,
+    "color": 9073761,
+    "align": 2
+  },
+  {
+    "slide": 3,
+    "name": "TextBox 39",
+    "text": "Цель: снизить стресс пассажира и нагрузку на персонал",
+    "font": "Arial",
+    "size": 16.0,
+    "bold": -1,
+    "color": 3349511,
+    "align": 2
+  },
+  {
+    "slide": 3,
+    "name": "TextBox 40",
+    "text": "AEROPORTER",
+    "font": "Arial",
+    "size": 9.0,
+    "bold": -1,
+    "color": 9073761,
+    "align": 1
+  },
+  {
+    "slide": 3,
+    "name": "TextBox 41",
+    "text": "03",
+    "font": "Arial",
+    "size": 9.0,
+    "bold": -1,
+    "color": 9073761,
+    "align": 3
+  },
+  {
+    "slide": 4,
+    "name": "TextBox 2",
+    "text": "03 · ПРОТОТИП",
+    "font": "Arial",
+    "size": 10.0,
+    "bold": -1,
+    "color": 16766033,
+    "align": 1
+  },
+  {
+    "slide": 4,
+    "name": "TextBox 3",
+    "text": "Аппаратная платформа",
+    "font": "Arial",
+    "size": 30.0,
+    "bold": -1,
+    "color": 16777215,
+    "align": 1
+  },
+  {
+    "slide": 4,
+    "name": "TextBox 4",
+    "text": "Манёвренное шасси и два уровня управления",
+    "font": "Arial",
+    "size": 15.0,
+    "bold": 0,
+    "color": 15653049,
+    "align": 1
+  },
+  {
+    "slide": 4,
+    "name": "TextBox 7",
+    "text": "1",
+    "font": "Arial",
+    "size": 14.0,
+    "bold": -1,
+    "color": 16777215,
+    "align": 2
+  },
+  {
+    "slide": 4,
+    "name": "TextBox 8",
+    "text": "Raspberry Pi 5",
+    "font": "Arial",
+    "size": 18.0,
+    "bold": -1,
+    "color": 16777215,
+    "align": 1
+  },
+  {
+    "slide": 4,
+    "name": "TextBox 9",
+    "text": "обработка изображения и интерфейс",
+    "font": "Arial",
+    "size": 13.0,
+    "bold": 0,
+    "color": 15653049,
+    "align": 1
+  },
+  {
+    "slide": 4,
+    "name": "TextBox 12",
+    "text": "2",
+    "font": "Arial",
+    "size": 14.0,
+    "bold": -1,
+    "color": 16777215,
+    "align": 2
+  },
+  {
+    "slide": 4,
+    "name": "TextBox 13",
+    "text": "Arduino Mega",
+    "font": "Arial",
+    "size": 18.0,
+    "bold": -1,
+    "color": 16777215,
+    "align": 1
+  },
+  {
+    "slide": 4,
+    "name": "TextBox 14",
+    "text": "управление моторами и watchdog команд",
+    "font": "Arial",
+    "size": 13.0,
+    "bold": 0,
+    "color": 15653049,
+    "align": 1
+  },
+  {
+    "slide": 4,
+    "name": "TextBox 17",
+    "text": "3",
+    "font": "Arial",
+    "size": 14.0,
+    "bold": -1,
+    "color": 16777215,
+    "align": 2
+  },
+  {
+    "slide": 4,
+    "name": "TextBox 18",
+    "text": "4 Mecanum-колеса",
+    "font": "Arial",
+    "size": 18.0,
+    "bold": -1,
+    "color": 16777215,
+    "align": 1
+  },
+  {
+    "slide": 4,
+    "name": "TextBox 19",
+    "text": "движение вперёд, вбок и с разворотом",
+    "font": "Arial",
+    "size": 13.0,
+    "bold": 0,
+    "color": 15653049,
+    "align": 1
+  },
+  {
+    "slide": 4,
+    "name": "TextBox 22",
+    "text": "4",
+    "font": "Arial",
+    "size": 14.0,
+    "bold": -1,
+    "color": 16777215,
+    "align": 2
+  },
+  {
+    "slide": 4,
+    "name": "TextBox 23",
+    "text": "Привод и датчики",
+    "font": "Arial",
+    "size": 18.0,
+    "bold": -1,
+    "color": 16777215,
+    "align": 1
+  },
+  {
+    "slide": 4,
+    "name": "TextBox 24",
+    "text": "4 двигателя · 2 драйвера · камера · датчики",
+    "font": "Arial",
+    "size": 13.0,
+    "bold": 0,
+    "color": 15653049,
+    "align": 1
+  },
+  {
+    "slide": 4,
+    "name": "TextBox 25",
+    "text": "AEROPORTER",
+    "font": "Arial",
+    "size": 9.0,
+    "bold": -1,
+    "color": 14993832,
+    "align": 1
+  },
+  {
+    "slide": 4,
+    "name": "TextBox 26",
+    "text": "04",
+    "font": "Arial",
+    "size": 9.0,
+    "bold": -1,
+    "color": 14993832,
+    "align": 3
+  },
+  {
+    "slide": 5,
+    "name": "TextBox 2",
+    "text": "04 · АРХИТЕКТУРА",
+    "font": "Arial",
+    "size": 10.0,
+    "bold": -1,
+    "color": 16091670,
+    "align": 1
+  },
+  {
+    "slide": 5,
+    "name": "TextBox 3",
+    "text": "Как устроена система",
+    "font": "Arial",
+    "size": 30.0,
+    "bold": -1,
+    "color": 3810322,
+    "align": 1
+  },
+  {
+    "slide": 5,
+    "name": "TextBox 4",
+    "text": "Каждый модуль отвечает за свою задачу",
+    "font": "Arial",
+    "size": 15.0,
+    "bold": 0,
+    "color": 9073761,
+    "align": 1
+  },
+  {
+    "slide": 5,
+    "name": "TextBox 7",
+    "text": "КАМЕРА",
+    "font": "Arial",
+    "size": 13.0,
+    "bold": -1,
+    "color": 3810322,
+    "align": 2
+  },
+  {
+    "slide": 5,
+    "name": "TextBox 8",
+    "text": "штрихкод · видеопоток",
+    "font": "Arial",
+    "size": 11.0,
+    "bold": 0,
+    "color": 9073761,
+    "align": 2
+  },
+  {
+    "slide": 5,
+    "name": "TextBox 11",
+    "text": "RASPBERRY PI 5",
+    "font": "Arial",
+    "size": 13.0,
+    "bold": -1,
+    "color": 3810322,
+    "align": 2
+  },
+  {
+    "slide": 5,
+    "name": "TextBox 12",
+    "text": "киоск · карта · маршрут",
+    "font": "Arial",
+    "size": 11.0,
+    "bold": 0,
+    "color": 9073761,
+    "align": 2
+  },
+  {
+    "slide": 5,
+    "name": "TextBox 15",
+    "text": "ARDUINO MEGA",
+    "font": "Arial",
+    "size": 13.0,
+    "bold": -1,
+    "color": 3810322,
+    "align": 2
+  },
+  {
+    "slide": 5,
+    "name": "TextBox 16",
+    "text": "привод · энкодеры",
+    "font": "Arial",
+    "size": 11.0,
+    "bold": 0,
+    "color": 9073761,
+    "align": 2
+  },
+  {
+    "slide": 5,
+    "name": "TextBox 19",
+    "text": "ПРИВОД",
+    "font": "Arial",
+    "size": 13.0,
+    "bold": -1,
+    "color": 3810322,
+    "align": 2
+  },
+  {
+    "slide": 5,
+    "name": "TextBox 20",
+    "text": "4 мотора",
+    "font": "Arial",
+    "size": 11.0,
+    "bold": 0,
+    "color": 9073761,
+    "align": 2
+  },
+  {
+    "slide": 5,
+    "name": "TextBox 22",
+    "text": "›",
+    "font": "Arial",
+    "size": 20.0,
+    "bold": -1,
+    "color": 16091670,
+    "align": 1
+  },
+  {
+    "slide": 5,
+    "name": "TextBox 24",
+    "text": "›",
+    "font": "Arial",
+    "size": 20.0,
+    "bold": -1,
+    "color": 16091670,
+    "align": 1
+  },
+  {
+    "slide": 5,
+    "name": "TextBox 26",
+    "text": "›",
+    "font": "Arial",
+    "size": 20.0,
+    "bold": -1,
+    "color": 16091670,
+    "align": 1
+  },
+  {
+    "slide": 5,
+    "name": "TextBox 28",
+    "text": "ПАССАЖИРСКИЙ ИНТЕРФЕЙС",
+    "font": "Arial",
+    "size": 13.0,
+    "bold": -1,
+    "color": 16777215,
+    "align": 2
+  },
+  {
+    "slide": 5,
+    "name": "TextBox 29",
+    "text": "4 языка · билет · выбор пункта",
+    "font": "Arial",
+    "size": 12.0,
+    "bold": 0,
+    "color": 15653049,
+    "align": 2
+  },
+  {
+    "slide": 5,
+    "name": "TextBox 32",
+    "text": "Вычисления разделены: высокоуровневая логика — на Raspberry Pi, / реальное управление движением — на",
+    "font": "Arial",
+    "size": 12.0,
+    "bold": 0,
+    "color": 9073761,
+    "align": 2
+  },
+  {
+    "slide": 5,
+    "name": "TextBox 33",
+    "text": "AEROPORTER",
+    "font": "Arial",
+    "size": 9.0,
+    "bold": -1,
+    "color": 9073761,
+    "align": 1
+  },
+  {
+    "slide": 5,
+    "name": "TextBox 34",
+    "text": "05",
+    "font": "Arial",
+    "size": 9.0,
+    "bold": -1,
+    "color": 9073761,
+    "align": 3
+  },
+  {
+    "slide": 6,
+    "name": "TextBox 2",
+    "text": "05 · НАВИГАЦИЯ",
+    "font": "Arial",
+    "size": 10.0,
+    "bold": -1,
+    "color": 16766033,
+    "align": 1
+  },
+  {
+    "slide": 6,
+    "name": "TextBox 3",
+    "text": "От линии — к автономному маршруту",
+    "font": "Arial",
+    "size": 30.0,
+    "bold": -1,
+    "color": 16777215,
+    "align": 1
+  },
+  {
+    "slide": 6,
+    "name": "TextBox 4",
+    "text": "Что уже работает, что сделано в программе, что ещё нужно проверить",
+    "font": "Arial",
+    "size": 15.0,
+    "bold": 0,
+    "color": 15653049,
+    "align": 1
+  },
+  {
+    "slide": 6,
+    "name": "TextBox 11",
+    "text": "Работает в прототипе",
+    "font": "Arial",
+    "size": 16.0,
+    "bold": -1,
+    "color": 16777215,
+    "align": 1
+  },
+  {
+    "slide": 6,
+    "name": "TextBox 12",
+    "text": "Езда по стрелкам /  / 4 стрелки ведут робота",
+    "font": "Arial",
+    "size": 13.0,
+    "bold": 0,
+    "color": 15653049,
+    "align": 1
+  },
+  {
+    "slide": 6,
+    "name": "TextBox 21",
+    "text": "Реализовано в ПО",
+    "font": "Arial",
+    "size": 16.0,
+    "bold": -1,
+    "color": 16777215,
+    "align": 1
+  },
+  {
+    "slide": 6,
+    "name": "TextBox 22",
+    "text": "Карта и маршрут /  / Робот строит карту по LiDAR и ищет путь A→B.",
+    "font": "Arial",
+    "size": 13.0,
+    "bold": 0,
+    "color": 15653049,
+    "align": 1
+  },
+  {
+    "slide": 6,
+    "name": "TextBox 29",
+    "text": "Нужно подтвердить",
+    "font": "Arial",
+    "size": 16.0,
+    "bold": -1,
+    "color": 16777215,
+    "align": 1
+  },
+  {
+    "slide": 6,
+    "name": "TextBox 30",
+    "text": "Полевые испытания /  / Проверка в реальном зале с людьми.",
+    "font": "Arial",
+    "size": 13.0,
+    "bold": 0,
+    "color": 15653049,
+    "align": 1
+  },
+  {
+    "slide": 6,
+    "name": "TextBox 31",
+    "text": "→",
+    "font": "Arial",
+    "size": 24.0,
+    "bold": -1,
+    "color": 16766033,
+    "align": 2
+  },
+  {
+    "slide": 6,
+    "name": "TextBox 32",
+    "text": "→",
+    "font": "Arial",
+    "size": 24.0,
+    "bold": -1,
+    "color": 16766033,
+    "align": 2
+  },
+  {
+    "slide": 6,
+    "name": "TextBox 33",
+    "text": "Программа навигации уже написана; работу в настоящем аэропорту пока не заявляем.",
+    "font": "Arial",
+    "size": 14.0,
+    "bold": 0,
+    "color": 15653049,
+    "align": 2
+  },
+  {
+    "slide": 6,
+    "name": "TextBox 34",
+    "text": "AEROPORTER",
+    "font": "Arial",
+    "size": 9.0,
+    "bold": -1,
+    "color": 14993832,
+    "align": 1
+  },
+  {
+    "slide": 6,
+    "name": "TextBox 35",
+    "text": "06",
+    "font": "Arial",
+    "size": 9.0,
+    "bold": -1,
+    "color": 14993832,
+    "align": 3
+  },
+  {
+    "slide": 7,
+    "name": "TextBox 2",
+    "text": "06 · ИНТЕРФЕЙС",
+    "font": "Arial",
+    "size": 10.0,
+    "bold": -1,
+    "color": 16091670,
+    "align": 1
+  },
+  {
+    "slide": 7,
+    "name": "TextBox 3",
+    "text": "Экран, понятный с первого взгляда",
+    "font": "Arial",
+    "size": 30.0,
+    "bold": -1,
+    "color": 3810322,
+    "align": 1
+  },
+  {
+    "slide": 7,
+    "name": "TextBox 4",
+    "text": "Крупные действия, четыре языка и быстрый доступ к билету",
+    "font": "Arial",
+    "size": 15.0,
+    "bold": 0,
+    "color": 9073761,
+    "align": 1
+  },
+  {
+    "slide": 7,
+    "name": "TextBox 8",
+    "text": "4 языка",
+    "font": "Arial",
+    "size": 16.0,
+    "bold": -1,
+    "color": 3810322,
+    "align": 1
+  },
+  {
+    "slide": 7,
+    "name": "TextBox 9",
+    "text": "RU · EN · 中文 · TT",
+    "font": "",
+    "size": 12.0,
+    "bold": 0,
+    "color": 9073761,
+    "align": 1
+  },
+  {
+    "slide": 7,
+    "name": "TextBox 11",
+    "text": "6 направлений",
+    "font": "Arial",
+    "size": 16.0,
+    "bold": -1,
+    "color": 3810322,
+    "align": 1
+  },
+  {
+    "slide": 7,
+    "name": "TextBox 12",
+    "text": "4 из них настраиваются",
+    "font": "Arial",
+    "size": 12.0,
+    "bold": 0,
+    "color": 9073761,
+    "align": 1
+  },
+  {
+    "slide": 7,
+    "name": "TextBox 14",
+    "text": "Билет",
+    "font": "Arial",
+    "size": 16.0,
+    "bold": -1,
+    "color": 3810322,
+    "align": 1
+  },
+  {
+    "slide": 7,
+    "name": "TextBox 15",
+    "text": "камера или ручной ввод",
+    "font": "Arial",
+    "size": 12.0,
+    "bold": 0,
+    "color": 9073761,
+    "align": 1
+  },
+  {
+    "slide": 7,
+    "name": "TextBox 16",
+    "text": "AEROPORTER",
+    "font": "Arial",
+    "size": 9.0,
+    "bold": -1,
+    "color": 9073761,
+    "align": 1
+  },
+  {
+    "slide": 7,
+    "name": "TextBox 17",
+    "text": "07",
+    "font": "Arial",
+    "size": 9.0,
+    "bold": -1,
+    "color": 9073761,
+    "align": 3
+  },
+  {
+    "slide": 8,
+    "name": "TextBox 2",
+    "text": "07 · БЕЗОПАСНОСТЬ",
+    "font": "Arial",
+    "size": 10.0,
+    "bold": -1,
+    "color": 16091670,
+    "align": 1
+  },
+  {
+    "slide": 8,
+    "name": "TextBox 3",
+    "text": "Безопасность заложена в сценарий",
+    "font": "Arial",
+    "size": 30.0,
+    "bold": -1,
+    "color": 3810322,
+    "align": 1
+  },
+  {
+    "slide": 8,
+    "name": "TextBox 4",
+    "text": "Робот должен помогать, не создавая новых рисков",
+    "font": "Arial",
+    "size": 15.0,
+    "bold": 0,
+    "color": 9073761,
+    "align": 1
+  },
+  {
+    "slide": 8,
+    "name": "TextBox 7",
+    "text": "ВНУТРЕННОСТИ ПРОТОТИПА",
+    "font": "Arial",
+    "size": 11.0,
+    "bold": -1,
+    "color": 3349511,
+    "align": 2
+  },
+  {
+    "slide": 8,
+    "name": "TextBox 11",
+    "text": "✓",
+    "font": "Helvetica",
+    "size": 10.0,
+    "bold": -1,
+    "color": 16777215,
+    "align": 2
+  },
+  {
+    "slide": 8,
+    "name": "TextBox 12",
+    "text": "Watchdog привода",
+    "font": "Arial",
+    "size": 14.0,
+    "bold": -1,
+    "color": 3810322,
+    "align": 1
+  },
+  {
+    "slide": 8,
+    "name": "TextBox 13",
+    "text": "Нет команд → остановка",
+    "font": "Arial",
+    "size": 12.0,
+    "bold": 0,
+    "color": 9073761,
+    "align": 1
+  },
+  {
+    "slide": 8,
+    "name": "TextBox 17",
+    "text": "✓",
+    "font": "Helvetica",
+    "size": 10.0,
+    "bold": -1,
+    "color": 16777215,
+    "align": 2
+  },
+  {
+    "slide": 8,
+    "name": "TextBox 18",
+    "text": "Heartbeat киоска",
+    "font": "Arial",
+    "size": 14.0,
+    "bold": -1,
+    "color": 3810322,
+    "align": 1
+  },
+  {
+    "slide": 8,
+    "name": "TextBox 19",
+    "text": "Потеря связи → отмена сопровождения",
+    "font": "Arial",
+    "size": 12.0,
+    "bold": 0,
+    "color": 9073761,
+    "align": 1
+  },
+  {
+    "slide": 8,
+    "name": "TextBox 23",
+    "text": "✓",
+    "font": "Helvetica",
+    "size": 10.0,
+    "bold": -1,
+    "color": 16777215,
+    "align": 2
+  },
+  {
+    "slide": 8,
+    "name": "TextBox 24",
+    "text": "Контроль маршрута",
+    "font": "Arial",
+    "size": 14.0,
+    "bold": -1,
+    "color": 3810322,
+    "align": 1
+  },
+  {
+    "slide": 8,
+    "name": "TextBox 25",
+    "text": "Только заранее настроенные точки",
+    "font": "Arial",
+    "size": 12.0,
+    "bold": 0,
+    "color": 9073761,
+    "align": 1
+  },
+  {
+    "slide": 8,
+    "name": "TextBox 29",
+    "text": "✓",
+    "font": "Helvetica",
+    "size": 10.0,
+    "bold": -1,
+    "color": 16777215,
+    "align": 2
+  },
+  {
+    "slide": 8,
+    "name": "TextBox 30",
+    "text": "Защитный корпус",
+    "font": "Arial",
+    "size": 14.0,
+    "bold": -1,
+    "color": 3810322,
+    "align": 1
+  },
+  {
+    "slide": 8,
+    "name": "TextBox 31",
+    "text": "Нужно до эксплуатации",
+    "font": "Arial",
+    "size": 12.0,
+    "bold": 0,
+    "color": 9073761,
+    "align": 1
+  },
+  {
+    "slide": 8,
+    "name": "TextBox 35",
+    "text": "✓",
+    "font": "Helvetica",
+    "size": 10.0,
+    "bold": -1,
+    "color": 16777215,
+    "align": 2
+  },
+  {
+    "slide": 8,
+    "name": "TextBox 36",
+    "text": "Индикация",
+    "font": "Arial",
+    "size": 14.0,
+    "bold": -1,
+    "color": 3810322,
+    "align": 1
+  },
+  {
+    "slide": 8,
+    "name": "TextBox 37",
+    "text": "Показывать состояние робота",
+    "font": "Arial",
+    "size": 12.0,
+    "bold": 0,
+    "color": 9073761,
+    "align": 1
+  },
+  {
+    "slide": 8,
+    "name": "TextBox 38",
+    "text": "AEROPORTER",
+    "font": "Arial",
+    "size": 9.0,
+    "bold": -1,
+    "color": 9073761,
+    "align": 1
+  },
+  {
+    "slide": 8,
+    "name": "TextBox 39",
+    "text": "08",
+    "font": "Arial",
+    "size": 9.0,
+    "bold": -1,
+    "color": 9073761,
+    "align": 3
+  },
+  {
+    "slide": 9,
+    "name": "TextBox 2",
+    "text": "08 · РАЗРАБОТКА",
+    "font": "Arial",
+    "size": 10.0,
+    "bold": -1,
+    "color": 16091670,
+    "align": 1
+  },
+  {
+    "slide": 9,
+    "name": "TextBox 3",
+    "text": "Что было сделано в проекте",
+    "font": "Arial",
+    "size": 30.0,
+    "bold": -1,
+    "color": 3810322,
+    "align": 1
+  },
+  {
+    "slide": 9,
+    "name": "TextBox 6",
+    "text": "1",
+    "font": "Arial",
+    "size": 13.0,
+    "bold": -1,
+    "color": 16777215,
+    "align": 2
+  },
+  {
+    "slide": 9,
+    "name": "TextBox 7",
+    "text": "Сценарий",
+    "font": "Arial",
+    "size": 14.0,
+    "bold": -1,
+    "color": 3810322,
+    "align": 2
+  },
+  {
+    "slide": 9,
+    "name": "TextBox 8",
+    "text": "Определён путь пассажира",
+    "font": "Arial",
+    "size": 12.0,
+    "bold": 0,
+    "color": 9073761,
+    "align": 2
+  },
+  {
+    "slide": 9,
+    "name": "TextBox 10",
+    "text": "2",
+    "font": "Arial",
+    "size": 13.0,
+    "bold": -1,
+    "color": 16777215,
+    "align": 2
+  },
+  {
+    "slide": 9,
+    "name": "TextBox 11",
+    "text": "Шасси",
+    "font": "Arial",
+    "size": 14.0,
+    "bold": -1,
+    "color": 3810322,
+    "align": 2
+  },
+  {
+    "slide": 9,
+    "name": "TextBox 12",
+    "text": "Собрана Mecanum-платформа",
+    "font": "Arial",
+    "size": 12.0,
+    "bold": 0,
+    "color": 9073761,
+    "align": 2
+  },
+  {
+    "slide": 9,
+    "name": "TextBox 14",
+    "text": "3",
+    "font": "Arial",
+    "size": 13.0,
+    "bold": -1,
+    "color": 16777215,
+    "align": 2
+  },
+  {
+    "slide": 9,
+    "name": "TextBox 15",
+    "text": "Электроника",
+    "font": "Arial",
+    "size": 14.0,
+    "bold": -1,
+    "color": 3810322,
+    "align": 2
+  },
+  {
+    "slide": 9,
+    "name": "TextBox 16",
+    "text": "Подключены Pi, Mega и привод",
+    "font": "Arial",
+    "size": 12.0,
+    "bold": 0,
+    "color": 9073761,
+    "align": 2
+  },
+  {
+    "slide": 9,
+    "name": "TextBox 18",
+    "text": "4",
+    "font": "Arial",
+    "size": 13.0,
+    "bold": -1,
+    "color": 16777215,
+    "align": 2
+  },
+  {
+    "slide": 9,
+    "name": "TextBox 19",
+    "text": "Движение",
+    "font": "Arial",
+    "size": 14.0,
+    "bold": -1,
+    "color": 3810322,
+    "align": 2
+  },
+  {
+    "slide": 9,
+    "name": "TextBox 20",
+    "text": "Удалённое управление роботом",
+    "font": "Arial",
+    "size": 12.0,
+    "bold": 0,
+    "color": 9073761,
+    "align": 2
+  },
+  {
+    "slide": 9,
+    "name": "TextBox 22",
+    "text": "5",
+    "font": "Arial",
+    "size": 13.0,
+    "bold": -1,
+    "color": 16777215,
+    "align": 2
+  },
+  {
+    "slide": 9,
+    "name": "TextBox 23",
+    "text": "Развитие",
+    "font": "Arial",
+    "size": 14.0,
+    "bold": -1,
+    "color": 3810322,
+    "align": 2
+  },
+  {
+    "slide": 9,
+    "name": "TextBox 24",
+    "text": "Добавлены киоск и LiDAR-модули",
+    "font": "Arial",
+    "size": 12.0,
+    "bold": 0,
+    "color": 9073761,
+    "align": 2
+  },
+  {
+    "slide": 9,
+    "name": "TextBox 26",
+    "text": "Модульный подход позволяет развивать части проекта независимо",
+    "font": "Arial",
+    "size": 13.0,
+    "bold": -1,
+    "color": 16777215,
+    "align": 2
+  },
+  {
+    "slide": 9,
+    "name": "TextBox 27",
+    "text": "AEROPORTER",
+    "font": "Arial",
+    "size": 9.0,
+    "bold": -1,
+    "color": 9073761,
+    "align": 1
+  },
+  {
+    "slide": 9,
+    "name": "TextBox 28",
+    "text": "09",
+    "font": "Arial",
+    "size": 9.0,
+    "bold": -1,
+    "color": 9073761,
+    "align": 3
+  },
+  {
+    "slide": 10,
+    "name": "TextBox 2",
+    "text": "09 · ЭКОНОМИКА",
+    "font": "Arial",
+    "size": 10.0,
+    "bold": -1,
+    "color": 16766033,
+    "align": 1
+  },
+  {
+    "slide": 10,
+    "name": "TextBox 3",
+    "text": "Смета исходного прототипа — около 18 000 ₽",
+    "font": "Arial",
+    "size": 30.0,
+    "bold": -1,
+    "color": 16777215,
+    "align": 1
+  },
+  {
+    "slide": 10,
+    "name": "TextBox 5",
+    "text": "75 000",
+    "font": "Arial",
+    "size": 58.0,
+    "bold": -1,
+    "color": 16777215,
+    "align": 1
+  },
+  {
+    "slide": 10,
+    "name": "TextBox 6",
+    "text": "рублей",
+    "font": "Arial",
+    "size": 20.0,
+    "bold": -1,
+    "color": 16766033,
+    "align": 1
+  },
+  {
+    "slide": 10,
+    "name": "TextBox 7",
+    "text": "Шасси · двигатели · драйверы · Arduino Mega / Raspberry Pi 5 · камера · датчики · материалы",
+    "font": "Arial",
+    "size": 14.0,
+    "bold": 0,
+    "color": 15653049,
+    "align": 1
+  },
+  {
+    "slide": 10,
+    "name": "TextBox 9",
+    "text": "Почему это важно",
+    "font": "Arial",
+    "size": 20.0,
+    "bold": -1,
+    "color": 16777215,
+    "align": 1
+  },
+  {
+    "slide": 10,
+    "name": "TextBox 11",
+    "text": "✓",
+    "font": "Helvetica",
+    "size": 9.0,
+    "bold": -1,
+    "color": 3349511,
+    "align": 2
+  },
+  {
+    "slide": 10,
+    "name": "TextBox 12",
+    "text": "доступная база для школьного прототипа",
+    "font": "Arial",
+    "size": 13.0,
+    "bold": 0,
+    "color": 16313046,
+    "align": 1
+  },
+  {
+    "slide": 10,
+    "name": "TextBox 14",
+    "text": "✓",
+    "font": "Helvetica",
+    "size": 9.0,
+    "bold": -1,
+    "color": 3349511,
+    "align": 2
+  },
+  {
+    "slide": 10,
+    "name": "TextBox 15",
+    "text": "модульная замена компонентов",
+    "font": "Arial",
+    "size": 13.0,
+    "bold": 0,
+    "color": 16313046,
+    "align": 1
+  },
+  {
+    "slide": 10,
+    "name": "TextBox 17",
+    "text": "✓",
+    "font": "Helvetica",
+    "size": 9.0,
+    "bold": -1,
+    "color": 3349511,
+    "align": 2
+  },
+  {
+    "slide": 10,
+    "name": "TextBox 18",
+    "text": "масштабирование по мере испытаний",
+    "font": "Arial",
+    "size": 13.0,
+    "bold": 0,
+    "color": 16313046,
+    "align": 1
+  },
+  {
+    "slide": 10,
+    "name": "TextBox 20",
+    "text": "AEROPORTER",
+    "font": "Arial",
+    "size": 9.0,
+    "bold": -1,
+    "color": 14993832,
+    "align": 1
+  },
+  {
+    "slide": 10,
+    "name": "TextBox 21",
+    "text": "10",
+    "font": "Arial",
+    "size": 9.0,
+    "bold": -1,
+    "color": 14993832,
+    "align": 3
+  },
+  {
+    "slide": 11,
+    "name": "TextBox 2",
+    "text": "10 · РЕЗУЛЬТАТ",
+    "font": "Arial",
+    "size": 10.0,
+    "bold": -1,
+    "color": 16091670,
+    "align": 1
+  },
+  {
+    "slide": 11,
+    "name": "TextBox 3",
+    "text": "Что уже достигнуто — и что дальше",
+    "font": "Arial",
+    "size": 30.0,
+    "bold": -1,
+    "color": 3810322,
+    "align": 1
+  },
+  {
+    "slide": 11,
+    "name": "TextBox 5",
+    "text": "РЕАЛИЗОВАНО / ДЕМО",
+    "font": "Arial",
+    "size": 11.0,
+    "bold": -1,
+    "color": 16091670,
+    "align": 1
+  },
+  {
+    "slide": 11,
+    "name": "TextBox 7",
+    "text": "✓",
+    "font": "Helvetica",
+    "size": 8.0,
+    "bold": -1,
+    "color": 3349511,
+    "align": 2
+  },
+  {
+    "slide": 11,
+    "name": "TextBox 8",
+    "text": "манёвренная Mecanum-платформа",
+    "font": "Arial",
+    "size": 13.0,
+    "bold": -1,
+    "color": 3810322,
+    "align": 1
+  },
+  {
+    "slide": 11,
+    "name": "TextBox 10",
+    "text": "✓",
+    "font": "Helvetica",
+    "size": 8.0,
+    "bold": -1,
+    "color": 3349511,
+    "align": 2
+  },
+  {
+    "slide": 11,
+    "name": "TextBox 11",
+    "text": "разделённое управление Pi + Arduino",
+    "font": "Arial",
+    "size": 13.0,
+    "bold": -1,
+    "color": 3810322,
+    "align": 1
+  },
+  {
+    "slide": 11,
+    "name": "TextBox 13",
+    "text": "✓",
+    "font": "Helvetica",
+    "size": 8.0,
+    "bold": -1,
+    "color": 3349511,
+    "align": 2
+  },
+  {
+    "slide": 11,
+    "name": "TextBox 14",
+    "text": "киоск и билетный сценарий на демоданных",
+    "font": "Arial",
+    "size": 13.0,
+    "bold": -1,
+    "color": 3810322,
+    "align": 1
+  },
+  {
+    "slide": 11,
+    "name": "TextBox 16",
+    "text": "✓",
+    "font": "Helvetica",
+    "size": 8.0,
+    "bold": -1,
+    "color": 3349511,
+    "align": 2
+  },
+  {
+    "slide": 11,
+    "name": "TextBox 17",
+    "text": "watchdog, heartbeat и контроль точек",
+    "font": "Arial",
+    "size": 13.0,
+    "bold": -1,
+    "color": 3810322,
+    "align": 1
+  },
+  {
+    "slide": 11,
+    "name": "TextBox 19",
+    "text": "ТРЕБУЕТ ПОДТВЕРЖДЕНИЯ",
+    "font": "Arial",
+    "size": 11.0,
+    "bold": -1,
+    "color": 16766033,
+    "align": 1
+  },
+  {
+    "slide": 11,
+    "name": "TextBox 21",
+    "text": "1",
+    "font": "Arial",
+    "size": 8.0,
+    "bold": -1,
+    "color": 3349511,
+    "align": 2
+  },
+  {
+    "slide": 11,
+    "name": "TextBox 22",
+    "text": "испытания LiDAR-навигации в терминале",
+    "font": "Arial",
+    "size": 13.0,
+    "bold": -1,
+    "color": 16777215,
+    "align": 1
+  },
+  {
+    "slide": 11,
+    "name": "TextBox 24",
+    "text": "2",
+    "font": "Arial",
+    "size": 8.0,
+    "bold": -1,
+    "color": 3349511,
+    "align": 2
+  },
+  {
+    "slide": 11,
+    "name": "TextBox 25",
+    "text": "устойчивость к динамичным препятствиям",
+    "font": "Arial",
+    "size": 13.0,
+    "bold": -1,
+    "color": 16777215,
+    "align": 1
+  },
+  {
+    "slide": 11,
+    "name": "TextBox 27",
+    "text": "3",
+    "font": "Arial",
+    "size": 8.0,
+    "bold": -1,
+    "color": 3349511,
+    "align": 2
+  },
+  {
+    "slide": 11,
+    "name": "TextBox 28",
+    "text": "интеграция с реальными данными аэропорта",
+    "font": "Arial",
+    "size": 13.0,
+    "bold": -1,
+    "color": 16777215,
+    "align": 1
+  },
+  {
+    "slide": 11,
+    "name": "TextBox 30",
+    "text": "4",
+    "font": "Arial",
+    "size": 8.0,
+    "bold": -1,
+    "color": 3349511,
+    "align": 2
+  },
+  {
+    "slide": 11,
+    "name": "TextBox 31",
+    "text": "промышленный безопасный корпус",
+    "font": "Arial",
+    "size": 13.0,
+    "bold": -1,
+    "color": 16777215,
+    "align": 1
+  },
+  {
+    "slide": 11,
+    "name": "TextBox 32",
+    "text": "AEROPORTER",
+    "font": "Arial",
+    "size": 9.0,
+    "bold": -1,
+    "color": 9073761,
+    "align": 1
+  },
+  {
+    "slide": 11,
+    "name": "TextBox 33",
+    "text": "11",
+    "font": "Arial",
+    "size": 9.0,
+    "bold": -1,
+    "color": 9073761,
+    "align": 3
+  },
+  {
+    "slide": 12,
+    "name": "TextBox 4",
+    "text": "AEROPORTER",
+    "font": "Arial",
+    "size": 12.0,
+    "bold": -1,
+    "color": 16766033,
+    "align": 1
+  },
+  {
+    "slide": 12,
+    "name": "TextBox 5",
+    "text": "Технология, / которая помогает / не потеряться",
+    "font": "Arial",
+    "size": 36.0,
+    "bold": -1,
+    "color": 16777215,
+    "align": 1
+  },
+  {
+    "slide": 12,
+    "name": "TextBox 6",
+    "text": "Цель — передать роботу часть рутинной навигации / и потенциально снизить нагрузку на сотрудников.",
+    "font": "Arial",
+    "size": 16.0,
+    "bold": 0,
+    "color": 16313046,
+    "align": 1
+  },
+  {
+    "slide": 12,
+    "name": "TextBox 8",
+    "text": "Спасибо за внимание",
+    "font": "Arial",
+    "size": 15.0,
+    "bold": -1,
+    "color": 3349511,
+    "align": 2
+  },
+  {
+    "slide": 12,
+    "name": "TextBox 9",
+    "text": "AEROPORTER",
+    "font": "Arial",
+    "size": 9.0,
+    "bold": -1,
+    "color": 14993832,
+    "align": 1
+  },
+  {
+    "slide": 12,
+    "name": "TextBox 10",
+    "text": "12",
+    "font": "Arial",
+    "size": 9.0,
+    "bold": -1,
+    "color": 14993832,
+    "align": 3
+  }
+]

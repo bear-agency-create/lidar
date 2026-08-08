@@ -181,6 +181,19 @@ function holdStart(name, el) {
     refreshDriveLoop();
     return;
   }
+  // Opposite directions are mutually exclusive. The most recently pressed
+  // arrow wins instead of summing to zero and leaving stale held buttons.
+  const opposite = {
+    fwd: 'back', back: 'fwd',
+    left: 'right', right: 'left',
+    yaw_l: 'yaw_r', yaw_r: 'yaw_l',
+  }[name];
+  if (opposite) {
+    held.delete(opposite);
+    document.querySelectorAll('#pad button[data-cmd="'+opposite+'"]').forEach(
+      b => b.classList.remove('held')
+    );
+  }
   held.add(name);
   if (el) el.classList.add('held');
   else {
